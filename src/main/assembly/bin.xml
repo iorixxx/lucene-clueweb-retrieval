@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<assembly>
+    <id>bin</id>
+    <formats>
+        <format>tar.gz</format>
+        <format>zip</format>
+    </formats>
+
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <baseDirectory>TermFrequencyDistributionAnalysis-${project.version}</baseDirectory>
+
+    <fileSets>
+
+        <fileSet>
+            <directory>.</directory>
+            <outputDirectory/>
+            <fileMode>644</fileMode>
+            <directoryMode>755</directoryMode>
+            <includes>
+                <include>README.md</include>
+                <include>README.pdf</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>target</directory>
+            <outputDirectory/>
+            <fileMode>644</fileMode>
+            <directoryMode>755</directoryMode>
+            <includes>
+                <include>${project.artifactId}-${project.version}.jar</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>scripts</directory>
+            <fileMode>755</fileMode>
+            <directoryMode>755</directoryMode>
+            <outputDirectory/>
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <fileMode>644</fileMode>
+            <directoryMode>755</directoryMode>
+            <outputDirectory/>
+        </fileSet>
+
+        <fileSet>
+            <directory>target/appassembler/repo</directory>
+            <outputDirectory>repo</outputDirectory>
+            <fileMode>644</fileMode>
+            <directoryMode>755</directoryMode>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+    </fileSets>
+</assembly>
