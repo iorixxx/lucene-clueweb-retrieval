@@ -3,10 +3,7 @@ package edu.anadolu.analysis;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
-import org.apache.lucene.analysis.icu.tokenattributes.ScriptAttribute;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.util.TokenizerFactory;
-import org.apache.poi.ss.formula.functions.T;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -72,7 +69,6 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")
                         .addTokenFilter("lowercase")
-                        .addTokenFilter("kstem")
                         .build();
 
             case KStem:
@@ -92,33 +88,5 @@ public class Analyzers {
 
         }
 
-    }
-
-    public static void main(String[] args) throws IOException {
-
-
-        System.out.println(Tag.tag("icuAnchor"));
-
-        System.out.println(TokenizerFactory.availableTokenizers());
-        Analyzer analyzer = CustomAnalyzer.builder()
-                .withTokenizer("icu")
-                .addTokenFilter("lowercase")
-                .build();
-
-
-        String text = "An intensive care unit 142, გამარჯობა მსოფლიო";
-        try (TokenStream ts = analyzer.tokenStream(FIELD, new StringReader(text))) {
-
-            final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
-            final ScriptAttribute scriptAtt = ts.addAttribute(ScriptAttribute.class);
-
-            ts.reset(); // Resets this stream to the beginning. (Required)
-            while (ts.incrementToken())
-                System.out.println(termAtt.toString() + " " + scriptAtt.getName());
-
-            ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
-        } catch (IOException ioe) {
-            throw new RuntimeException("happened during string analysis", ioe);
-        }
     }
 }
