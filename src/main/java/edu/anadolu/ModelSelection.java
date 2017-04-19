@@ -9,9 +9,7 @@ import edu.anadolu.qpp.Aggregate;
 import edu.anadolu.qpp.IDF;
 import edu.anadolu.qpp.Scope;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.store.FSDirectory;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 
@@ -76,9 +74,7 @@ public class ModelSelection {
 
         Path indexPath = dataSet.indexesPath().resolve(tag);
         BigDecimal p = new BigDecimal("0.2");
-        try (DirectoryReader reader = DirectoryReader.open(FSDirectory.open(indexPath))) {
-            Scope scope = new Scope(reader);
-            IDF idf = new IDF(reader);
+        try (Scope scope = new Scope(indexPath); IDF idf = new IDF(indexPath)) {
 
             for (InfoNeed need : allQueries) {
                 double[] vector = new double[3];

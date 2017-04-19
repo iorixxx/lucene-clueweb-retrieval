@@ -1,6 +1,7 @@
 package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
@@ -132,7 +133,7 @@ public final class Indexer {
             try {
                 jDoc = Jsoup.parse(warcRecord.content());
             } catch (Exception exception) {
-                exception.printStackTrace();
+                // exception.printStackTrace();
                 System.err.println(id);
                 // System.out.println(warcRecord.content());
                 return 1;
@@ -264,7 +265,9 @@ public final class Indexer {
 
     private final SolrClient solr;
 
-    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, boolean anchor, String tag) throws IOException {
+    private final Tag tag;
+
+    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, boolean anchor, Tag tag) throws IOException {
 
         this.collection = collection;
         this.anchor = anchor;
@@ -276,6 +279,7 @@ public final class Indexer {
         }
 
         this.solr = solr;
+        this.tag = tag;
 
         this.indexPath = Paths.get(indexPath, tag + (anchor ? "Anchor" : ""));
         if (!Files.exists(this.indexPath))
@@ -354,7 +358,14 @@ public final class Indexer {
      */
     private static Document warc2LuceneDocument(ClueWeb09WarcRecord wDoc) {
 
-        org.jsoup.nodes.Document jDoc = Jsoup.parse(wDoc.getContent());
+        org.jsoup.nodes.Document jDoc;
+        try {
+            jDoc = Jsoup.parse(wDoc.getContent());
+        } catch (Exception exception) {
+            System.err.println(wDoc.id());
+            return null;
+        }
+
         String contents = jDoc.text();
         // don't index empty documents
         if (contents.trim().length() == 0)
@@ -432,7 +443,7 @@ public final class Indexer {
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer());
+        final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer(tag));
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -471,8 +482,10 @@ public final class Indexer {
 
         try {
             // Wait for existing tasks to terminate
-            while (!executor.awaitTermination(2, TimeUnit.MINUTES)) {
-                System.out.println("top inside while activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+            while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+
+                System.out.print(String.format("%.2f percentage completed ", (double) (executor.getCompletedTaskCount() / executor.getTaskCount()) * 100.0d));
+                System.out.println("activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
 
                 final long completedTaskCount = executor.getCompletedTaskCount();
 

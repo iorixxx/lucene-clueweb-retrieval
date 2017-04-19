@@ -1,6 +1,7 @@
 package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.similarities.MATF;
 import org.apache.lucene.document.Document;
@@ -83,6 +84,8 @@ public class Searcher implements Closeable {
     protected final DataSet dataSet;
     protected final int numHits;
 
+    protected final Tag analyzerTag;
+
     public Searcher(Path indexPath, DataSet dataSet, int numHits) throws IOException {
 
         if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
@@ -94,7 +97,10 @@ public class Searcher implements Closeable {
         this.dataSet = dataSet;
         this.numHits = numHits;
 
+        this.analyzerTag = Tag.tag(indexTag);
+
         System.out.println("Opened index directory : " + indexPath + " has " + reader.numDocs() + " numDocs and has " + reader.maxDoc() + " maxDocs");
+        System.out.println("Analyzer Tag : " + analyzerTag);
 
     }
 
@@ -165,7 +171,7 @@ public class Searcher implements Closeable {
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(runTag + ".txt"), StandardCharsets.US_ASCII));
 
 
-        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer());
+        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer(analyzerTag));
         queryParser.setDefaultOperator(operator);
 
 
@@ -339,7 +345,7 @@ public class Searcher implements Closeable {
                 verbose_path.resolve(runTag + ".txt"),
                 StandardCharsets.US_ASCII));
 
-        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer());
+        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer(analyzerTag));
         queryParser.setDefaultOperator(operator);
 
 
@@ -465,10 +471,6 @@ public class Searcher implements Closeable {
         return Long.parseLong(desc.substring(i + DOC_LEN.length(), j));
     }
 
-    public static double extractRelativeFreq(Explanation exp) {
-        return Double.parseDouble(extractFreq(exp)) / (double) extractDocLen(exp);
-    }
-
     public void search(Track track, MATF matf, QueryParser.Operator operator) throws IOException, ParseException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
@@ -485,7 +487,7 @@ public class Searcher implements Closeable {
                 StandardCharsets.US_ASCII));
 
 
-        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer());
+        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer(analyzerTag));
         queryParser.setDefaultOperator(operator);
 
 

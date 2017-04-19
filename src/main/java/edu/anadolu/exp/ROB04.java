@@ -2,7 +2,7 @@ package edu.anadolu.exp;
 
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
-import edu.anadolu.cmdline.CmdLineTool;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.benchmark.byTask.feeds.DocData;
 import org.apache.lucene.benchmark.byTask.feeds.NoMoreDataException;
@@ -19,6 +19,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
@@ -29,12 +30,18 @@ import java.util.Properties;
  */
 public class ROB04 {
 
-    public static int index(String dataDir, Path indexPath) throws IOException {
+    public static int index(String dataDir, final String indexPath, Tag tag) throws IOException {
 
+        Path iPath = Paths.get(indexPath, tag.toString());
 
-        final Directory dir = FSDirectory.open(indexPath);
+        if (!Files.exists(iPath))
+            Files.createDirectories(iPath);
 
-        final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer());
+        System.out.println("Indexing to directory '" + iPath.toAbsolutePath() + "'...");
+
+        final Directory dir = FSDirectory.open(iPath);
+
+        final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer(tag));
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -102,19 +109,5 @@ public class ROB04 {
         dir.close();
 
         return numIndexed;
-    }
-
-    public static void main(String[] args) throws IOException {
-
-        String dataDir = "/Users/iorixxx/TREC_VOL4/";
-
-        Path indexPath = Paths.get("/tmp" +
-                "/ROBIndex/");
-
-        System.out.println("Indexing to directory '" + indexPath.toAbsolutePath() + "'...");
-        final long start = System.nanoTime();
-        final int numIndexed = index(dataDir, indexPath);
-        System.out.println("Total " + numIndexed + " documents indexed in " + CmdLineTool.execution(start));
-
     }
 }

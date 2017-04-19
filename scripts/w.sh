@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "$TFD_HOME" ]; then
- TFD_HOME=/home/iorixxx/TFD_HOME
+ TFD_HOME=~/TFD_HOME
 fi
 
 for tag in KStemAnalyzer KStemAnalyzerAnchor; do

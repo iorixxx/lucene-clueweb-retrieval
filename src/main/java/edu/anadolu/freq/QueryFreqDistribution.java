@@ -1,6 +1,7 @@
 package edu.anadolu.freq;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -40,7 +41,7 @@ public final class QueryFreqDistribution extends TermFreqDistribution {
 
     public void process(List<InfoNeed> needs, String indexTag, int numHits) throws ParseException, IOException {
 
-        QueryParser queryParser = new QueryParser(field, Analyzers.analyzer());
+        QueryParser queryParser = new QueryParser(field, Analyzers.analyzer(Tag.tag(indexTag)));
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
         PrintWriter output = new PrintWriter(Files.newBufferedWriter(Paths.get(freqsPath.toString(), "QueryFreqDist" + indexTag + ".csv"), StandardCharsets.US_ASCII));

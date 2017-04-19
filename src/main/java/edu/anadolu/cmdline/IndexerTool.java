@@ -1,6 +1,7 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.exp.ROB04;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -10,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+
+import static edu.anadolu.analysis.Tag.KStem;
 
 /**
  * Indexer Tool for ClueWeb09 ClueWeb12 Gov2 collections
@@ -21,6 +24,9 @@ public final class IndexerTool extends CmdLineTool {
 
     @Option(name = "-anchor", usage = "Boolean switch to index anchor text")
     private boolean anchor = false;
+
+    @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU]", required = false, usage = "Analyzer Tag")
+    private Tag tag = KStem;
 
     @Override
     public String getShortDescription() {
@@ -57,13 +63,10 @@ public final class IndexerTool extends CmdLineTool {
          * Indexer code snippet for Robust Track 2004
          */
         if (Collection.ROB04.equals(collection)) {
-            Path iPath = Paths.get(tfd_home, collection.toString(), "indexes", "KStemAnalyzer");
-            if (!Files.exists(iPath))
-                Files.createDirectories(iPath);
-            System.out.println("Indexing to directory '" + iPath.toAbsolutePath() + "'...");
+
             final long start = System.nanoTime();
-            final int numIndexed = ROB04.index(docsPath, iPath);
-            System.out.println("Total " + numIndexed + " documents indexed in " + CmdLineTool.execution(start));
+            final int numIndexed = ROB04.index(docsPath, indexPath, tag);
+            System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
             return;
         }
 
@@ -83,19 +86,19 @@ public final class IndexerTool extends CmdLineTool {
             } else if (Collection.CW12B.equals(collection))
                 solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
             else {
-                System.out.println("spam filtering is only applicable to ClueWeb09 and ClueWeb12 collections!");
+                System.out.println("anchor text is only available to ClueWeb09 and ClueWeb12 collections!");
                 return;
             }
 
             long s = System.nanoTime();
-            Indexer i = new Indexer(collection, docsPath, indexPath, solr, anchor, "KStemAnalyzer");
+            Indexer i = new Indexer(collection, docsPath, indexPath, solr, anchor, tag);
             int nIndexed = i.indexWithThreads(numThreads);
             System.out.println("Total " + nIndexed + " documents (with anchor text) indexed in " + execution(s));
 
         } else {
 
             long start = System.nanoTime();
-            Indexer indexer = new Indexer(collection, docsPath, indexPath, null, anchor, "KStemAnalyzer");
+            Indexer indexer = new Indexer(collection, docsPath, indexPath, null, anchor, tag);
             int numIndexed = indexer.indexWithThreads(numThreads);
             System.out.println("Total " + numIndexed + " documents (without anchor text) indexed in " + execution(start));
 

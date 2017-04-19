@@ -122,7 +122,7 @@ public class AbsoluteTool extends KNNTool {
                 }
             }
 
-            /**
+            /*
              * Characteristic Distribution for the model
              */
             Row row = sheet.createRow(rowNum);
@@ -134,7 +134,7 @@ public class AbsoluteTool extends KNNTool {
             for (Double d : absoluteTFDAwareNeeds.get(0).termFreqDistZeroNormalized.get(0)) {
                 String columnLetter = CellReference.convertNumToColString(columnNumber);
                 Cell cell = row.createCell(columnNumber, CellType.NUMERIC);
-                cell.setCellType(Cell.CELL_TYPE_FORMULA);
+                cell.setCellType(CellType.FORMULA);
                 cell.setCellFormula("AVERAGE(" + columnLetter + "2:" + columnLetter + Integer.toString(rowNum) + ")");
                 columnNumber++;
             }

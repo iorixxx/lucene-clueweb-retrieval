@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
 if [ -z "$TFD_HOME" ]; then
-  TFD_HOME=/home/iorixxx/TFD_HOME
+  TFD_HOME=~/TFD_HOME
 fi
-
-export LC_ALL=en_US.UTF-8
-export LANGUAGE=en_US.UTF-8
 
 if [ "$1" = "parameter" ]; then
 	RUNS=parameter_runs
@@ -26,7 +23,14 @@ done
 
 
 for set in ROB04; do
-for tag in KStemAnalyzer; do
+if [ ! -d "${TFD_HOME}/${set}/${RUNS}" ]; then
+       continue
+fi
+for tag in ${TFD_HOME}/${set}/${RUNS}/*; do
+if [[ ! -d ${tag} ]]; then
+    continue
+fi
+tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
 # TREC Robust Track 2004
 for T in 04; do

@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
 if [ -z "$TFD_HOME" ]; then
-  TFD_HOME=/home/iorixxx/TFD_HOME
+  TFD_HOME=~/TFD_HOME
 fi
-
-export LC_ALL=en_US.UTF-8
-export LANGUAGE=en_US.UTF-8
 
 if [ "$1" = "parameter" ]; then
 	RUNS=parameter_runs

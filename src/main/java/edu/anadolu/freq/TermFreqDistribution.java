@@ -2,15 +2,7 @@ package edu.anadolu.freq;
 
 
 import edu.anadolu.analysis.Analyzers;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.similarities.ModelBase;
 import org.apache.lucene.store.FSDirectory;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
@@ -25,9 +17,6 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static edu.anadolu.Searcher.extractRelativeFreq;
-import static edu.anadolu.Searcher.extractTerm;
 
 /**
  * Traverse posting list of given term over the field.
@@ -274,119 +263,6 @@ public class TermFreqDistribution {
             executor.shutdownNow();
             // Preserve interrupt status
             Thread.currentThread().interrupt();
-        }
-
-        reader.close();
-    }
-
-    /**
-     * Save TermFreqDist over result lists returned by different term-weighting models.
-     * Save aligned query relevance judgement levels too.
-     */
-    public static void saveTermFreqDistOverResultList(Path indexPath, Track[] tracks, String home, Collection<ModelBase> models) throws IOException, ParseException {
-
-        IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
-
-        final String indexTag = indexPath.getFileName().toString();
-
-        for (ModelBase model : models) {
-
-            if ("DefaultSimilarity".equals(model.toString())) continue;
-
-            IndexSearcher searcher = new IndexSearcher(reader);
-            searcher.setSimilarity(model);
-
-            final Path model_path = Paths.get(home, "freqs", indexTag, "models");
-            if (!Files.exists(model_path))
-                Files.createDirectories(model_path);
-
-            PrintWriter model_out = new PrintWriter(Files.newBufferedWriter(
-                    model_path.resolve(model.toString() + ".freq"),
-                    StandardCharsets.US_ASCII));
-
-            PrintWriter label_out = new PrintWriter(Files.newBufferedWriter(
-                    model_path.resolve(model.toString() + ".label"),
-                    StandardCharsets.US_ASCII));
-
-            QueryParser queryParser = new QueryParser("contents", Analyzers.analyzer());
-            queryParser.setDefaultOperator(QueryParser.Operator.AND);
-
-            for (Track track : tracks)
-                for (InfoNeed need : track.getTopics()) {
-
-                    Map<String, StringBuilder> bufferMap = new LinkedHashMap<>();
-
-                    for (String s : Analyzers.getAnalyzedTokens(need.query()))
-                        bufferMap.put(s, new StringBuilder());
-
-                    Query query = queryParser.parse(need.query());
-
-                    ScoreDoc[] hits;
-                    try {
-                        hits = searcher.search(query, 1000).scoreDocs;
-                    } catch (java.lang.AssertionError ae) {
-                        System.out.println("indexTag: " + indexTag + " similarity: " + model + " " + need.toString());
-                        ae.printStackTrace();
-                        continue;
-                    }
-
-                    label_out.print(need.id() + "\t");
-
-                    for (ScoreDoc scoreDoc : hits) {
-                        int docId = scoreDoc.doc;
-
-                        Document doc = searcher.doc(docId);
-                        String docID = doc.get("id");
-                        int j = need.getJudge(docID);
-                        label_out.print(j + "\t");
-
-                        Explanation explanation = searcher.explain(query, docId);
-                        Explanation[] first = explanation.getDetails();
-
-                        if (first.length != need.wordCount())
-                            throw new RuntimeException("explanation array size mismatch :" + need.wordCount() + " exp:" + first.length);
-
-                        if (need.wordCount() == 1) {
-
-                            try {
-                                String word = extractTerm(explanation);
-                                double relativeFreq = extractRelativeFreq(explanation.getDetails()[0]);
-                                //TODO if termCount != wordCount there is a bug: double counting, relativeFreq > 1
-                                bufferMap.get(word).append(String.format("%.6f", relativeFreq)).append("\t");
-                            } catch (RuntimeException r) {
-                                System.out.println("indexTag: " + indexTag + " similarity: " + model + " " + need.toString());
-                                System.out.println(explanation.toString());
-                                r.printStackTrace();
-                            }
-
-                        } else {
-
-                            for (Explanation exp : first)
-                                try {
-                                    String word = extractTerm(exp);
-                                    double relativeFreq = extractRelativeFreq(exp.getDetails()[0]);
-                                    bufferMap.get(word).append(String.format("%.6f", relativeFreq)).append("\t");
-
-                                } catch (RuntimeException r) {
-                                    System.out.println("indexTag: " + indexTag + " similarity: " + model + " " + need.toString());
-                                    System.out.println(explanation.toString());
-                                    r.printStackTrace();
-                                }
-                        }
-
-                    }
-
-                    label_out.println();
-                    for (String s : Analyzers.getAnalyzedTokens(need.query())) {
-                        model_out.println(need.id() + ":" + s + "\t" + bufferMap.get(s).toString().trim());
-                    }
-                }
-
-
-            model_out.flush();
-            model_out.close();
-            label_out.flush();
-            label_out.close();
         }
 
         reader.close();

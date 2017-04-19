@@ -28,16 +28,22 @@ public abstract class Base implements Predictor, Closeable {
 
     protected final String field;
 
-
     protected final IndexSearcher searcher;
     protected final DirectoryReader reader;
 
-    public Base(DirectoryReader reader, String field) throws IOException {
-        this.reader = reader;
+    protected final Path indexPath;
+
+    public Base(Path indexPath, String field) throws IOException {
+
+        if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
+            throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
+        }
+
+        this.indexPath = indexPath;
+        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(new MetaTerm());
         this.field = field;
-
 
         assert reader.numDocs() == 48735885 : "ClueWeb09B has 48735885 many documents after 10% spam filtering";
         assert reader.maxDoc() == 48735885 : "ClueWeb09B has 48735885 many documents after 10% spam filtering";
@@ -49,15 +55,6 @@ public abstract class Base implements Predictor, Closeable {
         sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
 
         System.out.println("docCount:" + docCount + " numDocs:" + reader.numDocs() + " sumTotalTermFreq:" + sumTotalTermFreq);
-
-    }
-
-    public Base(Path indexPath, String field) throws IOException {
-        this(DirectoryReader.open(FSDirectory.open(indexPath)), field);
-
-        if (!Files.exists(indexPath) || !Files.isDirectory(indexPath) || !Files.isReadable(indexPath)) {
-            throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
-        }
 
     }
 

@@ -3,7 +3,7 @@
 # Intended to use when from scratch installation is required
 
 if [ -z "$TFD_HOME" ]; then
- TFD_HOME=/home/iorixxx/TFD_HOME
+ TFD_HOME=~/TFD_HOME
 fi
 
 # Indexer

@@ -69,7 +69,7 @@ public final class OptimizeTool extends CmdLineTool {
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer());
+        final IndexWriterConfig iwc = new IndexWriterConfig();
 
         iwc.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         iwc.setRAMBufferSizeMB(1024);

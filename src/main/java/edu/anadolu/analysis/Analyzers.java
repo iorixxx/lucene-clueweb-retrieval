@@ -2,17 +2,18 @@ package edu.anadolu.analysis;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
-import org.apache.lucene.analysis.standard.ClassicTokenizer;
+import org.apache.lucene.analysis.icu.tokenattributes.ScriptAttribute;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.util.TokenizerFactory;
+import org.apache.poi.ss.formula.functions.T;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+
+import static edu.anadolu.analysis.Tag.KStem;
 
 /**
  * Utility to hold {@link Analyzer} implementation used in this work.
@@ -20,24 +21,6 @@ import java.util.List;
 public class Analyzers {
 
     private static final String FIELD = "field";
-
-    /**
-     * Filters {@link ClassicTokenizer} with {@link org.apache.lucene.analysis.standard.ClassicFilter},
-     * {@link org.apache.lucene.analysis.core.LowerCaseFilter} and {@link org.apache.lucene.analysis.en.KStemFilter}.
-     */
-    public static Analyzer analyzer() {
-        try {
-            return CustomAnalyzer.builder()
-                    .withTokenizer("classic")
-                    .addTokenFilter("classic")
-                    .addTokenFilter("lowercase")
-                    .addTokenFilter("kstem")
-                    .build();
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
-    }
-
 
     /**
      * Intended to use with one term queries (otq) only
@@ -58,7 +41,7 @@ public class Analyzers {
     public static List<String> getAnalyzedTokens(String text) {
 
         final List<String> list = new ArrayList<>();
-        try (TokenStream ts = analyzer().tokenStream(FIELD, new StringReader(text))) {
+        try (TokenStream ts = analyzer(KStem).tokenStream(FIELD, new StringReader(text))) {
 
             final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
             ts.reset(); // Resets this stream to the beginning. (Required)
@@ -72,57 +55,70 @@ public class Analyzers {
         return list;
     }
 
-    public static long getNumTerms(String text) {
 
-        long numTerms = 0;
-        try (Tokenizer ts = new ClassicTokenizer(); Reader reader = new StringReader(text)) {
-
-            ts.setReader(reader);
-            ts.reset(); // Resets this stream to the beginning. (Required)
-            while (ts.incrementToken())
-                numTerms++;
-
-            ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
+    public static Analyzer analyzer(Tag tag) {
+        try {
+            return anlyzr(tag);
         } catch (IOException ioe) {
-            throw new RuntimeException("happened during string analysis", ioe);
+            throw new RuntimeException(ioe);
         }
-        return numTerms;
     }
 
-    /**
-     * Modified from org.apache.lucene.analysis.miscellaneous.FingerprintFilter
-     *
-     * @param text sample text
-     * @return set of unique terms
-     */
-    public static CharArraySet getUniqueTerms(String text) {
+    private static Analyzer anlyzr(Tag tag) throws IOException {
 
-        final CharArraySet uniqueTerms = new CharArraySet(8, false);
+        switch (tag) {
 
-        try (Reader reader = new StringReader(text); TokenStream ts = Analyzers.analyzer().tokenStream(FIELD, reader)) {
+            case NoStem:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("lowercase")
+                        .addTokenFilter("kstem")
+                        .build();
+
+            case KStem:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("lowercase")
+                        .addTokenFilter("kstem")
+                        .build();
+
+            case ICU:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("icu")
+                        .addTokenFilter("lowercase")
+                        .build();
+            default:
+                throw new AssertionError(Analyzers.class);
+
+        }
+
+    }
+
+    public static void main(String[] args) throws IOException {
+
+
+        System.out.println(Tag.tag("icuAnchor"));
+
+        System.out.println(TokenizerFactory.availableTokenizers());
+        Analyzer analyzer = CustomAnalyzer.builder()
+                .withTokenizer("icu")
+                .addTokenFilter("lowercase")
+                .build();
+
+
+        String text = "An intensive care unit 142, გამარჯობა მსოფლიო";
+        try (TokenStream ts = analyzer.tokenStream(FIELD, new StringReader(text))) {
 
             final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
+            final ScriptAttribute scriptAtt = ts.addAttribute(ScriptAttribute.class);
+
             ts.reset(); // Resets this stream to the beginning. (Required)
-            while (ts.incrementToken()) {
+            while (ts.incrementToken())
+                System.out.println(termAtt.toString() + " " + scriptAtt.getName());
 
-                final char term[] = termAtt.buffer();
-                final int length = termAtt.length();
-
-                if (!uniqueTerms.contains(term, 0, length)) {
-                    // clone the term, and add to the set of seen terms.
-                    final char[] clonedLastTerm = new char[length];
-                    System.arraycopy(term, 0, clonedLastTerm, 0, length);
-                    uniqueTerms.add(clonedLastTerm);
-                }
-            }
             ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
         } catch (IOException ioe) {
             throw new RuntimeException("happened during string analysis", ioe);
         }
-        return uniqueTerms;
-    }
-
-    public static int getNumberOfUniqueTerms(String text) {
-        return getUniqueTerms(text).size();
     }
 }
