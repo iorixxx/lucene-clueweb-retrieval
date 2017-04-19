@@ -69,7 +69,7 @@ public final class Indexer {
 
         final private IndexWriter writer;
 
-        public IndexerThread(IndexWriter writer, Path inputWarcFile) throws IOException {
+        IndexerThread(IndexWriter writer, Path inputWarcFile) throws IOException {
             this.writer = writer;
             this.inputWarcFile = inputWarcFile;
             setName(inputWarcFile.getFileName().toString());
@@ -484,7 +484,7 @@ public final class Indexer {
             // Wait for existing tasks to terminate
             while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
 
-                System.out.print(String.format("%.2f percentage completed ", (double) (executor.getCompletedTaskCount() / executor.getTaskCount()) * 100.0d));
+                System.out.print(String.format("%.2f percentage completed ", ((double) executor.getCompletedTaskCount() / totalWarcFiles) * 100.0d));
                 System.out.println("activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
 
                 final long completedTaskCount = executor.getCompletedTaskCount();
@@ -523,7 +523,6 @@ public final class Indexer {
         }
 
         dir.close();
-        solr.close();
         return numIndexed;
     }
 }

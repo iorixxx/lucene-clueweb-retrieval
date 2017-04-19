@@ -7,8 +7,6 @@ import edu.anadolu.exp.ROB04;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Option;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
@@ -93,6 +91,7 @@ public final class IndexerTool extends CmdLineTool {
             long s = System.nanoTime();
             Indexer i = new Indexer(collection, docsPath, indexPath, solr, anchor, tag);
             int nIndexed = i.indexWithThreads(numThreads);
+            solr.close();
             System.out.println("Total " + nIndexed + " documents (with anchor text) indexed in " + execution(s));
 
         } else {
