@@ -52,6 +52,9 @@
             <outputDirectory>repo</outputDirectory>
             <fileMode>644</fileMode>
             <directoryMode>755</directoryMode>
+            <excludes>
+                <exclude>${project.artifactId}-${project.version}.jar</exclude>
+            </excludes>
             <includes>
                 <include>*.jar</include>
             </includes>
