@@ -75,7 +75,6 @@
                     <descriptors>
                         <descriptor>src/main/assembly/bin.xml</descriptor>
                     </descriptors>
-                    <finalName>TermFrequencyDistributionAnalysis-${project.version}</finalName>
                 </configuration>
 
             </plugin>
