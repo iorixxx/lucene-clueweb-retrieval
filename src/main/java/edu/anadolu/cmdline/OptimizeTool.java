@@ -1,9 +1,9 @@
 package edu.anadolu.cmdline;
 
-import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
@@ -12,13 +12,12 @@ import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
  * Optimizes (force merge) indexes
  */
-public final class OptimizeTool extends CmdLineTool {
+final class OptimizeTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     protected Collection collection;
@@ -46,16 +45,6 @@ public final class OptimizeTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset. Optimizing waterloo spam indices instead....");
-            optimize(Paths.get(props.getProperty("waterloo.spam.CW09.lucene")));
-            System.out.println("=================================");
-            optimize(Paths.get(props.getProperty("waterloo.spam.CW12.lucene")));
-            System.out.println("=================================");
-            return;
-        }
-
-
         for (Path path : discoverIndexes(dataset)) {
             optimize(path);
             System.out.println("=================================");
@@ -74,6 +63,7 @@ public final class OptimizeTool extends CmdLineTool {
         iwc.setOpenMode(IndexWriterConfig.OpenMode.APPEND);
         iwc.setRAMBufferSizeMB(1024);
         iwc.setUseCompoundFile(false);
+        iwc.setMergeScheduler(new ConcurrentMergeScheduler());
 
         try (IndexWriter writer = new IndexWriter(dir, iwc)) {
             // This can be a terribly costly operation, so generally it's only worth it when your index is static.
