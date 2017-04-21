@@ -8,11 +8,17 @@ fi
 
 # Indexer
 
-# ./run.sh Indexer -collection CW09B
-# ./run.sh Indexer -collection CW09B -anchor
+./run.sh Indexer -collection CW09B -tag KStem -anchor
+./run.sh Indexer -collection CW09B -tag NoStem -anchor
+./run.sh Indexer -collection CW09B -tag ICU -anchor
 
-# ./run.sh Indexer -collection CW12B
-# ./run.sh Indexer -collection CW12B -anchor
+./run.sh Indexer -collection CW09B -tag KStem
+./run.sh Indexer -collection CW09B -tag NoStem
+./run.sh Indexer -collection CW09B -tag ICU
+
+# Optimize
+
+./run.sh Optimize -collection CW09B
 
 # Searcher
 
