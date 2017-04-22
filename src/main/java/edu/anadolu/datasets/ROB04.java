@@ -7,9 +7,9 @@ import org.clueweb09.tracks.Track;
  * <p>
  * http://trec.nist.gov/data/robust.html
  */
-public class ROB04 extends DataSet {
+class ROB04 extends DataSet {
 
-    public ROB04(String tfd_home) {
+    ROB04(String tfd_home) {
         super(Collection.ROB04, new Track[]{
                 new org.clueweb09.tracks.ROB04(tfd_home)
         }, tfd_home);

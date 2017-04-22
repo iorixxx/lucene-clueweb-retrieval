@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-for i in {10..90..5}
+for i in {5..95..5}
   do
      echo "calling eval.sh with spam_$i argument"
      ./eval.sh "spam_$i"

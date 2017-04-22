@@ -9,9 +9,9 @@ import org.clueweb09.tracks.Track;
  * GOV2 Test Collection
  * http://ir.dcs.gla.ac.uk/test_collections/gov2-summary.htm
  */
-public class Gov2 extends DataSet {
+class Gov2 extends DataSet {
 
-    public Gov2(String tfd_home) {
+    Gov2(String tfd_home) {
         super(Collection.GOV2, new Track[]{
                 new TT04(tfd_home),
                 new TT05(tfd_home),

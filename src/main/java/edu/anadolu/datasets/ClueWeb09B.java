@@ -5,8 +5,8 @@ import org.clueweb09.tracks.*;
 /**
  * The ClueWeb09 Category B Dataset
  */
-public class ClueWeb09B extends DataSet {
-    public ClueWeb09B(String tfd_home) {
+class ClueWeb09B extends DataSet {
+    ClueWeb09B(String tfd_home) {
         super(Collection.CW09B, new Track[]{
                 new WT09(tfd_home),
                 new WT10(tfd_home),
@@ -15,6 +15,10 @@ public class ClueWeb09B extends DataSet {
         }, tfd_home);
     }
 
+    /**
+     * If you would normally return no documents for a query, instead return the single document "clueweb09-en0000-00-00000" at rank one.
+     * Doing so maintains consistent evaluation results (averages over the same number of queries) and does not break anyone's tools.
+     */
     @Override
     public String getNoDocumentsID() {
         return "clueweb09-en0000-00-00000";

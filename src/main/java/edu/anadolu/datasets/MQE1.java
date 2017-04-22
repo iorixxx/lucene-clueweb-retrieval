@@ -12,9 +12,9 @@ import java.nio.file.Paths;
  * <p>
  * http://ir.cis.udel.edu/million/data.html
  */
-public class MQE1 extends DataSet {
+class MQE1 extends DataSet {
 
-    public MQE1(String tfd_home) {
+    MQE1(String tfd_home) {
         super(Collection.MQE1, new Track[]{
                 new org.clueweb09.tracks.MQE1(tfd_home)
         }, tfd_home);

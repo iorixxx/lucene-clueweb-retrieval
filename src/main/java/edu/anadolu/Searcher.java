@@ -40,12 +40,6 @@ public class Searcher implements Closeable {
 
     protected final IndexReader reader;
 
-    private static final String WEIGHT_CONTENTS = "weight(contents:";
-
-    private static final String FREQ = "freq=";
-
-    private static final String DOC_LEN = "docLen=";
-
     protected final String indexTag;
 
     private final class SearcherThread extends Thread {
@@ -55,7 +49,7 @@ public class Searcher implements Closeable {
         private final Similarity similarity;
         private final Path path;
 
-        public SearcherThread(Track track, Similarity similarity, QueryParser.Operator operator, Path path) {
+        SearcherThread(Track track, Similarity similarity, QueryParser.Operator operator, Path path) {
             this.operator = operator;
             this.track = track;
             this.similarity = similarity;
@@ -187,7 +181,7 @@ public class Searcher implements Closeable {
             /**
              * If you are returning zero documents for a query, instead return the single document
              * clueweb09-en0000-00-00000
-             * clueweb12-000000-00-00000
+             * clueweb12-0000wb-00-00000
              * GX000-00-0000000
              * If you are returning zero documents for a query, instead return the single document "clueweb09-en0000-00-00000".
              * If you would normally return no documents for a query, instead return the single document "clueweb09-en0000-00-00000" at rank one.
@@ -324,152 +318,6 @@ public class Searcher implements Closeable {
         out.close();
     }
 
-
-    public void verbose(Track track, Similarity similarity, QueryParser.Operator operator) throws IOException, ParseException {
-
-        IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(similarity);
-
-
-        final Path verbose_path = Paths.get(dataSet.collectionPath().toString(), "verbose_runs", indexTag, track.toString());
-        createDirectories(verbose_path);
-
-
-        // for (int part = 0; part <= topics.getMaxParts(); part++)
-        int part = 0;
-
-        final String runTag = toString(similarity, operator, part);
-
-
-        PrintWriter verbose_out = new PrintWriter(Files.newBufferedWriter(
-                verbose_path.resolve(runTag + ".txt"),
-                StandardCharsets.US_ASCII));
-
-        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer(analyzerTag));
-        queryParser.setDefaultOperator(operator);
-
-
-        for (InfoNeed need : track.getTopics()) {
-
-            String queryString = need.getPartOfQuery(part);
-            if (queryString == null) continue;
-            Query query = queryParser.parse(queryString);
-
-
-            /**
-             * For Web Tracks 2010,2011,and 2012; an experimental run consists of the top 10,000 documents for each topic query.
-             */
-            ScoreDoc[] hits = searcher.search(query, 1000).scoreDocs;
-
-
-            /**
-             * the first column is the topic number.
-             * the second column is currently unused and should always be "Q0".
-             * the third column is the official document identifier of the retrieved document.
-             * the fourth column is the rank the document is retrieved.
-             * the fifth column shows the score (integer or floating point) that generated the ranking.
-             * the sixth column is called the "run tag" and should be a unique identifier for your
-             */
-            for (int i = 0; i < hits.length; i++) {
-
-                int docId = hits[i].doc;
-                Document doc = searcher.doc(docId);
-
-                verbose_out.print(need.id());
-                verbose_out.print("\t");
-                verbose_out.print(doc.get("id"));
-                verbose_out.print("\t");
-                verbose_out.print(doc.get(FIELD_CONTENTS + "Length"));
-                verbose_out.print("\t");
-                verbose_out.print(i + 1);
-                verbose_out.print("\t");
-                verbose_out.print(hits[i].score);
-                verbose_out.print("\t");
-                verbose_out.print(similarity.toString());
-                verbose_out.print("\t");
-                verbose_out.print(need.getJudge(doc.get(FIELD_ID)));
-                verbose_out.print("\t");
-
-                if ("DefaultSimilarity".equals(similarity.toString())) continue;
-                Explanation explanation = searcher.explain(query, docId);
-                Explanation[] first = explanation.getDetails();
-
-                if (first.length != need.wordCount() && QueryParser.Operator.AND.equals(operator))
-                    throw new RuntimeException("explanation array size mismatch :" + need.wordCount() + " exp:" + first.length);
-
-                if (need.wordCount() == 1) {
-
-                    try {
-                        String word = extractTerm(explanation);
-                        String freq = extractFreq(explanation.getDetails()[0]);
-                        verbose_out.print(word + "(" + freq + ")=" + explanation.getValue());
-                    } catch (RuntimeException r) {
-                        System.out.println("analyzer: " + indexTag + " similarity: " + similarity + " " + need.toString());
-                        System.out.println(explanation.toString());
-                        r.printStackTrace();
-                    }
-
-                } else {
-
-                    for (Explanation exp : first)
-                        try {
-
-                            String word = extractTerm(exp);
-                            String freq = extractFreq(exp.getDetails()[0]);
-
-                            verbose_out.print(word + "(" + freq + ")=" + exp.getValue());
-                            verbose_out.print("\t");
-
-                        } catch (RuntimeException r) {
-                            System.out.println("analyzer: " + indexTag + "similarity: " + similarity + " " + need.toString());
-                            System.out.println(explanation.toString());
-                            r.printStackTrace();
-                        }
-                }
-
-                verbose_out.println();
-            }
-        }
-
-        verbose_out.flush();
-        verbose_out.close();
-    }
-
-    public static String extractTerm(Explanation exp) {
-        String desc = exp.getDescription();
-
-        int i = desc.indexOf(WEIGHT_CONTENTS);
-        if (i == -1) throw new RuntimeException("cannot find term in : " + desc);
-
-        int j = desc.indexOf(" in ", i);
-        if (j == -1) throw new RuntimeException("cannot find term in : " + desc);
-
-        return desc.substring(i + WEIGHT_CONTENTS.length(), j);
-    }
-
-    public static String extractFreq(Explanation exp) {
-        String desc = exp.getDescription();
-
-        int i = desc.indexOf(FREQ);
-        if (i == -1) throw new RuntimeException("cannot find freq in : " + desc);
-
-        int j = desc.indexOf("),", i);
-        if (j == -1) throw new RuntimeException("cannot find ), in : " + desc);
-
-        return desc.substring(i + FREQ.length(), j);
-    }
-
-    public static long extractDocLen(Explanation exp) {
-        String desc = exp.getDescription();
-
-        int i = desc.indexOf(DOC_LEN);
-        if (i == -1) throw new RuntimeException("cannot find docLen in : " + desc);
-
-        int j = desc.indexOf(",", i);
-        if (j == -1) throw new RuntimeException("cannot find , in : " + desc);
-
-        return Long.parseLong(desc.substring(i + DOC_LEN.length(), j));
-    }
 
     public void search(Track track, MATF matf, QueryParser.Operator operator) throws IOException, ParseException {
 

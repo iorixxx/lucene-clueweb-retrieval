@@ -8,17 +8,22 @@ import org.clueweb09.tracks.WT14;
  * ClueWeb12 B13 Dataset
  * Number of documents:	52,343,021
  */
-public class ClueWeb12B extends DataSet {
+class ClueWeb12B extends DataSet {
 
-    public ClueWeb12B(String tfd_home) {
+    ClueWeb12B(String tfd_home) {
         super(Collection.CW12B, new Track[]{
                 new WT13(tfd_home),
                 new WT14(tfd_home)
         }, tfd_home);
     }
 
+
+    /**
+     * TREC submission system requires you to submit documents for every topic.
+     * If there are no documents for a certain topic, please insert 'clueweb12-0000wb-00-00000' as DOC-ID with a dummy score.
+     */
     @Override
     public String getNoDocumentsID() {
-        return "clueweb12-000000-00-00000";
+        return "clueweb12-0000wb-00-00000";
     }
 }
