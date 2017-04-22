@@ -1,14 +1,16 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Decorator;
+import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.datasets.Gov2;
-import edu.anadolu.datasets.ROB04;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.freq.Freq;
 import edu.anadolu.knn.*;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
@@ -21,7 +23,7 @@ import java.util.*;
 /**
  * Query2Query (Q2Q Tool)
  */
-public class Q2QTool extends CmdLineTool {
+class Q2QTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
@@ -31,9 +33,9 @@ public class Q2QTool extends CmdLineTool {
         return "Query2Query (Q2Q Tool)";
     }
 
-    Map<InfoNeed, Set<String>> bestModelMap;
+    private Map<InfoNeed, Set<String>> bestModelMap;
 
-    Map<String, int[]> colorMap = ColorUtil.colorMap();
+    private Map<String, int[]> colorMap = ColorUtil.colorMap();
 
     @Override
     public void run(Properties props) throws Exception {
@@ -63,12 +65,12 @@ public class Q2QTool extends CmdLineTool {
 
 
         for (String tag : tags) {
-            if ("KStemAnalyzerAnchor".equals(tag) && (dataset.getClass().equals(Gov2.class) || dataset.getClass().equals(ROB04.class)))
+            if ("KStemAnalyzerAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
                 continue;
 
             final String evalDirectory;
 
-            if (edu.anadolu.datasets.Collection.GOV2.equals(collection) || edu.anadolu.datasets.Collection.MC.equals(collection) || edu.anadolu.datasets.Collection.ROB04.equals(collection)) {
+            if (Collection.GOV2.equals(collection) || Collection.MC.equals(collection) || Collection.ROB04.equals(collection)) {
                 evalDirectory = "evals";
             } else {
                 final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, Measure.NDCG100, "OR");
@@ -98,7 +100,7 @@ public class Q2QTool extends CmdLineTool {
             Path excelFile = excelPath.resolve("Q2Q" + decorator.type() + dataset.collection().toString() + tag + ".xlsx");
 
 
-            Collection<TFDAwareNeed> TFDAwareNeeds = decorator.residualTFDAwareNeeds(residualNeeds);
+            java.util.Collection<TFDAwareNeed> TFDAwareNeeds = decorator.residualTFDAwareNeeds(residualNeeds);
 
             addColors(workbook.createSheet("colors"), TFDAwareNeeds);
 
@@ -157,7 +159,7 @@ public class Q2QTool extends CmdLineTool {
 
     }
 
-    public static void fillSheetWithChiSquare(Sheet sheet, Collection<TFDAwareNeed> TFDAwareNeeds, QuerySimilarity querySimilarity, Freq type) {
+    private static void fillSheetWithChiSquare(Sheet sheet, java.util.Collection<TFDAwareNeed> TFDAwareNeeds, QuerySimilarity querySimilarity, Freq type) {
 
         int mostSimilarQueryShouldBeItSelf = 0;
 
@@ -196,7 +198,7 @@ public class Q2QTool extends CmdLineTool {
 
     }
 
-    public void addColors(Sheet sheet, Collection<TFDAwareNeed> TFDAwareNeeds) {
+    private void addColors(Sheet sheet, java.util.Collection<TFDAwareNeed> TFDAwareNeeds) {
 
         int i = 0;
         for (TFDAwareNeed need : TFDAwareNeeds) {
@@ -207,7 +209,7 @@ public class Q2QTool extends CmdLineTool {
         }
     }
 
-    public void addTopicHeaders(Sheet sheet, Collection<TFDAwareNeed> TFDAwareNeeds) {
+    private void addTopicHeaders(Sheet sheet, java.util.Collection<TFDAwareNeed> TFDAwareNeeds) {
         Row r0 = sheet.createRow(0);
 
         int c = 2;

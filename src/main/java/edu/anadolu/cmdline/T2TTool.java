@@ -1,10 +1,9 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Decorator;
+import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.datasets.Gov2;
-import edu.anadolu.datasets.ROB04;
 import edu.anadolu.freq.Freq;
 import edu.anadolu.knn.ChiBase;
 import edu.anadolu.knn.ChiSquare;
@@ -28,7 +27,7 @@ import java.util.Set;
 /**
  * Term2Term (T2T Tool)
  */
-public class T2TTool extends CmdLineTool {
+class T2TTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
@@ -73,7 +72,7 @@ public class T2TTool extends CmdLineTool {
         Map<String, String> map = new HashMap<>();
 
         for (String tag : tags) {
-            if ("KStemAnalyzerAnchor".equals(tag) && (dataset.getClass().equals(Gov2.class) || dataset.getClass().equals(ROB04.class)))
+            if ("KStemAnalyzerAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
                 continue;
 
             Workbook workbook = new XSSFWorkbook();
@@ -140,7 +139,7 @@ public class T2TTool extends CmdLineTool {
         System.out.println("}");
     }
 
-    public static void addTopicHeaders(Sheet sheet, Set<String> set) {
+    private static void addTopicHeaders(Sheet sheet, Set<String> set) {
         Row r0 = sheet.createRow(0);
 
         int c = 1;
@@ -158,7 +157,7 @@ public class T2TTool extends CmdLineTool {
 
     }
 
-    public static Double[] normalize(Long[] a) {
+    private static Double[] normalize(Long[] a) {
 
         long df = TFDAwareNeed.df(a);
         final Double[] array = new Double[a.length];

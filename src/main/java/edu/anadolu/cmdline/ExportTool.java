@@ -4,10 +4,9 @@ import edu.anadolu.Decorator;
 import edu.anadolu.Exporter;
 import edu.anadolu.QuerySelector;
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.datasets.Gov2;
-import edu.anadolu.datasets.ROB04;
 import edu.anadolu.freq.Freq;
 import edu.anadolu.knn.TFDAwareNeed;
 import edu.anadolu.stats.TermStats;
@@ -22,17 +21,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
 /**
  * Export Tool: Saves run topic matrix to export and knn folders
  */
-public final class ExportTool extends CmdLineTool {
+final class ExportTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    private edu.anadolu.datasets.Collection collection;
+    private Collection collection;
 
     @Override
     public String getShortDescription() {
@@ -65,7 +63,7 @@ public final class ExportTool extends CmdLineTool {
 
 
         for (String tag : tags) {
-            if ("KStemAnalyzerAnchor".equals(tag) && (dataset.getClass().equals(Gov2.class) || dataset.getClass().equals(ROB04.class)))
+            if ("KStemAnalyzerAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
                 continue;
 
 
@@ -158,7 +156,7 @@ public final class ExportTool extends CmdLineTool {
 
     public void write(Decorator decorator, boolean pdf) throws IOException {
 
-        Collection<TFDAwareNeed> tfdAwareNeeds = decorator.residualTFDAwareNeeds();
+        java.util.Collection<TFDAwareNeed> tfdAwareNeeds = decorator.residualTFDAwareNeeds();
 
         final String freqDistSheetName = (pdf ? "p" : "c") + decorator.type() + "FreqDist" + decorator.numBins();
 
