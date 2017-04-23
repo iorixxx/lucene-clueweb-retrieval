@@ -108,7 +108,7 @@ public final class SpamEvalTool extends EvaluatorTool {
         map.put(0, evaluator.averageForAllModels());
         System.out.println("=======================");
 
-        for (int spamThreshold = 10; spamThreshold <= 90; spamThreshold += 5) {
+        for (int spamThreshold = 5; spamThreshold <= 95; spamThreshold += 5) {
 
             evaluator = new Evaluator(dataset, tag, measure, models, "spam_" + spamThreshold + "_evals", op);
 
@@ -158,7 +158,7 @@ public final class SpamEvalTool extends EvaluatorTool {
         double max = evaluator.averageOfAllModels();
 
 
-        for (int spamThreshold = 10; spamThreshold <= 90; spamThreshold += 5) {
+        for (int spamThreshold = 5; spamThreshold <= 95; spamThreshold += 5) {
 
             evaluator = new Evaluator(dataset, tag, measure, models, "spam_" + spamThreshold + "_evals", op);
 
