@@ -36,6 +36,21 @@
             <directory>scripts</directory>
             <fileMode>755</fileMode>
             <directoryMode>755</directoryMode>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+            <lineEnding>unix</lineEnding>
+            <outputDirectory/>
+        </fileSet>
+
+        <fileSet>
+            <directory>scripts</directory>
+            <fileMode>755</fileMode>
+            <directoryMode>755</directoryMode>
+            <includes>
+                <include>*.bat</include>
+            </includes>
+            <lineEnding>windows</lineEnding>
             <outputDirectory/>
         </fileSet>
 
