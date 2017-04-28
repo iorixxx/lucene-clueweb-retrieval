@@ -36,6 +36,7 @@
             <directory>scripts</directory>
             <fileMode>755</fileMode>
             <directoryMode>755</directoryMode>
+            <lineEnding>unix</lineEnding>
             <outputDirectory/>
         </fileSet>
 
