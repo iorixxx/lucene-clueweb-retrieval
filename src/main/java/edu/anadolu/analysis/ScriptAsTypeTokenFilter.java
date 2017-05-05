@@ -8,9 +8,6 @@ import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 
 import java.io.IOException;
 
-/**
- * Created by AHMET on 25.04.2017.
- */
 public class ScriptAsTypeTokenFilter extends TokenFilter {
     private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
     private final ScriptAttribute scriptAtt = addAttribute(ScriptAttribute.class);

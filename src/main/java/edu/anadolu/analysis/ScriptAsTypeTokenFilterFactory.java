@@ -6,9 +6,7 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 import java.util.Map;
 
-/**
- * Created by AHMET on 25.04.2017.
- */
+
 public class ScriptAsTypeTokenFilterFactory extends TokenFilterFactory {
     /**
      * Creates a new ScriptAsTypeTokenFilterFactory
