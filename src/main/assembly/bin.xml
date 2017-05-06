@@ -62,7 +62,7 @@
         </fileSet>
 
         <fileSet>
-            <directory>target/appassembler/repo</directory>
+            <directory>target/dependency</directory>
             <outputDirectory>repo</outputDirectory>
             <fileMode>644</fileMode>
             <directoryMode>755</directoryMode>

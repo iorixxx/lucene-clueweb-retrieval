@@ -10,17 +10,6 @@
     <name>FrequencyDistributionAnalysis</name>
     <url>http://maven.apache.org</url>
 
-    <repositories>
-        <repository>
-            <id>java.net</id>
-            <url>https://maven.java.net/content/repositories/public/</url>
-        </repository>
-        <repository>
-            <id>spring.io</id>
-            <url>http://repo.spring.io/plugins-release/</url>
-        </repository>
-    </repositories>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lucene.version>6.5.0</lucene.version>
@@ -80,12 +69,11 @@
             </plugin>
 
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.10</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.0.0</version>
                 <configuration>
-                    <extraJvmArguments>-Xms512M -Xmx24576M</extraJvmArguments>
-                    <repositoryLayout>flat</repositoryLayout>
+                    <includeScope>compile</includeScope>
                 </configuration>
             </plugin>
 
