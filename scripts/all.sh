@@ -16,6 +16,10 @@ fi
 ./run.sh Indexer -collection CW09B -tag NoStem
 ./run.sh Indexer -collection CW09B -tag ICU
 
+# save document IDs that are skipped during indexing
+# we skip empty documents or parsing error
+nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.out &
+
 # Optimize
 
 ./run.sh Optimize -collection CW09B
