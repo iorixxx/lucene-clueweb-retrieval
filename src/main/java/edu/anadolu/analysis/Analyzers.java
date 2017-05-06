@@ -83,6 +83,15 @@ public class Analyzers {
                         .withTokenizer("icu")
                         .addTokenFilter("lowercase")
                         .build();
+
+            case Latin:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("icu")
+                        .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
+                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin")
+                        .addTokenFilter("lowercase")
+                        .build();
+
             default:
                 throw new AssertionError(Analyzers.class);
 
