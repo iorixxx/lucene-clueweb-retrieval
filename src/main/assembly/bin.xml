@@ -36,7 +36,6 @@
             <directory>scripts</directory>
             <fileMode>755</fileMode>
             <directoryMode>755</directoryMode>
-<<<<<<< HEAD
             <includes>
                 <include>*.sh</include>
             </includes>
@@ -52,9 +51,6 @@
                 <include>*.bat</include>
             </includes>
             <lineEnding>windows</lineEnding>
-=======
-            <lineEnding>unix</lineEnding>
->>>>>>> e989a9be91c55080371e010d3b0c0952567a2244
             <outputDirectory/>
         </fileSet>
 
