@@ -16,17 +16,17 @@ import java.util.Set;
 /**
  * Factory class for {@link TypeTokenFilter}.
  * <pre class="prettyprint">
- * &lt;fieldType name="chars" class="solr.TextField" positionIncrementGap="100"&gt;
+ * &lt;fieldType name="latin" class="solr.TextField" positionIncrementGap="100"&gt;
  * &lt;analyzer&gt;
- * &lt;tokenizer class="solr.StandardTokenizerFactory"/&gt;
- * &lt;filter class="solr.TypeTokenFilterFactory" types="Latin"
- * useWhitelist="false"/&gt;
+ * &lt;tokenizer class="solr.ICUTokenizerFactory"/&gt;
+ * &lt;tokenizer class="solr.ScriptAsTypeTokenFilterFactory"/&gt;
+ * &lt;filter class="solr.FilterTypeTokenFilterFactory" types="Latin" useWhitelist="true"/&gt;
  * &lt;/analyzer&gt;
  * &lt;/fieldType&gt;</pre>
  */
 public class FilterTypeTokenFilterFactory extends TokenFilterFactory implements ResourceLoaderAware {
     private final boolean useWhitelist;
-    private final String stopTypesFiles;
+    private final String types;
     private Set<String> stopTypes;
 
     /**
@@ -34,7 +34,7 @@ public class FilterTypeTokenFilterFactory extends TokenFilterFactory implements 
      */
     public FilterTypeTokenFilterFactory(Map<String, String> args) {
         super(args);
-        stopTypesFiles = require(args, "types");
+        types = require(args, "types");
         useWhitelist = getBoolean(args, "useWhitelist", false);
         if (!args.isEmpty()) {
             throw new IllegalArgumentException("Unknown parameters: " + args);
@@ -43,22 +43,14 @@ public class FilterTypeTokenFilterFactory extends TokenFilterFactory implements 
 
     @Override
     public void inform(ResourceLoader loader) throws IOException {
-        List<String> files = splitFileNames(stopTypesFiles);
+        List<String> files = splitFileNames(types);
         if (files.size() > 0) {
-            stopTypes = new HashSet<>();
-
-            stopTypes.addAll(files);
-
+            stopTypes = new HashSet<>(files);
         }
-    }
-
-    public Set<String> getStopTypes() {
-        return stopTypes;
     }
 
     @Override
     public TokenStream create(TokenStream input) {
-        final TokenStream filter = new TypeTokenFilter(input, stopTypes, useWhitelist);
-        return filter;
+        return new TypeTokenFilter(input, stopTypes, useWhitelist);
     }
 }
