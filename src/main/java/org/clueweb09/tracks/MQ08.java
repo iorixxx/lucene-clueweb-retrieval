@@ -11,47 +11,48 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Extensively judged topics from 20051 to 20250 of the
+ * TREC 2008 Million Query Track
  * <p>
- * TREC 2009 Million Query (1MQ) Track
- * <p>
- * http://ir.cis.udel.edu/million/data.html
+ * http://trec.nist.gov/data/million.query08.html
  */
-public class MQE1 extends MQ09 {
+public class MQ08 extends MQ09 {
 
 
-    /**
-     * @param home tfd.home directory
-     */
-    public MQE1(String home) {
+    public MQ08(String home) {
         super(home);
     }
 
 
     @Override
+    protected void checkQueryIDRange(int queryID) {
+        if (queryID < 10001 || queryID > 20000)
+            throw new IllegalArgumentException("queryID: " + queryID + " must be between 10001 and 20000");
+    }
+
+    @Override
     protected void populateQRelsMap() throws Exception {
-        populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrels.mq.51-250.txt"));
+        populateQRelsMap(Paths.get(home, "topics-and-qrels", "prels.10001-20000"));
     }
 
     @Override
     protected void populateInfoNeeds() throws IOException {
 
-        Path queryPath = Paths.get(home, "topics-and-qrels", "09.mq.topics.20001-60000");
+        Path queryPath = Paths.get(home, "topics-and-qrels", "08.million-query-topics.10001-20000");
         List<String> lines = Files.readAllLines(queryPath, StandardCharsets.ISO_8859_1);
 
         for (String line : lines) {
-            String parts[] = line.split(":");
-            assert parts.length == 3 : "topic does not contain colon : " + line;
 
-            int qID = Integer.parseInt(parts[0]);
+            int i = line.indexOf(":");
+
+            if (i == -1) throw new RuntimeException(line + " line does not contain colon :");
+
+
+            int qID = Integer.parseInt(line.substring(0, i));
             checkQueryIDRange(qID);
-            // P is the priority (a number 1-4, with 1 indicating highest priority)
-            if (qID <= 20050) continue;
-            if (qID > 20250) break;
-            int priority = Integer.parseInt(parts[1]);
-            if (priority > P) break;
 
-            String query = parts[2].trim();
+
+            String query = line.substring(i + 1);
+
 
             if (!isJudged(qID)) {
                 System.out.println(qID + ":" + query + " is not judged. Skipping...");
@@ -72,5 +73,4 @@ public class MQE1 extends MQ09 {
         }
         lines.clear();
     }
-
 }

@@ -22,4 +22,4 @@ if [ -z "$JAVACMD" ] ; then
   fi
 fi
 
-$JAVACMD -cp "repo/*:*" -server -Xms10g -Xmx20g edu.anadolu.cmdline.CLI $@
+$JAVACMD -cp "repo/*:*" -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Xms10g -Xmx20g edu.anadolu.cmdline.CLI $@

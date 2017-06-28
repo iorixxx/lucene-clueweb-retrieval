@@ -13,4 +13,4 @@
 @REM  limitations under the License.
 
 @echo off
-java -cp repo\*;* -server -Xms10g -Xmx20g edu.anadolu.cmdline.CLI %*
+java -cp repo\*;* -Dfile.encoding=UTF-8 -server -Djava.awt.headless=true -Xms10g -Xmx20g edu.anadolu.cmdline.CLI %*

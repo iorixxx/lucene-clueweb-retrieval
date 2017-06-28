@@ -14,14 +14,45 @@ fi
 
 echo "starting MQ09 evaluator with RUNS = $RUNS and EVALS = $EVALS ..."
 
-# TREC 2009 Million Query (1MQ) Track
-# http://ir.cis.udel.edu/million/data.html
-set=MQ09
-for tag in KStemAnalyzer KStemAnalyzerAnchor;
- do
-    mkdir -p ${TFD_HOME}/${set}/${EVALS}/${tag}/MQ09
-    for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/MQ09/*.txt;
-    do
-    ${TFD_HOME}/scripts/statAP_MQ_eval_v4.pl -q ${TFD_HOME}/topics-and-qrels/prels.20001-60000 ${f} > ${TFD_HOME}/${set}/${EVALS}/${tag}/MQ09/${f##/*/}
-    done
- done
+prels[9]=prels.20001-60000
+prels[8]=prels.10001-20000
+prels[7]=prels.1-10000
+
+
+for T in 07 08 09; do
+ printf "%s\n" ${prels[${T#0}]}
+done
+
+
+for T in 07 08 09; do
+if [ ! -d "${TFD_HOME}/MQ${T}/${RUNS}" ]; then
+       continue
+fi
+for tag in ${TFD_HOME}/MQ${T}/${RUNS}/*; do
+if [[ ! -d ${tag} ]]; then
+    continue
+fi
+tag=$(basename "${tag}")
+
+mkdir -p "$TFD_HOME/MQ${T}/${EVALS}/$tag"
+
+
+
+
+    if [ ! -d "${TFD_HOME}/MQ${T}/${RUNS}/${tag}/MQ${T}" ]; then
+        # Control will enter here if $DIRECTORY does not exist.
+        echo "${TFD_HOME}/MQ${T}/${RUNS}/${tag}/MQ${T} does not exist!"
+        continue
+    fi
+
+     mkdir -p "$TFD_HOME/MQ${T}/${EVALS}/$tag/MQ$T"
+
+     for f in ${TFD_HOME}/MQ${T}/${RUNS}/${tag}/MQ${T}/*.txt;
+     do
+        ${TFD_HOME}/scripts/statAP_MQ_eval_v4.pl -q ${TFD_HOME}/topics-and-qrels/${prels[${T#0}]} ${f} > "${TFD_HOME}/MQ${T}/${EVALS}/${tag}/MQ${T}/${f##/*/}" &
+     done
+
+     wait
+
+done
+done

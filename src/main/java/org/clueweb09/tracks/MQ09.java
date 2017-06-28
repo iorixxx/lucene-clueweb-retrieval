@@ -49,7 +49,7 @@ public class MQ09 extends Track {
     }
 
 
-    static void checkQueryIDRange(int queryID) {
+    protected void checkQueryIDRange(int queryID) {
         if (queryID < 20001 || queryID > 60000)
             throw new IllegalArgumentException("queryID: " + queryID + " must be between 20001 and 60000");
     }
