@@ -4,7 +4,10 @@ import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.similarities.MetaTerm;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexOptions;
@@ -27,18 +30,22 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 /**
- * Indexer for ClueWeb09 Cat B corpus
+ * Indexer for ClueWeb{09|12} plus GOV2
  */
 public final class Indexer {
 
@@ -126,6 +133,14 @@ public final class Indexer {
             // see if it's a response record
             if (!RESPONSE.equals(warcRecord.type()))
                 return 0;
+
+            if (field) {
+                Document document = warc2LuceneDocument(warcRecord);
+                if (document != null)
+                    writer.addDocument(document);
+
+                return 1;
+            }
 
             String id = warcRecord.id();
 
@@ -240,6 +255,7 @@ public final class Indexer {
     private final Path docsPath;
 
     private final boolean anchor;
+    private final boolean field;
     private final Collection collection;
 
     private String anchor(String id) {
@@ -267,10 +283,11 @@ public final class Indexer {
 
     private final Tag tag;
 
-    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, boolean anchor, Tag tag) throws IOException {
+    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, boolean anchor, Tag tag, boolean field) throws IOException {
 
         this.collection = collection;
-        this.anchor = anchor;
+        this.field = field;
+        this.anchor = this.field || anchor;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
@@ -281,7 +298,10 @@ public final class Indexer {
         this.solr = solr;
         this.tag = tag;
 
-        this.indexPath = Paths.get(indexPath, tag + (anchor ? "Anchor" : ""));
+        if (this.field)
+            this.indexPath = Paths.get(indexPath, tag + "Field");
+        else
+            this.indexPath = Paths.get(indexPath, tag + (anchor ? "Anchor" : ""));
         if (!Files.exists(this.indexPath))
             Files.createDirectories(this.indexPath);
 
@@ -356,33 +376,27 @@ public final class Indexer {
      * @param wDoc ClueWeb09WarcRecord
      * @return Lucene Document having different fields (keywords, body, title, description)
      */
-    private static Document warc2LuceneDocument(ClueWeb09WarcRecord wDoc) {
+    private Document warc2LuceneDocument(WarcRecord wDoc) {
 
         org.jsoup.nodes.Document jDoc;
         try {
-            jDoc = Jsoup.parse(wDoc.getContent());
+            jDoc = Jsoup.parse(wDoc.content());
         } catch (Exception exception) {
             System.err.println(wDoc.id());
             return null;
         }
 
-        String contents = jDoc.text();
-        // don't index empty documents
-        if (contents.trim().length() == 0)
-            return null;
-
 
         // make a new, empty document
         Document document = new Document();
 
-        document.add(new StringField("id", wDoc.getDocid(), Field.Store.YES));
+        document.add(new StringField("id", wDoc.id(), Field.Store.YES));
 
-        document.add(new TextField("contents", contents, Field.Store.NO));
 
         // HTML <title> Tag
         Element titleEl = jDoc.getElementsByTag("title").first();
         if (titleEl != null)
-            document.add(new TextField("title", StringUtil.normaliseWhitespace(titleEl.text()).trim(), Field.Store.NO));
+            document.add(new NoPositionsTextField("title", StringUtil.normaliseWhitespace(titleEl.text()).trim()));
 
 
         enrich("description", jDoc, "description", document);
@@ -391,7 +405,40 @@ public final class Indexer {
         // HTML <body> Tag
         Element bodyEl = jDoc.body();
         if (bodyEl != null)
-            document.add(new TextField("body", bodyEl.text(), Field.Store.NO));
+            document.add(new NoPositionsTextField("body", bodyEl.text()));
+
+
+        if (anchor && solr != null) {
+            String anchor = anchor(wDoc.id());
+            if (anchor != null)
+                document.add(new NoPositionsTextField("anchor", anchor));
+        }
+
+
+        /*
+         * Try to get useful parts of the URL
+         * https://docs.oracle.com/javase/tutorial/networking/urls/urlInfo.html
+         */
+
+        if (wDoc.url() != null && wDoc.url().length() > 5) {
+
+            String url;
+
+            try {
+                URL aURL = new URL(wDoc.url());
+
+                url = aURL.getHost() + " " + aURL.getFile();
+
+                if (aURL.getRef() != null)
+                    url += " " + aURL.getRef();
+
+                document.add(new NoPositionsTextField("url", url));
+
+            } catch (MalformedURLException me) {
+                System.out.println("Malformed URL = " + wDoc.url());
+            }
+
+        }
 
         return document;
     }
@@ -443,7 +490,14 @@ public final class Indexer {
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer(tag));
+        Map<String, Analyzer> analyzerPerField = new HashMap<>();
+        analyzerPerField.put("url", new SimpleAnalyzer());
+
+        PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(
+                Analyzers.analyzer(tag), analyzerPerField);
+
+
+        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);

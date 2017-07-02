@@ -23,6 +23,9 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-anchor", usage = "Boolean switch to index anchor text")
     private boolean anchor = false;
 
+    @Option(name = "-field", usage = "Boolean switch to index different document representations")
+    private boolean field = false;
+
     @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU]", required = false, usage = "Analyzer Tag")
     private Tag tag = KStem;
 
@@ -89,7 +92,7 @@ public final class IndexerTool extends CmdLineTool {
             }
 
             long s = System.nanoTime();
-            Indexer i = new Indexer(collection, docsPath, indexPath, solr, anchor, tag);
+            Indexer i = new Indexer(collection, docsPath, indexPath, solr, anchor, tag, field);
             int nIndexed = i.indexWithThreads(numThreads);
             solr.close();
             System.out.println("Total " + nIndexed + " documents (with anchor text) indexed in " + execution(s));
@@ -97,7 +100,7 @@ public final class IndexerTool extends CmdLineTool {
         } else {
 
             long start = System.nanoTime();
-            Indexer indexer = new Indexer(collection, docsPath, indexPath, null, anchor, tag);
+            Indexer indexer = new Indexer(collection, docsPath, indexPath, null, anchor, tag, field);
             int numIndexed = indexer.indexWithThreads(numThreads);
             System.out.println("Total " + numIndexed + " documents (without anchor text) indexed in " + execution(start));
 
