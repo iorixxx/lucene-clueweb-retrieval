@@ -420,14 +420,17 @@ public final class Indexer {
          * https://docs.oracle.com/javase/tutorial/networking/urls/urlInfo.html
          */
 
-        if (wDoc.url() != null && wDoc.url().length() > 5) {
+        final String URLString = Collection.GOV2.equals(collection) ? jDoc.baseUri() : wDoc.url();
+
+        if (URLString != null && URLString.length() > 5) {
 
             String url;
 
             try {
-                URL aURL = new URL(wDoc.url());
 
-                url = aURL.getHost() + " " + aURL.getFile();
+                final URL aURL = new URL(URLString);
+
+                url = (aURL.getHost() + " " + aURL.getFile()).trim();
 
                 if (aURL.getRef() != null)
                     url += " " + aURL.getRef();
@@ -435,7 +438,7 @@ public final class Indexer {
                 document.add(new NoPositionsTextField("url", url));
 
             } catch (MalformedURLException me) {
-                System.out.println("Malformed URL = " + wDoc.url());
+                System.out.println("Malformed URL = " + URLString);
             }
 
         }
