@@ -45,12 +45,14 @@ public class Searcher implements Closeable {
     private final class SearcherThread extends Thread {
 
         private final QueryParser.Operator operator;
+        private final String field;
         private final Track track;
         private final Similarity similarity;
         private final Path path;
 
-        SearcherThread(Track track, Similarity similarity, QueryParser.Operator operator, Path path) {
+        SearcherThread(Track track, Similarity similarity, QueryParser.Operator operator, String field, Path path) {
             this.operator = operator;
+            this.field = field;
             this.track = track;
             this.similarity = similarity;
             this.path = path;
@@ -60,7 +62,7 @@ public class Searcher implements Closeable {
         @Override
         public void run() {
             try {
-                search(track, similarity, operator, path);
+                search(track, similarity, operator, field, path);
             } catch (Exception e) {
                 System.out.println(Thread.currentThread().getName() + ": unexpected exception : " + e.getMessage());
                 e.printStackTrace();
@@ -98,9 +100,9 @@ public class Searcher implements Closeable {
 
     }
 
-    public String toString(Similarity similarity, QueryParser.Operator operator, int part) {
+    public String toString(Similarity similarity, QueryParser.Operator operator, String field, int part) {
         String p = part == 0 ? "all" : Integer.toString(part);
-        return similarity.toString().replaceAll(" ", "_") + "_" + FIELD_CONTENTS + "_" + indexTag + "_" + operator.toString() + "_" + p;
+        return similarity.toString().replaceAll(" ", "_") + "_" + field + "_" + indexTag + "_" + operator.toString() + "_" + p;
     }
 
     @Override
@@ -113,9 +115,9 @@ public class Searcher implements Closeable {
             Files.createDirectories(path);
     }
 
-    public void searchWithThreads(int numThreads, Collection<ModelBase> models, String runsPath) throws InterruptedException, IOException {
+    public void searchWithThreads(int numThreads, Collection<ModelBase> models, Collection<String> fields, String runsPath) throws InterruptedException, IOException {
 
-        System.out.println("There are " + models.size() * dataSet.tracks().length + " many tasks to process...");
+        System.out.println("There are " + models.size() * fields.size() * dataSet.tracks().length + " many tasks to process...");
 
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 
@@ -124,10 +126,11 @@ public class Searcher implements Closeable {
             final Path path = Paths.get(dataSet.collectionPath().toString(), runsPath, indexTag, track.toString());
             createDirectories(path);
 
-            for (final ModelBase model : models) {
-                //    executor.execute(new SearcherThread(track, model, QueryParser.Operator.AND, path));
-                executor.execute(new SearcherThread(track, model, QueryParser.Operator.OR, path));
-            }
+            for (String field : fields)
+                for (final ModelBase model : models) {
+                    //    executor.execute(new SearcherThread(track, model, QueryParser.Operator.AND, path));
+                    executor.execute(new SearcherThread(track, model, QueryParser.Operator.OR, field, path));
+                }
         }
 
         //add some delay to let some threads spawn by scheduler
@@ -152,6 +155,10 @@ public class Searcher implements Closeable {
     }
 
     public void search(Track track, Similarity similarity, QueryParser.Operator operator, Path path) throws IOException, ParseException {
+        search(track, similarity, operator, FIELD_CONTENTS, path);
+    }
+
+    public void search(Track track, Similarity similarity, QueryParser.Operator operator, String field, Path path) throws IOException, ParseException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarity);
@@ -160,12 +167,12 @@ public class Searcher implements Closeable {
         // for (int part = 0; part <= topics.getMaxParts(); part++)
         int part = 0;
 
-        final String runTag = toString(similarity, operator, part);
+        final String runTag = toString(similarity, operator, field, part);
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(runTag + ".txt"), StandardCharsets.US_ASCII));
 
 
-        QueryParser queryParser = new QueryParser(FIELD_CONTENTS, Analyzers.analyzer(analyzerTag));
+        QueryParser queryParser = new QueryParser(field, Analyzers.analyzer(analyzerTag));
         queryParser.setDefaultOperator(operator);
 
 
@@ -328,7 +335,7 @@ public class Searcher implements Closeable {
         createDirectories(path);
 
 
-        final String runTag = toString(matf, operator, 0);
+        final String runTag = toString(matf, operator, FIELD_CONTENTS, 0);
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(
                 path.resolve(runTag + ".txt"),

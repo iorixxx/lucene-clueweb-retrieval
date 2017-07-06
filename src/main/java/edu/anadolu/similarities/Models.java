@@ -97,12 +97,7 @@ public final class Models {
 
         // sims.addAll(delegates(sims));
 
-        Collections.sort(sims, new Comparator<Similarity>() {
-            @Override
-            public int compare(Similarity o1, Similarity o2) {
-                return o1.toString().compareTo(o2.toString());
-            }
-        });
+        Collections.sort(sims, (o1, o2) -> o1.toString().compareTo(o2.toString()));
         return Collections.unmodifiableCollection(sims);
     }
 

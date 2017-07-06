@@ -2,13 +2,17 @@ package edu.anadolu.analysis;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static edu.anadolu.analysis.Tag.KStem;
 
@@ -91,6 +95,15 @@ public class Analyzers {
                         .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin")
                         .addTokenFilter("lowercase")
                         .build();
+
+            case KStemField: {
+
+                Map<String, Analyzer> analyzerPerField = new HashMap<>();
+                analyzerPerField.put("url", new SimpleAnalyzer());
+
+                return new PerFieldAnalyzerWrapper(
+                        Analyzers.analyzer(KStem), analyzerPerField);
+            }
 
             default:
                 throw new AssertionError(Analyzers.class);

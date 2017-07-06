@@ -52,7 +52,7 @@ public class MCSearcher extends Searcher {
         // for (int part = 0; part <= topics.getMaxParts(); part++)
         int part = 0;
 
-        final String runTag = toString(similarity, operator, part);
+        final String runTag = toString(similarity, operator, FIELD_CONTENTS, part);
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(
                 path.resolve(runTag + ".txt"),

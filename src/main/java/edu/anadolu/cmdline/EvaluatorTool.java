@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import static edu.anadolu.Indexer.FIELD_CONTENTS;
+
 
 /**
  * Evaluator tool
@@ -67,6 +69,9 @@ public class EvaluatorTool extends CmdLineTool {
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
     protected String op = "OR";
 
+    @Option(name = "-field", metaVar = "[title|body|description|keywords]", required = false, usage = "field that you want to search on")
+    protected String field = FIELD_CONTENTS;
+
     @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
     protected int spam = 0;
 
@@ -96,7 +101,7 @@ public class EvaluatorTool extends CmdLineTool {
             evaluator = new Evaluator(dataSets, tag, measure, models, evalDirs, op);
         } else if (collections.length == 1) {
             DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
-            evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op);
+            evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op, field);
         } else throw new RuntimeException("Invalid collections " + Arrays.toString(collections));
 
 

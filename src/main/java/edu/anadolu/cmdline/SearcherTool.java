@@ -21,6 +21,7 @@ import org.kohsuke.args4j.Option;
 import java.nio.file.Path;
 import java.util.*;
 
+import static edu.anadolu.Indexer.FIELD_CONTENTS;
 import static edu.anadolu.cmdline.ParamTool.train;
 
 /**
@@ -39,7 +40,13 @@ public final class SearcherTool extends CmdLineTool {
     private String task;
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    protected edu.anadolu.datasets.Collection collection;
+    private edu.anadolu.datasets.Collection collection;
+
+    @Option(name = "-field", usage = "Boolean switch to search different document representations")
+    private boolean field = false;
+
+    @Option(name = "-tag", usage = "If you want to search use specific tag, e.g. KStemField")
+    private String tag = null;
 
     @Override
     public String getShortDescription() {
@@ -87,6 +94,15 @@ public final class SearcherTool extends CmdLineTool {
         if (dataset == null) {
             System.out.println(collection + " returned null dataset");
             return;
+        }
+
+        final List<String> fields;
+        if (field) {
+            final String[] arr = props.getProperty(collection.toString() + ".fields", "description,keywords,title,body,anchor,url").split(",");
+            fields = Arrays.asList(arr);
+        } else {
+            fields = new ArrayList<>();
+            fields.add(FIELD_CONTENTS);
         }
 
 
@@ -145,7 +161,7 @@ public final class SearcherTool extends CmdLineTool {
             for (final Path path : discoverIndexes(dataset)) {
 
                 try (Searcher searcher = new Searcher(path, dataset, 1000)) {
-                    searcher.searchWithThreads(numThreads, models, "parameter_runs");
+                    searcher.searchWithThreads(numThreads, models, fields, "parameter_runs");
                 }
             }
             System.out.println("Parameterized Search completed in " + execution(start));
@@ -176,10 +192,14 @@ public final class SearcherTool extends CmdLineTool {
 
             final String tag = path.getFileName().toString();
 
+            // search for a specific tag, skip the rest
+            if (tag != null && !tag.equals(this.tag)) continue;
+
             final Set<ModelBase> modelBaseList = new HashSet<>();
-            for (String parametricModel : parametricModels)
-                for (Measure measure : Measure.values())
-                    modelBaseList.add(train(parametricModel, dataset, tag, measure, "OR"));
+            if (!field)
+                for (String parametricModel : parametricModels)
+                    for (Measure measure : Measure.values())
+                        modelBaseList.add(train(parametricModel, dataset, tag, measure, "OR"));
 
 
             // modelBaseList.addAll(parametricModelList());
@@ -190,7 +210,7 @@ public final class SearcherTool extends CmdLineTool {
             modelBaseList.add(new DFRee());
 
             try (Searcher searcher = new Searcher(path, dataset, numHits)) {
-                searcher.searchWithThreads(numThreads, modelBaseList, "runs");
+                searcher.searchWithThreads(numThreads, modelBaseList, fields, "runs");
             }
             modelBaseList.clear();
         }

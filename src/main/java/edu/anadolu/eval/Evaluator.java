@@ -26,6 +26,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static edu.anadolu.Indexer.FIELD_CONTENTS;
 import static edu.anadolu.cmdline.CmdLineTool.parametricModels;
 import static edu.anadolu.cmdline.ParamTool.train;
 
@@ -113,6 +114,7 @@ public class Evaluator {
 
 
     private final String op;
+    private final String field;
 
     private final Map<DataSet, String> evalDirectoryMap;
 
@@ -136,6 +138,7 @@ public class Evaluator {
         this.k = measure.k();
         this.models = models;
         this.op = op;
+        this.field = FIELD_CONTENTS;
 
 
         if ("all".equals(models)) {
@@ -155,6 +158,10 @@ public class Evaluator {
 
 
     public Evaluator(DataSet dataSet, String indexTag, Measure measure, String models, String evalDirectory, String op) {
+        this(dataSet, indexTag, measure, models, evalDirectory, op, FIELD_CONTENTS);
+    }
+
+    public Evaluator(DataSet dataSet, String indexTag, Measure measure, String models, String evalDirectory, String op, String field) {
 
         needs = dataSet.getTopics();
 
@@ -166,6 +173,7 @@ public class Evaluator {
         this.k = measure.k();
         this.models = models;
         this.op = op;
+        this.field = field;
         this.evalDirectoryMap = new HashMap<>(1);
         this.evalDirectoryMap.put(dataSet, evalDirectory);
 
@@ -341,11 +349,14 @@ public class Evaluator {
         if ("DPH".equals(model)) return true;
         if ("DFIC".equals(model)) return true;
         if ("DFRee".equals(model)) return true;
+        if ("DLH13".equals(model)) return true;
 
         return false;
     }
 
     public List<Path> percolate(List<Path> paths) {
+
+        paths = paths.stream().filter(p -> p.getFileName().toString().contains("_" + field + "_")).collect(Collectors.toList());
 
         List<String> parts = new ArrayList<>();
 
@@ -357,11 +368,12 @@ public class Evaluator {
             } else
                 for (String m : arr) {
                     if (isTrained(m)) parts.add(m);
-                    for (String pm : bestParametricModels) {
-                        if (pm.startsWith(m))
-                            parts.add(pm);
-                        else parts.add(m);
-                    }
+                    if (bestParametricModels != null)
+                        for (String pm : bestParametricModels) {
+                            if (pm.startsWith(m))
+                                parts.add(pm);
+                            else parts.add(m);
+                        }
 
                 }
         } else if (models.endsWith("*"))

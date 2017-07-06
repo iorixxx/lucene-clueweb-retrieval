@@ -5,7 +5,7 @@ package edu.anadolu.analysis;
  */
 public enum Tag {
 
-    NoStem, KStem, ICU, Latin;
+    NoStem, KStem, ICU, Latin, KStemField;
 
     public static Tag tag(String indexTag) {
         final int i = indexTag.indexOf("Anchor");
