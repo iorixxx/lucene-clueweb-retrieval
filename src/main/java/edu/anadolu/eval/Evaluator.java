@@ -216,6 +216,7 @@ public class Evaluator {
         List<InfoNeed> needs = needsSortedByVariance();
 
         int n = (int) needs.stream().filter((InfoNeed need) -> varianceMap.get(need) > 0).count() / slices;
+        if (n == 0) return;
 
         int i = 0;
         for (InfoNeed need : needs) {

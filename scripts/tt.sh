@@ -25,7 +25,16 @@ done
 
 
 for set in GOV2; do
-for tag in KStemAnalyzer; do
+
+if [ ! -d "${TFD_HOME}/${set}/${RUNS}" ]; then
+       continue
+fi
+
+for tag in ${TFD_HOME}/${set}/${RUNS}/*; do
+if [[ ! -d ${tag} ]]; then
+    continue
+fi
+tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
 # TREC Terabyte Tracks from 2004 to 2006
 for TT in 04 05 06; do
