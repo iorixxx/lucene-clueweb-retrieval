@@ -1963,25 +1963,25 @@ public class Evaluator {
         return averageForAllModels(needs);
     }
 
-    public List<ModelScore> averageForAllModels(Collection<InfoNeed> needs) {
-
-        List<ModelScore> list = new ArrayList<>();
-
-        for (String model : modelSet) {
-
-            double mean = 0.0;
-            for (InfoNeed need : needs) {
-                mean += score(need, model);
-            }
-            mean /= (double) needs.size();
-
-            list.add(new ModelScore(model, mean));
-        }
-
-        return list;
-
-
+    public List<ModelScore> averageForAllModels(final Collection<InfoNeed> needs) {
+        return modelSet.stream().map(p -> averagePerModel(p, needs)).collect(Collectors.toList());
     }
+
+    public ModelScore averagePerModel(String model, Collection<InfoNeed> needs) {
+
+        double mean = 0.0;
+        for (InfoNeed need : needs) {
+            mean += score(need, model);
+        }
+        mean /= (double) needs.size();
+
+        return new ModelScore(model, mean);
+    }
+
+    public ModelScore averagePerModel(String model) {
+        return averagePerModel(model, needs);
+    }
+
 
     public ModelScore modelScorePerTrack(Track track, String model) {
 
@@ -2064,5 +2064,48 @@ public class Evaluator {
             array.add(modelScore.score);
 
         return array;
+    }
+
+    public List<ModelScore> meanWT(int top, Track wt) {
+
+        List<InfoNeed> needs = getNeedsPerTW(wt);
+
+        System.out.print(wt.toString() + "(" + needs.size() + ")\t");
+
+        List<ModelScore> list = averageForAllModels(needs);
+
+        Collections.sort(list);
+
+        if (-1 != top && list.size() > top) {
+            list = list.subList(0, top);
+        }
+
+        return list;
+    }
+
+    /**
+     * Print overall mean effective measures
+     */
+    public List<ModelScore> mean(int top) {
+
+        List<ModelScore> list = averageForAllModels(needs);
+
+        Collections.sort(list);
+
+        if (-1 != top && list.size() > top) {
+            list = list.subList(0, top);
+        }
+
+        if (needs.size() < 100)
+            System.out.print("ALL(" + needs.size() + ") \t");
+        else
+            System.out.print("ALL(" + needs.size() + ")\t");
+
+        for (ModelScore modelScore : list)
+            System.out.print(modelScore.model + "(" + String.format("%.5f", modelScore.score) + ")\t");
+
+        System.out.println();
+
+        return list;
     }
 }

@@ -8,7 +8,10 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
@@ -365,7 +368,7 @@ public final class Indexer {
         }
 
         if (builder.length() > 1)
-            document.add(new TextField(fieldName, builder.toString().trim(), Field.Store.NO));
+            document.add(new NoPositionsTextField(fieldName, builder.toString().trim()));
 
         elements.empty();
     }
@@ -390,22 +393,34 @@ public final class Indexer {
         // make a new, empty document
         Document document = new Document();
 
+        String title = null;
+        String body = null;
+        String keywords = null;
+        String description = null;
+
         document.add(new StringField("id", wDoc.id(), Field.Store.YES));
 
 
         // HTML <title> Tag
         Element titleEl = jDoc.getElementsByTag("title").first();
-        if (titleEl != null)
-            document.add(new NoPositionsTextField("title", StringUtil.normaliseWhitespace(titleEl.text()).trim()));
+        if (titleEl != null) {
+            title = StringUtil.normaliseWhitespace(titleEl.text()).trim();
+            document.add(new NoPositionsTextField("title", title));
+        }
 
 
         enrich("description", jDoc, "description", document);
         enrich("keyword", jDoc, "keywords", document);
 
+        keywords = document.get("keywords");
+        description = document.get("description");
+
         // HTML <body> Tag
         Element bodyEl = jDoc.body();
-        if (bodyEl != null)
-            document.add(new NoPositionsTextField("body", bodyEl.text()));
+        if (bodyEl != null) {
+            body = bodyEl.text();
+            document.add(new NoPositionsTextField("body", body));
+        }
 
 
         if (anchor && solr != null) {
@@ -413,6 +428,11 @@ public final class Indexer {
             if (anchor != null)
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
+
+        document.add(new NoPositionsTextField("bt", body + " " + title));
+        document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
+        document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
+        document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
 
 
         /*

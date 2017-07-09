@@ -55,7 +55,7 @@ public class MQ08 extends MQ09 {
 
 
             if (!isJudged(qID)) {
-                System.out.println(qID + ":" + query + " is not judged. Skipping...");
+                //System.out.println(qID + ":" + query + " is not judged. Skipping...");
                 continue;
             }
 
@@ -65,7 +65,7 @@ public class MQ08 extends MQ09 {
 
 
             if (need.relevant() == 0) {
-                System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
+                //System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
                 continue;
             }
             needs.add(need);

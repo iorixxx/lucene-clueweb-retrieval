@@ -53,6 +53,11 @@ public class YTool extends XTool {
     }
 
     @Override
+    public String getShortDescription() {
+        return "Y Utility";
+    }
+
+    @Override
     public Path excelFile() throws IOException {
 
         Path excelPath = Paths.get(tfd_home).resolve("excels");
