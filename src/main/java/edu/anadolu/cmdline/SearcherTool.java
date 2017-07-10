@@ -183,11 +183,43 @@ public final class SearcherTool extends CmdLineTool {
 
             System.out.println("Multi-Aspect TF Search completed in " + execution(start));
             return;
+        } else if ("spam".equals(task)) {
+
+            final long start = System.nanoTime();
+
+            if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) ||
+                    Collection.MQE1.equals(collection) || Collection.CW12B.equals(collection)) {
+                for (final Path path : discoverIndexes(dataset)) {
+
+                    final String tag = path.getFileName().toString();
+
+
+                    final Set<ModelBase> modelBaseList = new HashSet<>();
+
+                    for (String parametricModel : parametricModels)
+                        for (Measure measure : Measure.values())
+                            modelBaseList.add(train(parametricModel, dataset, tag, measure, "OR"));
+
+
+                    // modelBaseList.addAll(parametricModelList());
+
+                    modelBaseList.add(new DFIC());
+                    modelBaseList.add(new DPH());
+                    modelBaseList.add(new DLH13());
+                    modelBaseList.add(new DFRee());
+
+                    try (Searcher searcher = new Searcher(path, dataset, 10000)) {
+                        searcher.searchWithThreads(numThreads, modelBaseList, fields, "spam_0_runs");
+                    }
+                    modelBaseList.clear();
+                }
+
+                System.out.println("Base search for spam filtering 10,000 documents per query completed in " + execution(start));
+            }
         }
 
         final long start = System.nanoTime();
 
-        final int numHits = (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection)) || Collection.MQE1.equals(collection) || Collection.CW12B.equals(collection) ? 10000 : 1000;
         for (final Path path : discoverIndexes(dataset)) {
 
             final String tag = path.getFileName().toString();
@@ -209,7 +241,7 @@ public final class SearcherTool extends CmdLineTool {
             modelBaseList.add(new DLH13());
             modelBaseList.add(new DFRee());
 
-            try (Searcher searcher = new Searcher(path, dataset, numHits)) {
+            try (Searcher searcher = new Searcher(path, dataset, 1000)) {
                 searcher.searchWithThreads(numThreads, modelBaseList, fields, "runs");
             }
             modelBaseList.clear();
