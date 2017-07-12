@@ -54,6 +54,9 @@ public class FieldTool extends CmdLineTool {
     @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
     protected int spam = 0;
 
+    @Option(name = "-catB", required = false, usage = "use catB qrels for CW12B and CW09B")
+    private boolean catB = false;
+
     private static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         return map.entrySet()
                 .stream()
@@ -80,9 +83,12 @@ public class FieldTool extends CmdLineTool {
             return;
         }
 
+        DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
+
         String evalDirectory = spam == 0 ? "evals" : "spam_" + spam + "_evals";
 
-        DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
+        if (catB && (Collection.CW09B.equals(collection) || Collection.CW12B.equals(collection)))
+            evalDirectory = "catb_evals";
 
         List<InfoNeed> needs = new ArrayList<>();
         Map<String, Evaluator> evaluatorMap = new HashMap<>();
