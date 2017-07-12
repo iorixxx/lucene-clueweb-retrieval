@@ -116,6 +116,14 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>TurkishAnalysis</artifactId>
+            <version>6.3.0</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>${lucene.version}</version>
@@ -231,6 +239,17 @@
             <version>1.4.196</version>
             <scope>test</scope>
         </dependency>
+        <!-- Zemberek -->
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>core</artifactId>
+            <version>0.9.2</version>
+        </dependency>
 
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>morphology</artifactId>
+            <version>0.9.2</version>
+        </dependency>
     </dependencies>
 </project>

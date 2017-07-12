@@ -6,6 +6,7 @@ import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tr.Zemberek3StemFilterFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -95,6 +96,21 @@ public class Analyzers {
                         .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin")
                         .addTokenFilter("lowercase")
                         .build();
+
+            case Zemberek:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("apostrophe")
+                        .addTokenFilter("turkishlowercase")
+                        .addTokenFilter(Zemberek3StemFilterFactory.class, "strategy", "maxLength")
+                        .build();
+
+            case NoStemTurkish:
+                return CustomAnalyzer.builder()
+                    .withTokenizer("standard")
+                    .addTokenFilter("apostrophe")
+                    .addTokenFilter("turkishlowercase")
+                    .build();
 
             case KStemField: {
 
