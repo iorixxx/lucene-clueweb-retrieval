@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-mvn clean package appassembler:create-repository assembly:single
+mvn clean package dependency:copy-dependencies assembly:single

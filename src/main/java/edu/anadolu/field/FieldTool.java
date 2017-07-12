@@ -10,12 +10,12 @@ import edu.anadolu.eval.ModelScore;
 import edu.anadolu.knn.Measure;
 import edu.anadolu.knn.Prediction;
 import edu.anadolu.knn.Solution;
+import org.apache.commons.math3.stat.inference.TTest;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
 import java.util.*;
-
-import static edu.anadolu.datasets.Collection.GOV2;
+import java.util.stream.Collectors;
 
 /**
  * Field based scoring tool
@@ -54,6 +54,20 @@ public class FieldTool extends CmdLineTool {
     @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
     protected int spam = 0;
 
+    private static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+        return map.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (e1, e2) -> e1,
+                        LinkedHashMap::new
+                ));
+    }
+
+    private final TTest tTest = new TTest();
+
     @Override
     public void run(Properties props) throws Exception {
 
@@ -81,6 +95,18 @@ public class FieldTool extends CmdLineTool {
             needs = evaluator.getNeeds();
         }
 
+        Map<String, double[]> baselines = new HashMap<>();
+
+        for (String model : models.split("_")) {
+
+            double[] baseline = new double[needs.size()];
+
+            for (int i = 0; i < needs.size(); i++)
+                baseline[i] = evaluatorMap.get("bt").score(needs.get(i), model);
+
+            baselines.put(model, baseline);
+        }
+
 
         for (String model : models.split("_")) {
 
@@ -88,10 +114,21 @@ public class FieldTool extends CmdLineTool {
 
             for (String field : fieldsArr) {
 
+                double[] scores = new double[needs.size()];
+
                 final Evaluator evaluator = evaluatorMap.get(field);
 
+                for (int i = 0; i < needs.size(); i++)
+                    scores[i] = evaluator.score(needs.get(i), model);
+
                 ModelScore modelScore = evaluator.averagePerModel(model);
-                list.add(new ModelScore(field, modelScore.score));
+
+                if (tTest.pairedTTest(baselines.get(model), scores, 0.05))
+                    list.add(new ModelScore(field + "*", modelScore.score));
+                else
+                    list.add(new ModelScore(field, modelScore.score));
+
+
             }
 
             Collections.sort(list);
@@ -108,7 +145,8 @@ public class FieldTool extends CmdLineTool {
 
         }
 
-       // if (!collection.equals(GOV2)) fields += ",anchor";
+        System.out.println("========= oracles ==============");
+        // if (!collection.equals(GOV2)) fields += ",anchor";
 
         for (String model : models.split("_")) {
 
@@ -147,14 +185,13 @@ public class FieldTool extends CmdLineTool {
             }
 
             Solution solution = new Solution(list, -1);
-            System.out.print(String.format("%s(oracle) \t %.5f \t", model, solution.getMean()));
+            System.out.print(String.format("%s(%.5f) \t", model, solution.getMean()));
 
-            for (String field : fields.split(",")) {
-                System.out.print(field + "(" + countMap.get(field) + ")\t");
-            }
+            countMap = sortByValue(countMap);
+            for (Map.Entry<String, Integer> entry : countMap.entrySet())
+                System.out.print(entry.getKey() + "(" + entry.getValue() + ")\t");
 
             System.out.println();
-
         }
     }
 }
