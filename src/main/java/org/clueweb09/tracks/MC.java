@@ -16,13 +16,7 @@ import java.util.Map;
  * Created by Gokhan on 11.07.2017.
  */
 public class MC extends Track {
-    static {
-        try {
-            Class.forName("org.h2.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Database driver not found!");
-        }
-    }
+
 
     public MC (String home) {
         super(home);
@@ -30,6 +24,7 @@ public class MC extends Track {
 
     @Override
     protected void populateInfoNeeds() throws Exception {
+        Class.forName("org.h2.Driver");
         final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + home, "sa", "");
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery("SELECT QueryID, Topic from queries");
