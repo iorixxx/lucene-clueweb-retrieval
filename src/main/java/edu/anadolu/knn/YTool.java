@@ -134,10 +134,11 @@ public class YTool extends XTool {
         Evaluator evaluator = new Evaluator(dataSets, tag, optimize, "all", evalDirs, op);
 
 
+        report = optimize;
         modelSet = evaluator.getModelSet();
 
 
-        List<InfoNeed> residualNeeds = evaluator.residualNeeds(var);
+        List<InfoNeed> residualNeeds = evaluator.residualNeeds(0);
         residualNeedsSize = residualNeeds.size();
         System.out.println("residual Size " + residualNeedsSize + " all " + evaluator.getNeeds().size() + " same =" + evaluator.getAllSame().size() + " zero = " + evaluator.getAllZero().size());
         List<TFDAwareNeed> testNeeds = residualTFDAwareNeeds(residualNeeds, decorators);

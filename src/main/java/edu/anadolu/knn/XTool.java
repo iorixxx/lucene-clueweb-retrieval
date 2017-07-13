@@ -39,7 +39,7 @@ import static edu.anadolu.knn.Predict.*;
 public class XTool extends CmdLineTool {
 
     @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzer";
+    protected String tag = "KStemAnalyzerAnchor";
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
     protected String op = "OR";
