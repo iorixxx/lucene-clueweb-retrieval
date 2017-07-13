@@ -513,11 +513,14 @@ public final class Indexer {
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        Map<String, Analyzer> analyzerPerField = new HashMap<>();
-        analyzerPerField.put("url", new SimpleAnalyzer());
+        Analyzer analyzer;
 
-        PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(
-                Analyzers.analyzer(tag), analyzerPerField);
+        if (field) {
+            Map<String, Analyzer> analyzerPerField = new HashMap<>();
+            analyzerPerField.put("url", new SimpleAnalyzer());
+            analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
+        } else
+            analyzer = Analyzers.analyzer(tag);
 
 
         final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);

@@ -5,7 +5,9 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.standard.UAX29URLEmailTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.util.TokenizerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -105,10 +107,35 @@ public class Analyzers {
                         Analyzers.analyzer(KStem), analyzerPerField);
             }
 
+            case UAX:
+
+                Map<String, Analyzer> analyzerPerField = new HashMap<>();
+
+                analyzerPerField.put("url", CustomAnalyzer.builder()
+                        .withTokenizer("uax29urlemail")
+                        .addTokenFilter("lowercase")
+                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", UAX29URLEmailTokenizer.TOKEN_TYPES[UAX29URLEmailTokenizer.URL])
+                        .build());
+
+                analyzerPerField.put("email", CustomAnalyzer.builder()
+                        .withTokenizer("uax29urlemail")
+                        .addTokenFilter("lowercase")
+                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", UAX29URLEmailTokenizer.TOKEN_TYPES[UAX29URLEmailTokenizer.EMAIL])
+                        .build());
+
+                return new PerFieldAnalyzerWrapper(CustomAnalyzer.builder()
+                        .withTokenizer("uax29urlemail")
+                        .addTokenFilter("lowercase")
+                        .build(), analyzerPerField);
+
             default:
                 throw new AssertionError(Analyzers.class);
 
         }
 
+    }
+
+    public static void main(String[] args) {
+        System.out.println(TokenizerFactory.availableTokenizers());
     }
 }
