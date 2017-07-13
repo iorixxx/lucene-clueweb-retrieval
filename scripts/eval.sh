@@ -20,8 +20,10 @@ echo "starting evaluator with RUNS = $RUNS and EVALS = $EVALS ..."
  qrels[12]=qrels.web.151-200.txt
  qrels[13]=qrels.web.201-250.txt
  qrels[14]=qrels.web.251-300.txt
+ qrels[15]=qrels.web.301-350.txt
+ qrels[16]=qrels.web.351-400.txt
 
-for WT in 09 10 11 12 13 14; do
+for WT in 09 10 11 12 13 14 15 16; do
  printf "%s\n" ${qrels[${WT#0}]}
 done
 
@@ -47,7 +49,7 @@ for WT in 09 10 11 12; do
     mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WT$WT/trec_eval"
 
     for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/WT${WT}/*.txt; do
-        ${TFD_HOME}/scripts/trec_eval -m all_trec -m ndcg_cut.20,100,1000 -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WT#0}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/trec_eval/${f##/*/}" &
+        ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WT#0}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/trec_eval/${f##/*/}" &
         for k in 20 100 1000; do
           mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WT$WT/$k"
           ${TFD_HOME}/scripts/gdeval.pl -k ${k} ${TFD_HOME}/topics-and-qrels/${qrels[${WT#0}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/${k}/${f##/*/}" &
@@ -68,7 +70,7 @@ if [[ ! -d ${tag} ]]; then
 fi
 tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
-for WT in 13 14; do
+for WT in 13 14 15 16; do
 
     if [ ! -d "${TFD_HOME}/${set}/${RUNS}/${tag}/WT${WT}" ]; then
         # Control will enter here if $DIRECTORY does not exist.
@@ -80,7 +82,7 @@ for WT in 13 14; do
     mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WT$WT/trec_eval"
 
     for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/WT${WT}/*.txt; do
-        ${TFD_HOME}/scripts/trec_eval -m all_trec -m ndcg_cut.20,100,1000 -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WT}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/trec_eval/${f##/*/}" &
+        ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WT}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/trec_eval/${f##/*/}" &
         for k in 20 100 1000; do
           mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WT$WT/$k"
           ${TFD_HOME}/scripts/gdeval.pl -k ${k} ${TFD_HOME}/topics-and-qrels/${qrels[${WT}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/${k}/${f##/*/}" &

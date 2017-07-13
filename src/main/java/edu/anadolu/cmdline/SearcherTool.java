@@ -225,7 +225,7 @@ public final class SearcherTool extends CmdLineTool {
             final String tag = path.getFileName().toString();
 
             // search for a specific tag, skip the rest
-            if (tag != null && !tag.equals(this.tag)) continue;
+            if (this.tag != null && !tag.equals(this.tag)) continue;
 
             final Set<ModelBase> modelBaseList = new HashSet<>();
             if (!field)
