@@ -98,6 +98,13 @@ public class Analyzers {
                         .addTokenFilter("lowercase")
                         .build();
 
+
+            case Script:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("icu")
+                        .addTokenFilter(ScriptAsTermTokenFilterFactory.class)
+                        .build();
+
             case KStemField: {
 
                 Map<String, Analyzer> analyzerPerField = new HashMap<>();
