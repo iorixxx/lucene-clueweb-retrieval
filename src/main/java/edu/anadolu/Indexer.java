@@ -96,6 +96,12 @@ public final class Indexer {
             // entire document
             document.add(new NoPositionsTextField(FIELD_CONTENTS, contents));
 
+            // URLs only
+            // document.add(new NoPositionsTextField("url", contents));
+
+            // EMails only
+            // document.add(new NoPositionsTextField("email", contents));
+
             writer.addDocument(document);
             return 1;
 
@@ -374,6 +380,38 @@ public final class Indexer {
     }
 
     /**
+     * Enrich Lucene document with metadata extracted from JSoup document.
+     * <p>
+     * <head>
+     * <meta charset="UTF-8">
+     * <meta name="description" content="Free Web tutorials">
+     * <meta name="keywords" content="HTML,CSS,XML,JavaScript">
+     * <meta name="author" content="Hege Refsnes">
+     * </head>
+     *
+     * @param jDoc      JSoup document
+     * @param fieldName name of the metadata/field
+     * @param document  Lucene document
+     */
+    private static void enrich2(org.jsoup.nodes.Document jDoc, String fieldName, Document document) {
+
+        Elements elements = jDoc.select("meta[name=" + fieldName + "]");
+
+        if (elements.isEmpty()) return;
+
+        StringBuilder builder = new StringBuilder();
+
+        for (Element e : elements) {
+            append(e.attr("content"), builder);
+        }
+
+        if (builder.length() > 1)
+            document.add(new NoPositionsTextField(fieldName, builder.toString().trim()));
+
+        elements.empty();
+    }
+
+    /**
      * Indexes different document representations (keywords, body, title, description, URL) into separate fields.
      *
      * @param wDoc ClueWeb09WarcRecord
@@ -409,8 +447,8 @@ public final class Indexer {
         }
 
 
-        enrich("description", jDoc, "description", document);
-        enrich("keyword", jDoc, "keywords", document);
+        enrich2(jDoc, "description", document);
+        enrich2(jDoc, "keywords", document);
 
         keywords = document.get("keywords");
         description = document.get("description");
