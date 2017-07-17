@@ -45,6 +45,8 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -79,10 +81,11 @@ public final class Indexer {
 
         final private IndexWriter writer;
 
-        IndexerThread(IndexWriter writer, Path inputWarcFile) throws IOException {
+        IndexerThread(IndexWriter writer, Path inputWarcFile) {
+            super(inputWarcFile.getFileName().toString());
             this.writer = writer;
             this.inputWarcFile = inputWarcFile;
-            setName(inputWarcFile.getFileName().toString());
+
         }
 
         private int index(String id, String contents) throws IOException {
@@ -642,5 +645,75 @@ public final class Indexer {
 
         dir.close();
         return numIndexed;
+    }
+
+    public int indexParallel() throws IOException {
+
+        System.out.println("Parallel Indexing to directory '" + indexPath.toAbsolutePath() + "'...");
+
+        final Directory dir = FSDirectory.open(indexPath);
+
+        Analyzer analyzer;
+
+        if (field) {
+            Map<String, Analyzer> analyzerPerField = new HashMap<>();
+            analyzerPerField.put("url", new SimpleAnalyzer());
+            analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
+        } else
+            analyzer = Analyzers.analyzer(tag);
+
+
+        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+
+        iwc.setSimilarity(new MetaTerm());
+        iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+        iwc.setRAMBufferSizeMB(512.0);
+        iwc.setUseCompoundFile(false);
+        iwc.setMergeScheduler(new ConcurrentMergeScheduler());
+
+        final IndexWriter writer = new IndexWriter(dir, iwc);
+
+        final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
+
+        try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
+
+            stream.parallel().forEach(p -> {
+                new IndexerThread(writer, p).run();
+            });
+
+        }
+
+        int numIndexed = writer.maxDoc();
+
+        try {
+            writer.commit();
+        } finally {
+            writer.close();
+        }
+
+        dir.close();
+        return numIndexed;
+    }
+
+    static final class WarcMatcher implements BiPredicate<Path, BasicFileAttributes> {
+
+        private final String suffix;
+
+        WarcMatcher(String suffix) {
+            this.suffix = suffix;
+        }
+
+        @Override
+        public boolean test(Path path, BasicFileAttributes basicFileAttributes) {
+
+            if (path.toString().contains("OtherData")) return false;
+
+            if (!basicFileAttributes.isRegularFile()) return false;
+
+            Path name = path.getFileName();
+
+            return (name != null && name.toString().endsWith(suffix));
+
+        }
     }
 }
