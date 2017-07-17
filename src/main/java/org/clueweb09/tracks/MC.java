@@ -4,11 +4,14 @@ import org.clueweb09.InfoNeed;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,49 +27,62 @@ public class MC extends Track {
 
     @Override
     protected void populateInfoNeeds() throws Exception {
-        Class.forName("org.h2.Driver");
-        final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + home, "sa", "");
-        Statement statement = conn.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT QueryID, Topic from queries");
-        while (rs.next()) {
-            int qID = rs.getInt(1);
-            String query = rs.getString(2);
+        Path topicsPath=Paths.get(home, "topics-and-qrels", "MC_queries.tsv");
+        List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
+
+        Iterator<String> iterator = lines.iterator();
+
+        while (iterator.hasNext()) {
+
+            final String line = iterator.next().trim();
+            String[] parts = line.split("\t");
+            int qID = Integer.parseInt(parts[0]);
+            String query = parts[1];
+            if (!isJudged(qID)) {
+                System.out.println(qID + ":" + query + " is not judged. Skipping...");
+                continue;
+            }
 
             final Map<String, Integer> innerMap = map.get(qID);
 
             InfoNeed need = new InfoNeed(qID, MQ09.escape(query), this, innerMap);
 
-
             if (need.relevant() == 0) {
-                //System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
+                System.out.println(need.toString() + " does not have relevant documents. Skipping...");
                 continue;
             }
             needs.add(need);
         }
-        conn.close();
+
+
+        lines.clear();
+
     }
 
     @Override
     protected void populateQRelsMap() throws Exception {
-        final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + home, "sa", "");
-        Statement statement = conn.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT QueryID, docno, rel from qrels");
-        while (rs.next()) {
-            int queryID = rs.getInt(1);
-            String docID =  rs.getString(2);
-            int judge = rs.getInt(3);
-            final Triple triple = new Triple(queryID, docID, judge);
+        Path qrelsPath=Paths.get(home, "topics-and-qrels", "MC_qrels.tsv");
+        final List<String> qrels = Files.readAllLines(qrelsPath, StandardCharsets.UTF_8);
 
-            judgeLevels.add(triple.judge);
+        for (String l : qrels) {
+            String[] parts = whiteSpaceSplitter.split(l);
+            assert parts.length == 4 : "qrels file should contain four columns : " + l;
+            int queryID = Integer.parseInt(parts[1]);
 
-            if (map.containsKey(triple.queryID)) {
-                Map<String, Integer> innerMap = map.get(triple.queryID);
-                innerMap.put(triple.docID, triple.judge);
+            String docID = parts[2];
+            int judge = Integer.parseInt(parts[3]);
+
+            final Triple t= new Triple(queryID, docID, judge);
+            judgeLevels.add(t.judge);
+            if (map.containsKey(t.queryID)) {
+                Map<String, Integer> innerMap = map.get(t.queryID);
+                innerMap.put(t.docID, t.judge);
             } else {
-                map.put(triple.queryID, new HashMap<>());
+                map.put(t.queryID, new HashMap<>());
             }
         }
-        conn.close();
+
+        qrels.clear();
     }
 
     @Override
