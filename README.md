@@ -34,6 +34,11 @@ In folder naming convention, WT stands for Web Track, TT stands for Terabyte Tra
 * Perl `yum install perl`
 * [Bzip](http://www.bzip.org) `yum install bzip2`
 * [Million Query](http://ir.cis.udel.edu/million/index.html) evaluation tool [statAP_MQ_eval_v4.pl](http://ir.cis.udel.edu/million/statAP_MQ_eval_v4.pl) requires: `yum install perl-CPAN` and `perl -MCPAN -e'install "LWP::Simple"'`
+* Check where LWP::Simple module is installed on your system and type below line just above the use LWP::Simple statement in the `statAP_MQ_eval_v4.pl` file.
+```perl
+use lib '/home/iorixxx/perl5/lib/perl5';
+use LWP::Simple;
+```
 * JDK 1.8 or above
 * Apache Maven 3.0.3 or above
 * Apache Lucene (Solr) 6.5.0
