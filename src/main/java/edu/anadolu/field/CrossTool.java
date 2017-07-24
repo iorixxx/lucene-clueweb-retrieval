@@ -9,11 +9,15 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
 import edu.anadolu.knn.Measure;
+import edu.anadolu.knn.Prediction;
+import edu.anadolu.knn.Solution;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
 import java.util.*;
+
+import static edu.anadolu.field.FieldTool.sortByValue;
 
 /**
  * Comparison for across different index tags/folders (e.g. ICU, Latin, Standard, UAX)
@@ -39,8 +43,8 @@ public class CrossTool extends CmdLineTool {
     @Option(name = "-tags", metaVar = "[ICU_Latin]", required = false, usage = "Index Tag")
     protected String tags = "ICU_Latin";
 
-    @Option(name = "-models", required = false, usage = "term-weighting models")
-    protected String models = "all";
+    @Option(name = "-baseline", required = false, usage = "term-weighting models")
+    protected String baseline = "Latin";
 
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
@@ -81,26 +85,34 @@ public class CrossTool extends CmdLineTool {
 
         final String[] tagsArr = tags.split("_");
 
-        for (String tag : tagsArr) {
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op);
+        Set<String> modelIntersection = new HashSet<>();
+
+        for (int i = 0; i < tagsArr.length; i++) {
+            String tag = tagsArr[i];
+            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, "all", evalDirectory, op);
             evaluatorMap.put(tag, evaluator);
             needs = evaluator.getNeeds();
+
+            if (i == 0)
+                modelIntersection.addAll(evaluator.getModelSet());
+            else
+                modelIntersection.retainAll(evaluator.getModelSet());
         }
 
         Map<String, double[]> baselines = new HashMap<>();
 
-        for (String model : "DPH_DFIC_DFRee_DLH13".split("_")) {
+        for (String model : modelIntersection) {
 
             double[] baseline = new double[needs.size()];
 
             for (int i = 0; i < needs.size(); i++)
-                baseline[i] = evaluatorMap.get("Latin").score(needs.get(i), model);
+                baseline[i] = evaluatorMap.get(this.baseline).score(needs.get(i), model);
 
             baselines.put(model, baseline);
         }
 
 
-        for (String model : "DPH_DFIC_DFRee_DLH13".split("_")) {
+        for (String model : modelIntersection) {
 
             List<ModelScore> list = new ArrayList<>();
 
@@ -136,5 +148,53 @@ public class CrossTool extends CmdLineTool {
 
         }
 
+        System.out.println("========= oracles ==============");
+        // if (!collection.equals(GOV2)) fields += ",anchor";
+
+        for (String model : modelIntersection) {
+
+            List<Prediction> list = new ArrayList<>(needs.size());
+
+            Map<String, Integer> countMap = new HashMap<>();
+            for (String tag : tagsArr) {
+                countMap.put(tag, 0);
+            }
+
+            for (InfoNeed need : needs) {
+
+                double max = Double.NEGATIVE_INFINITY;
+
+                String bestTag = null;
+
+                for (String tag : tagsArr) {
+
+                    final Evaluator evaluator = evaluatorMap.get(tag);
+
+                    double score = evaluator.score(need, model);
+                    if (score > max) {
+                        max = score;
+                        bestTag = tag;
+                    }
+                }
+
+                if (null == bestTag) throw new RuntimeException("bestField is null!");
+
+                Prediction prediction = new Prediction(need, bestTag, max);
+                list.add(prediction);
+
+                Integer count = countMap.get(bestTag);
+                countMap.put(bestTag, count + 1);
+
+            }
+
+            Solution solution = new Solution(list, -1);
+            System.out.print(String.format("%s(%.5f) \t", model, solution.getMean()));
+
+            countMap = sortByValue(countMap);
+            for (Map.Entry<String, Integer> entry : countMap.entrySet())
+                System.out.print(entry.getKey() + "(" + entry.getValue() + ")\t");
+
+            System.out.println();
+        }
     }
 }

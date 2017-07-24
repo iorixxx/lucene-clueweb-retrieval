@@ -41,9 +41,6 @@ public class FieldTool extends CmdLineTool {
     @Option(name = "-tag", metaVar = "[KStemField|KStem]", required = false, usage = "Index Tag")
     protected String tag = "KStemField";
 
-    @Option(name = "-models", required = false, usage = "term-weighting models")
-    protected String models = "DPH_DFIC_DFRee_DLH13";
-
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
     protected String op = "OR";
@@ -57,7 +54,7 @@ public class FieldTool extends CmdLineTool {
     @Option(name = "-catB", required = false, usage = "use catB qrels for CW12B and CW09B")
     private boolean catB = false;
 
-    private static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+    static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         return map.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
@@ -95,15 +92,23 @@ public class FieldTool extends CmdLineTool {
 
         final String[] fieldsArr = props.getProperty(collection.toString() + ".fields", "description,keywords,title,body,anchor,url").split(",");
 
-        for (String field : fieldsArr) {
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op, field);
+        Set<String> modelIntersection = new HashSet<>();
+
+        for (int i = 0; i < fieldsArr.length; i++) {
+            String field = fieldsArr[i];
+            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, "all", evalDirectory, op, field);
             evaluatorMap.put(field, evaluator);
             needs = evaluator.getNeeds();
+
+            if (i == 0)
+                modelIntersection.addAll(evaluator.getModelSet());
+            else
+                modelIntersection.retainAll(evaluator.getModelSet());
         }
 
         Map<String, double[]> baselines = new HashMap<>();
 
-        for (String model : models.split("_")) {
+        for (String model : modelIntersection) {
 
             double[] baseline = new double[needs.size()];
 
@@ -114,7 +119,7 @@ public class FieldTool extends CmdLineTool {
         }
 
 
-        for (String model : models.split("_")) {
+        for (String model : modelIntersection) {
 
             List<ModelScore> list = new ArrayList<>();
 
@@ -154,7 +159,7 @@ public class FieldTool extends CmdLineTool {
         System.out.println("========= oracles ==============");
         // if (!collection.equals(GOV2)) fields += ",anchor";
 
-        for (String model : models.split("_")) {
+        for (String model : modelIntersection) {
 
             List<Prediction> list = new ArrayList<>(needs.size());
 
