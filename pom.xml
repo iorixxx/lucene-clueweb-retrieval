@@ -11,6 +11,7 @@
     <url>http://maven.apache.org</url>
 
     <properties>
+        <maven.test.skip>true</maven.test.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lucene.version>6.6.0</lucene.version>
     </properties>
@@ -245,6 +246,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>1.4.196</version>
+            <scope>provided</scope>
         </dependency>
         <!-- Zemberek -->
         <dependency>

@@ -12,6 +12,9 @@ fi
 ./run.sh Indexer -collection CW09B -tag NoStem -anchor
 ./run.sh Indexer -collection CW09B -tag ICU -anchor
 
+./run.sh Indexer -collection MC -tag NoStemTurkish
+./run.sh Indexer -collection MC -tag Zemberek
+
 ./run.sh Indexer -collection CW09B -tag KStem
 ./run.sh Indexer -collection CW09B -tag NoStem
 ./run.sh Indexer -collection CW09B -tag ICU
@@ -33,6 +36,10 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 ./run.sh Searcher -collection MQE1 -task param
 ./run.sh Searcher -collection CW12B -task param
 ./run.sh Searcher -collection GOV2 -task param
+
+./run.sh Searcher -collection MC -task param
+./mc.sh parameter
+
 ./eval.sh parameter
 ./mq.sh parameter
 ./mqe1.sh parameter
@@ -45,6 +52,10 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 ./run.sh Searcher -collection MQE1
 ./run.sh Searcher -collection CW12B
 ./run.sh Searcher -collection GOV2
+
+./run.sh Searcher -collection MC
+./mc.sh
+
 ./eval.sh
 ./mq.sh
 ./mqe1.sh

@@ -15,9 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by Gokhan on 11.07.2017.
- */
+
 public class MC extends Track {
 
 
@@ -27,7 +25,7 @@ public class MC extends Track {
 
     @Override
     protected void populateInfoNeeds() throws Exception {
-        Path topicsPath=Paths.get(home, "topics-and-qrels", "MC_queries.tsv");
+        Path topicsPath=Paths.get(home, "topics-and-qrels", "mctopics.txt");
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
 
         Iterator<String> iterator = lines.iterator();
@@ -35,7 +33,7 @@ public class MC extends Track {
         while (iterator.hasNext()) {
 
             final String line = iterator.next().trim();
-            String[] parts = line.split("\t");
+            String[] parts = line.split(":");
             int qID = Integer.parseInt(parts[0]);
             String query = parts[1];
             if (!isJudged(qID)) {
@@ -61,13 +59,13 @@ public class MC extends Track {
 
     @Override
     protected void populateQRelsMap() throws Exception {
-        Path qrelsPath=Paths.get(home, "topics-and-qrels", "MC_qrels.tsv");
+        Path qrelsPath=Paths.get(home, "topics-and-qrels", "mcqrels.txt");
         final List<String> qrels = Files.readAllLines(qrelsPath, StandardCharsets.UTF_8);
 
         for (String l : qrels) {
             String[] parts = whiteSpaceSplitter.split(l);
             assert parts.length == 4 : "qrels file should contain four columns : " + l;
-            int queryID = Integer.parseInt(parts[1]);
+            int queryID = Integer.parseInt(parts[0]);
 
             String docID = parts[2];
             int judge = Integer.parseInt(parts[3]);

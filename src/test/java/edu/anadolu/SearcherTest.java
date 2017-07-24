@@ -9,16 +9,20 @@ import org.junit.Test;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-/**
- * Created by GKHN on 14.07.2017.
- */
+
 public class SearcherTest {
 
 
 
     @Test
     public void SearcherToolMCTest() throws Exception {
-        String[] args ={"Searcher","-collection","MC","-task","param"};
+        String[] args ={"Searcher","-collection","MC"};
+        CLI.main(args);
+    }
+
+    @Test
+    public void EvaluatorToolMCTest() throws Exception {
+        String[] args ={"Indexer","-collection","MC","-metric","MAP","-tag","NoStemTurkish"};
         CLI.main(args);
     }
 }
