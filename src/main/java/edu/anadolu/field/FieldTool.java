@@ -96,7 +96,7 @@ public class FieldTool extends CmdLineTool {
 
         for (int i = 0; i < fieldsArr.length; i++) {
             String field = fieldsArr[i];
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, "all", evalDirectory, op, field);
+            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, "DPH_DFIC_DFRee_DLH13", evalDirectory, op, field);
             evaluatorMap.put(field, evaluator);
             needs = evaluator.getNeeds();
 
