@@ -4,6 +4,7 @@ import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.exp.ROB04;
+import edu.anadolu.mc.MCIndexer;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Option;
 
@@ -26,7 +27,7 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-field", usage = "Boolean switch to index different document representations")
     private boolean field = false;
 
-    @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU]", required = false, usage = "Analyzer Tag")
+    @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU|NoStemTurkish|Zemberek]", required = false, usage = "Analyzer Tag")
     private Tag tag = KStem;
 
     @Override
@@ -67,6 +68,13 @@ public final class IndexerTool extends CmdLineTool {
 
             final long start = System.nanoTime();
             final int numIndexed = ROB04.index(docsPath, indexPath, tag);
+            System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
+            return;
+        }
+
+        if (Collection.MC.equals(collection)){
+            final long start = System.nanoTime();
+            final int numIndexed = MCIndexer.index(docsPath, indexPath, tag);
             System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
             return;
         }

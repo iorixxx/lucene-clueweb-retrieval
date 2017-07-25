@@ -11,9 +11,18 @@
     <url>http://maven.apache.org</url>
 
     <properties>
+        <maven.test.skip>true</maven.test.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lucene.version>6.6.0</lucene.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>ahmetaa-repo</id>
+            <name>ahmetaa Maven Repo on Github</name>
+            <url>https://raw.github.com/ahmetaa/maven-repo/master</url>
+        </repository>
+    </repositories>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -111,6 +120,14 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>TurkishAnalysis</artifactId>
+            <version>6.3.0</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
@@ -232,5 +249,24 @@
             <version>3.15</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.196</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- Zemberek -->
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>core</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>zemberek-nlp</groupId>
+            <artifactId>morphology</artifactId>
+            <version>0.9.2</version>
+        </dependency>
     </dependencies>
 </project>

@@ -1,5 +1,6 @@
 package edu.anadolu.datasets;
 
+import edu.anadolu.cmdline.CLI;
 import edu.anadolu.mc.MCSet;
 
 /**
@@ -22,7 +23,7 @@ public class CollectionFactory {
                 return new ClueWeb12B(tfd_home);
 
             case MC:
-                return new MCSet(tfd_home);
+                return new MC(tfd_home);
 
             case MQ08:
                 return new MQ08(tfd_home);

@@ -7,6 +7,7 @@ import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.UAX29URLEmailTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tr.Zemberek3StemFilterFactory;
 import org.apache.lucene.analysis.util.TokenizerFactory;
 
 import java.io.IOException;
@@ -98,6 +99,20 @@ public class Analyzers {
                         .addTokenFilter("lowercase")
                         .build();
 
+            case Zemberek:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("apostrophe")
+                        .addTokenFilter("turkishlowercase")
+                        .addTokenFilter(Zemberek3StemFilterFactory.class, "strategy", "maxLength")
+                        .build();
+
+            case NoStemTurkish:
+                return CustomAnalyzer.builder()
+                    .withTokenizer("standard")
+                    .addTokenFilter("apostrophe")
+                    .addTokenFilter("turkishlowercase")
+                    .build();
 
             case Script:
                 return CustomAnalyzer.builder()
