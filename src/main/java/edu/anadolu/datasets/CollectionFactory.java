@@ -1,8 +1,5 @@
 package edu.anadolu.datasets;
 
-import edu.anadolu.cmdline.CLI;
-import edu.anadolu.mc.MCSet;
-
 /**
  * Factory responsible for creating {@link DataSet} from {@link Collection} command line argument
  */

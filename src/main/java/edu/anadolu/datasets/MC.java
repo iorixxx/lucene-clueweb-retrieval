@@ -12,6 +12,6 @@ public class MC extends DataSet{
 
     @Override
     public String getNoDocumentsID() {
-        return null;
+        return "Milliyet_0105_v00_00000";
     }
 }
