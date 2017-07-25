@@ -1,5 +1,6 @@
 package edu.anadolu.field;
 
+
 import edu.anadolu.cmdline.CLI;
 import edu.anadolu.cmdline.CmdLineTool;
 import edu.anadolu.datasets.Collection;
@@ -8,26 +9,23 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
 import edu.anadolu.knn.Measure;
-import edu.anadolu.knn.Prediction;
-import edu.anadolu.knn.Solution;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * Field based scoring tool
+ * Comparison for across different index tags/folders (e.g. ICU, Latin, Standard, UAX)
  */
-public class FieldTool extends CmdLineTool {
+public class CrossTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "CW09A_CW12B")
     protected Collection collection;
 
     @Override
     public String getShortDescription() {
-        return "Field-based scoring utility";
+        return "Cross-index comparison utility";
     }
 
     @Override
@@ -38,11 +36,11 @@ public class FieldTool extends CmdLineTool {
     @Option(name = "-metric", required = false, usage = "Effectiveness measure")
     protected Measure measure = Measure.NDCG100;
 
-    @Option(name = "-tag", metaVar = "[KStemField|KStem]", required = false, usage = "Index Tag")
-    protected String tag = "KStemField";
+    @Option(name = "-tags", metaVar = "[ICU_Latin]", required = false, usage = "Index Tag")
+    protected String tags = "ICU_Latin";
 
     @Option(name = "-models", required = false, usage = "term-weighting models")
-    protected String models = "DPH_DFIC_DFRee_DLH13";
+    protected String models = "all";
 
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
@@ -56,18 +54,6 @@ public class FieldTool extends CmdLineTool {
 
     @Option(name = "-catB", required = false, usage = "use catB qrels for CW12B and CW09B")
     private boolean catB = false;
-
-    private static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
-        return map.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
-    }
 
     private final TTest tTest = new TTest();
 
@@ -93,36 +79,36 @@ public class FieldTool extends CmdLineTool {
         List<InfoNeed> needs = new ArrayList<>();
         Map<String, Evaluator> evaluatorMap = new HashMap<>();
 
-        final String[] fieldsArr = props.getProperty(collection.toString() + ".fields", "description,keywords,title,body,anchor,url").split(",");
+        final String[] tagsArr = tags.split("_");
 
-        for (String field : fieldsArr) {
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op, field);
-            evaluatorMap.put(field, evaluator);
+        for (String tag : tagsArr) {
+            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op);
+            evaluatorMap.put(tag, evaluator);
             needs = evaluator.getNeeds();
         }
 
         Map<String, double[]> baselines = new HashMap<>();
 
-        for (String model : models.split("_")) {
+        for (String model : "DPH_DFIC_DFRee_DLH13".split("_")) {
 
             double[] baseline = new double[needs.size()];
 
             for (int i = 0; i < needs.size(); i++)
-                baseline[i] = evaluatorMap.get("bt").score(needs.get(i), model);
+                baseline[i] = evaluatorMap.get("Latin").score(needs.get(i), model);
 
             baselines.put(model, baseline);
         }
 
 
-        for (String model : models.split("_")) {
+        for (String model : "DPH_DFIC_DFRee_DLH13".split("_")) {
 
             List<ModelScore> list = new ArrayList<>();
 
-            for (String field : fieldsArr) {
+            for (String tag : tagsArr) {
 
                 double[] scores = new double[needs.size()];
 
-                final Evaluator evaluator = evaluatorMap.get(field);
+                final Evaluator evaluator = evaluatorMap.get(tag);
 
                 for (int i = 0; i < needs.size(); i++)
                     scores[i] = evaluator.score(needs.get(i), model);
@@ -130,10 +116,9 @@ public class FieldTool extends CmdLineTool {
                 ModelScore modelScore = evaluator.averagePerModel(model);
 
                 if (tTest.pairedTTest(baselines.get(model), scores, 0.05))
-                    list.add(new ModelScore(field + "*", modelScore.score));
+                    list.add(new ModelScore(tag + "*", modelScore.score));
                 else
-                    list.add(new ModelScore(field, modelScore.score));
-
+                    list.add(new ModelScore(tag, modelScore.score));
 
             }
 
@@ -151,53 +136,5 @@ public class FieldTool extends CmdLineTool {
 
         }
 
-        System.out.println("========= oracles ==============");
-        // if (!collection.equals(GOV2)) fields += ",anchor";
-
-        for (String model : models.split("_")) {
-
-            List<Prediction> list = new ArrayList<>(needs.size());
-
-            Map<String, Integer> countMap = new HashMap<>();
-            for (String field : fields.split(",")) {
-                countMap.put(field, 0);
-            }
-
-            for (InfoNeed need : needs) {
-
-                double max = Double.NEGATIVE_INFINITY;
-
-                String bestField = null;
-
-                for (String field : fields.split(",")) {
-
-                    final Evaluator evaluator = evaluatorMap.get(field);
-
-                    double score = evaluator.score(need, model);
-                    if (score > max) {
-                        max = score;
-                        bestField = field;
-                    }
-                }
-
-                if (null == bestField) throw new RuntimeException("bestField is null!");
-
-                Prediction prediction = new Prediction(need, bestField, max);
-                list.add(prediction);
-
-                Integer count = countMap.get(bestField);
-                countMap.put(bestField, count + 1);
-
-            }
-
-            Solution solution = new Solution(list, -1);
-            System.out.print(String.format("%s(%.5f) \t", model, solution.getMean()));
-
-            countMap = sortByValue(countMap);
-            for (Map.Entry<String, Integer> entry : countMap.entrySet())
-                System.out.print(entry.getKey() + "(" + entry.getValue() + ")\t");
-
-            System.out.println();
-        }
     }
 }

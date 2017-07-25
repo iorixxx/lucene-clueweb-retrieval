@@ -1,8 +1,6 @@
 package edu.anadolu.datasets;
 
-import org.clueweb09.tracks.Track;
-import org.clueweb09.tracks.WT13;
-import org.clueweb09.tracks.WT14;
+import org.clueweb09.tracks.*;
 
 /**
  * ClueWeb12 B13 Dataset
@@ -13,7 +11,9 @@ class ClueWeb12B extends DataSet {
     ClueWeb12B(String tfd_home) {
         super(Collection.CW12B, new Track[]{
                 new WT13(tfd_home),
-                new WT14(tfd_home)
+                new WT14(tfd_home),
+                new WT15(tfd_home),
+                new WT16(tfd_home)
         }, tfd_home);
     }
 

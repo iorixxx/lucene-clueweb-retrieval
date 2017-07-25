@@ -61,17 +61,22 @@ public abstract class Track implements Comparable<Track> {
         return judgeLevels;
     }
 
-    protected String extract(String line, String tag) {
+    static String extract(String line, String tag) {
 
         int i = line.indexOf(tag);
 
         if (i == -1) throw new IllegalArgumentException("line does not contain the tag : " + tag);
 
-        int j = line.indexOf("\"", i + tag.length() + 2);
+        int j = line.indexOf("\"", i + tag.length());
 
-        if (j == -1) throw new IllegalArgumentException("line does not contain quotation");
+        if (j == -1) throw new IllegalArgumentException("line does not contain quotation: " + line);
 
-        return line.substring(i + tag.length() + 2, j);
+        int k = line.indexOf("\"", j + 1);
+
+        if (k == -1) throw new IllegalArgumentException("line does not contain ending quotation: " + line);
+
+        return line.substring(j + 1, k).trim();
+
     }
 
     protected void populateQRelsMap(Path qrels) throws IOException {

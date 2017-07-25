@@ -1,5 +1,6 @@
 package edu.anadolu.cmdline;
 
+import edu.anadolu.field.CrossTool;
 import edu.anadolu.field.FieldTool;
 import edu.anadolu.knn.*;
 import org.apache.lucene.util.Version;
@@ -121,6 +122,10 @@ public final class CLI {
         tools.add(new SigTool());
 
         tools.add(new FieldTool());
+
+        tools.add(new CrossTool());
+
+        tools.add(new HighTool());
 
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);

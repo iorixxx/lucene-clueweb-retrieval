@@ -25,9 +25,15 @@ for WT in 09 10 11 12 13 14; do
  printf "%s\n" ${qrels[${WT#0}]}
 done
 
-
 for set in CW09B; do
-for tag in KStemAnalyzer KStemAnalyzerAnchor; do
+if [ ! -d "${TFD_HOME}/${set}/${RUNS}" ]; then
+       continue
+fi
+for tag in ${TFD_HOME}/${set}/${RUNS}/*; do
+if [[ ! -d ${tag} ]]; then
+    continue
+fi
+tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
 for WT in 09 10 11 12; do
 
@@ -54,7 +60,13 @@ done
 done
 
 set=CW12B
-for tag in KStemAnalyzer KStemAnalyzerAnchor; do
+if [ -d "${TFD_HOME}/${set}/${RUNS}" ]; then
+
+for tag in ${TFD_HOME}/${set}/${RUNS}/*; do
+if [[ ! -d ${tag} ]]; then
+    continue
+fi
+tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
 for WT in 13 14; do
 
@@ -78,5 +90,5 @@ for WT in 13 14; do
 
 done
 done
+fi
 wait
-
