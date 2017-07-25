@@ -38,7 +38,7 @@ public class HighTool extends CmdLineTool {
     }
 
     @Option(name = "-field", metaVar = "[url|email|contents]", required = false, usage = "field that you want to search on")
-    protected String field = "contents";
+    protected String field = "url";
 
     @Option(name = "-tag", usage = "If you want to search use specific tag, e.g. UAX or Script")
     private String tag = null;
