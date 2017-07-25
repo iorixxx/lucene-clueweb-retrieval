@@ -40,6 +40,9 @@ public class CollectionFactory {
             case MQE1:
                 return new MQE1(tfd_home);
 
+            case MQE2:
+                return new MQE2(tfd_home);
+
             default:
                 throw new RuntimeException(collection + " returned null DataSet");
 

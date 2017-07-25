@@ -52,7 +52,7 @@ public final class IndexerTool extends CmdLineTool {
 
         if (parseArguments(props) == -1) return;
 
-        if (Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {
+        if (Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection) || Collection.MQE2.equals(collection)) {
             System.out.println("No need to run separate indexer for MQ09!");
             return;
         }
