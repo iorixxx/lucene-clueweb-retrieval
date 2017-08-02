@@ -2,6 +2,7 @@ package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -69,6 +70,10 @@ public class MultipleSearcher {
 
     }
 
+    /**
+     * First searcher is baseline
+      * @param searchers
+     */
     public MultipleSearcher(Searcher... searchers) {
         this.searchers = searchers;
         this.dataSet=searchers[0].dataSet
@@ -133,19 +138,6 @@ public class MultipleSearcher {
 
     public void search(Track track, Similarity similarity, QueryParser.Operator operator, String field, Path path) throws IOException, ParseException {
 
-        //Indexsearcher for each searcher objects and their query parser
-        IndexSearcher[] indexSearchers = new IndexSearcher[searchers.length];
-        HashMap<IndexSearcher,QueryParser> indexSearcherQueryParser = new HashMap<IndexSearcher,QueryParser>();
-
-        for(Searcher s: searchers){
-            IndexSearcher is =  new IndexSearcher(s.reader);
-            is.setSimilarity(similarity);
-
-            QueryParser queryParser = new QueryParser(field, Analyzers.analyzer(s.analyzerTag));
-            queryParser.setDefaultOperator(operator);
-
-            indexSearcherQueryParser.put(is, queryParser);
-        }
 
         // for (int part = 0; part <= topics.getMaxParts(); part++)
         int part = 0;
@@ -155,12 +147,20 @@ public class MultipleSearcher {
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(runTag + ".txt"), StandardCharsets.US_ASCII));
 
         for (InfoNeed need : track.getTopics()) {
-            IndexSearcher selectedSearcher = SelectionMethods.MST(need,indexSearchers); //Select indexsearcher for each topic
+
+            Searcher selectedSearcher = SelectionMethods.MSTTermFreq(need, searchers,similarity); //Select indexsearcher for each topic
+
+            IndexSearcher is =  new IndexSearcher(selectedSearcher.reader);
+            is.setSimilarity(similarity);
+
+            QueryParser queryParser = new QueryParser(field, Analyzers.analyzer(selectedSearcher.analyzerTag));
+            queryParser.setDefaultOperator(operator);
+
             String queryString = need.getPartOfQuery(part);
             if (queryString == null) continue;
-            Query query = indexSearcherQueryParser.get(selectedSearcher).parse(queryString);
+            Query query = queryParser.parse(queryString);
 
-            ScoreDoc[] hits = selectedSearcher.search(query, numHits).scoreDocs;
+            ScoreDoc[] hits = is.search(query, numHits).scoreDocs;
 
             /**
              * If you are returning zero documents for a query, instead return the single document
@@ -192,7 +192,7 @@ public class MultipleSearcher {
              */
             for (int i = 0; i < hits.length; i++) {
                 int docId = hits[i].doc;
-                Document doc = selectedSearcher.doc(docId);
+                Document doc = is.doc(docId);
                 out.print(need.id());
                 out.print("\tQ0\t");
                 out.print(doc.get(FIELD_ID));
