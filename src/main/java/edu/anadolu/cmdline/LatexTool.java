@@ -48,7 +48,10 @@ public final class LatexTool extends EvaluatorTool {
 
         if ("CW09ACW12B".equals(dataSet)) return "ClueWeb\\{09A\\textbar12B\\}";
         if ("MQ09".equals(dataSet)) return "Million Query 2009";
-        if ("MQE1".equals(dataSet)) return "Million Query 2009 Extended";
+        if ("MQ08".equals(dataSet)) return "Million Query 2008";
+        if ("MQ07".equals(dataSet)) return "Million Query 2007";
+        if ("MQE1".equals(dataSet)) return "Million Query 2009 Extended1";
+        if ("MQE2".equals(dataSet)) return "Million Query 2009 Extended2";
         if ("CW09A".equals(dataSet)) return "ClueWeb09A";
         if ("CW09B".equals(dataSet)) return "ClueWeb09B";
         if ("CW12B".equals(dataSet)) return "ClueWeb12-B13";

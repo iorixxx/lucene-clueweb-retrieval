@@ -1,0 +1,12 @@
+curl "http://localhost:8983/solr/spam09A/update/csv?commit=true&separator=%20&fieldnames=percentile,id" --data-binary @clueweb09spam.Fusion -H 'Content-type:text/plain; charset=utf-8'
+
+
+
+for f in *.spamPct.gz ; do cat $f | gunzip -c | ../decompress-spam12 | gzip -c | gunzip > ../waterloo-spam-cw12-decoded/"${f%%.*}".txt ; done  
+
+
+for f in waterloo-spam-cw12-decoded/*.txt ; do curl "http://localhost:8983/solr/spam12A/update/csv?commit=false&separator=%20&fieldnames=percentile,id" --data-binary @$f -H 'Content-type:text/plain; charset=utf-8' ; done  
+
+
+
+curl "http://192.168.10.111:8983/solr/spam09A/update/csv?commit=true&separator=%20&fieldnames=percentile,id" --data-binary @clueweb09spam.Fusion -H 'Content-type:text/plain; charset=utf-8'

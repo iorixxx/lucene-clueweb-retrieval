@@ -40,12 +40,36 @@ public class Analyzers {
     }
 
     /**
-     * Modified from : http://lucene.apache.org/core/4_10_2/core/org/apache/lucene/analysis/package-summary.html
+     * @deprecated As of release 7.0.0 replaced by {@link #getAnalyzedTokens(java.lang.String, org.apache.lucene.analysis.Analyzer)()}
+     * In early stages of research KStem was constant, for simplicity KStem was hardcoded.
+     * Now we are dealing with different analyzers and document representations. Its time to parametrize it.
      */
+
+    @Deprecated
     public static List<String> getAnalyzedTokens(String text) {
 
         final List<String> list = new ArrayList<>();
         try (TokenStream ts = analyzer(KStem).tokenStream(FIELD, new StringReader(text))) {
+
+            final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
+            ts.reset(); // Resets this stream to the beginning. (Required)
+            while (ts.incrementToken())
+                list.add(termAtt.toString());
+
+            ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
+        } catch (IOException ioe) {
+            throw new RuntimeException("happened during string analysis", ioe);
+        }
+        return list;
+    }
+
+    /**
+     * Modified from : http://lucene.apache.org/core/4_10_2/core/org/apache/lucene/analysis/package-summary.html
+     */
+    public static List<String> getAnalyzedTokens(String text, Analyzer analyzer) {
+
+        final List<String> list = new ArrayList<>();
+        try (TokenStream ts = analyzer.tokenStream(FIELD, new StringReader(text))) {
 
             final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
             ts.reset(); // Resets this stream to the beginning. (Required)
@@ -109,10 +133,10 @@ public class Analyzers {
 
             case NoStemTurkish:
                 return CustomAnalyzer.builder()
-                    .withTokenizer("standard")
-                    .addTokenFilter("apostrophe")
-                    .addTokenFilter("turkishlowercase")
-                    .build();
+                        .withTokenizer("standard")
+                        .addTokenFilter("apostrophe")
+                        .addTokenFilter("turkishlowercase")
+                        .build();
 
             case Script:
                 return CustomAnalyzer.builder()
