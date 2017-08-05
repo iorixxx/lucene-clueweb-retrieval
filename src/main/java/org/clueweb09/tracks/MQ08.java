@@ -36,8 +36,12 @@ public class MQ08 extends MQ09 {
 
     @Override
     protected void populateInfoNeeds() throws IOException {
-
         Path queryPath = Paths.get(home, "topics-and-qrels", "08.million-query-topics.10001-20000");
+        populateInfoNeeds(queryPath);
+    }
+
+    protected void populateInfoNeeds(Path queryPath) throws IOException {
+
         List<String> lines = Files.readAllLines(queryPath, StandardCharsets.ISO_8859_1);
 
         for (String line : lines) {

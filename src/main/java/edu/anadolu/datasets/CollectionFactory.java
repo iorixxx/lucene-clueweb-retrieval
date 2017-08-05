@@ -22,6 +22,9 @@ public class CollectionFactory {
             case MC:
                 return new MC(tfd_home);
 
+            case MQ07:
+                return new MQ07(tfd_home);
+
             case MQ08:
                 return new MQ08(tfd_home);
 
