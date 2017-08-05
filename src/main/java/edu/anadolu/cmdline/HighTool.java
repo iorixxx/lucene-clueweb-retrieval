@@ -29,7 +29,7 @@ public class HighTool extends CmdLineTool {
 
     @Override
     public String getShortDescription() {
-        return "Cross-index comparison utility";
+        return "Extracts the top n most frequent terms";
     }
 
     @Override

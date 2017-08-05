@@ -8,7 +8,30 @@
     <packaging>jar</packaging>
 
     <name>FrequencyDistributionAnalysis</name>
-    <url>http://maven.apache.org</url>
+    <description>Reproducible IR experiments with Apache Lucene</description>
+    <url>http://iorixxx.github.io</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Ahmet Arslan</name>
+            <email>aarslan2@anadolu.edu.tr</email>
+            <organization>Anadolu University</organization>
+            <organizationUrl>https://www.anadolu.edu.tr</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/iorixxx/lucene-clueweb-retrieval.git</connection>
+        <developerConnection>scm:git:ssh://github.com/iorixxx/lucene-clueweb-retrieval.git</developerConnection>
+        <url>https://github.com/iorixxx/lucene-clueweb-retrieval/tree/master</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,6 +45,14 @@
             <url>https://raw.github.com/ahmetaa/maven-repo/master</url>
         </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file://${project.build.directory}/mvn-repo</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <sourceDirectory>src/main/java</sourceDirectory>
@@ -38,6 +69,29 @@
         </testResources>
 
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.0.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.2</version>
+                <configuration>
+                    <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo
+                    </altDeploymentRepository>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -255,17 +309,6 @@
             <version>1.4.196</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Zemberek -->
-        <dependency>
-            <groupId>zemberek-nlp</groupId>
-            <artifactId>core</artifactId>
-            <version>0.11.1</version>
-        </dependency>
 
-        <dependency>
-            <groupId>zemberek-nlp</groupId>
-            <artifactId>morphology</artifactId>
-            <version>0.11.1</version>
-        </dependency>
     </dependencies>
 </project>
