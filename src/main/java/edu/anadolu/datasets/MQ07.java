@@ -5,6 +5,11 @@ import org.clueweb09.tracks.Track;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * TREC 2007 Million Query Track
+ * <p>
+ * http://trec.nist.gov/data/million.query07.html
+ */
 public class MQ07 extends DataSet {
 
     MQ07(String tfd_home) {
