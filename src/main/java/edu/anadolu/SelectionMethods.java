@@ -3,6 +3,7 @@ package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
+import edu.anadolu.stats.TermStats;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
@@ -16,15 +17,13 @@ import org.clueweb09.InfoNeed;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 public class SelectionMethods {
-public static String CONTENT_FIELD = "contents";
+    public static String CONTENT_FIELD = "contents";
 
-    private static class TermTFDF{
+    private static class TermTFDF {
         private int indexID;
         private long TF;
         private long DF;
@@ -56,82 +55,45 @@ public static String CONTENT_FIELD = "contents";
 
     /**
      * This method returns one of the given IndexSearchers due to the changing of the most specific term in term frequency
-     * If the most specific term changes in term frequency, the method returns stemmed IndexSearcher
-     * @param infoNeed
-     * @param searchers
-     * @return
+     * If the most specific term changes in term frequency, the method returns stemmed tag
      */
-    public static Searcher MSTTermFreq(InfoNeed infoNeed,Searcher[] searchers ,Similarity similarity) throws IOException {
-        if(searchers.length!=2) throw new RuntimeException("We do not support selective stemming for searchers whose count is not equal to 2 yet!");
+    public static String MSTTermFreq(Map<String, ArrayList<TermStats>> tagTermTermStats, String[] tagsArr) {
+        ArrayList<TermTFDF> listTermTag1 = new ArrayList<TermTFDF>();
+        ArrayList<TermTFDF> listTermTag2 = new ArrayList<TermTFDF>();
 
-        HashMap<Tag,IndexSearcher> indexSearchers = new HashMap<>();
-        HashMap<Tag,Searcher> tagSearcher = new HashMap<>();
-        for(Searcher s: searchers){
-            IndexSearcher is =  new IndexSearcher(s.reader);
-            is.setSimilarity(similarity);
-            indexSearchers.put(s.analyzerTag, is);
-            tagSearcher.put(s.analyzerTag,s);
+        ArrayList<TermStats> tsList = tagTermTermStats.get(tagsArr[0]);
+        System.out.print(tagsArr[0]);
+        for (int i = 0; i < tsList.size(); i++) {
+            TermTFDF termTFDF = new TermTFDF(i);
+            termTFDF.setTF(tsList.get(i).totalTermFreq());
+            listTermTag1.add(termTFDF);
+            System.out.print(" "+tsList.get(i).term().utf8ToString());
         }
+        System.out.println();
 
-
-        HashMap<Tag, List<String>> tokenizedTopic4searchers = new HashMap<>();
-        for(Tag tag: indexSearchers.keySet())
-            tokenizedTopic4searchers.put(tag,tokenize(infoNeed.query(), Analyzers.analyzer(tag)));
-
-        HashMap<Tag, List<TermTFDF>> termTFDF4searchers = new HashMap<>();
-
-        for(Tag tag: tokenizedTopic4searchers.keySet()){
-            List<String> tokenizedTopic = tokenizedTopic4searchers.get(tag);
-            List<TermTFDF> listTermTFDF = new ArrayList<>();
-            IndexSearcher is = indexSearchers.get(tag);
-            for(String word: tokenizedTopic){
-                Term t = new Term(CONTENT_FIELD,word);
-                TermStatistics termStatistics = is.termStatistics(t, TermContext.build(is.getTopReaderContext(), t));
-                final long termFrequency = termStatistics.totalTermFreq();
-                TermTFDF termTFDF = new TermTFDF(tokenizedTopic.indexOf(word));
-                termTFDF.setTF(termFrequency);
-                listTermTFDF.add(termTFDF);
-            }
-            listTermTFDF.sort((t1, t2) -> Long.compare(t1.getTF(), t2.getTF()));
-            termTFDF4searchers.put(tag,listTermTFDF);
+        tsList = tagTermTermStats.get(tagsArr[1]);
+        System.out.print(tagsArr[1]);
+        for (int i = 0; i < tsList.size(); i++) {
+            TermTFDF termTFDF = new TermTFDF(i);
+            termTFDF.setTF(tsList.get(i).totalTermFreq());
+            listTermTag2.add(termTFDF);
+            System.out.print(" "+tsList.get(i).term().utf8ToString());
         }
+        System.out.println();
+        System.out.println("======= Before ======");
+        listTermTag1.stream().forEach(t -> System.out.println(t.indexID + " " + t.getTF()));
+        listTermTag2.stream().forEach(t -> System.out.println(t.indexID + " " + t.getTF()));
 
+        listTermTag1.sort((t1, t2) -> Long.compare(t1.getTF(), t2.getTF()));
+        listTermTag2.sort((t1, t2) -> Long.compare(t1.getTF(), t2.getTF()));
 
-        Tag baseTag = searchers[0].analyzerTag;
-        IndexSearcher selectedIndexSearcher=indexSearchers.get(baseTag);
-        List<TermTFDF> baseListTermTFDF=termTFDF4searchers.get(baseTag);
-        Searcher selectedSearcher = tagSearcher.get(baseTag);
+        System.out.println("======= Afer ======");
+        listTermTag1.stream().forEach(t -> System.out.println(t.indexID + " " + t.getTF()));
+        listTermTag2.stream().forEach(t -> System.out.println(t.indexID + " " + t.getTF()));
 
-        for(Tag tag: termTFDF4searchers.keySet()){
-            if(tag.compareTo(baseTag)==0) continue;
-            List<TermTFDF> listTermTFDF = termTFDF4searchers.get(tag);
+        if (listTermTag1.get(0).getIndexID() != listTermTag2.get(0).getIndexID())
+            return tagsArr[0]; //Nostem
+        return tagsArr[1];
 
-            if (listTermTFDF.get(0).getIndexID() != baseListTermTFDF.get(0).getIndexID()) {
-                //Stem -> MST has changed
-                selectedIndexSearcher = indexSearchers.get(tag);
-                selectedSearcher=tagSearcher.get(tag);
-                break;
-            }else{
-                //NoStem
-            }
-        }
-
-        return selectedSearcher;
-    }
-
-    private static List<String> tokenize(String text, Analyzer analyzer){
-        final List<String> list = new ArrayList<>();
-        try (TokenStream ts = analyzer.tokenStream(CONTENT_FIELD, new StringReader(text))) {
-
-            final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
-            ts.reset(); // Resets this stream to the beginning. (Required)
-            while (ts.incrementToken())
-                list.add(termAtt.toString());
-
-            ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
-        } catch (IOException ioe) {
-            throw new RuntimeException("happened during string analysis", ioe);
-        }
-        return list;
     }
 }

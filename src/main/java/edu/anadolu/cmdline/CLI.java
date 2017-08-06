@@ -2,6 +2,7 @@ package edu.anadolu.cmdline;
 
 import edu.anadolu.field.CrossTool;
 import edu.anadolu.field.FieldTool;
+import edu.anadolu.field.SelectiveStemmingTool;
 import edu.anadolu.knn.*;
 import org.apache.lucene.util.Version;
 
@@ -126,6 +127,8 @@ public final class CLI {
         tools.add(new CrossTool());
 
         tools.add(new HighTool());
+
+        tools.add(new SelectiveStemmingTool());
 
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
