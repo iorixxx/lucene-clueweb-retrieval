@@ -279,10 +279,11 @@ public class QuerySelector {
 
 
     public Map<String, TermStats> loadTermStatsMap() {
-
+//        System.out.println("Loading term stats map for "+tag);
         Map<String, TermStats> termStatsMap = new HashMap<>();
 
         Path fieldStats = Paths.get(collectionPath.toString(), "stats", tag, "contents_term_stats.csv");
+//        System.out.println(fieldStats.toString());
         List<String> lines = readAllLines(fieldStats);
         for (String line : lines)
 
@@ -353,7 +354,8 @@ public class QuerySelector {
     private void enrichTermStatsMap(Map<String, TermStats> termStatsMap) {
 
         Path documentStatsFile = Paths.get(collectionPath.toString(), "stats", tag, "contents_document_length_stats.csv");
-
+//        System.out.println("Enriching term stats map for "+ tag);
+//        System.out.println(documentStatsFile.toString());
         if (!Files.exists(documentStatsFile) || !Files.isRegularFile(documentStatsFile) || !Files.isReadable(documentStatsFile)) {
             System.out.println("Document length stats  file : " + documentStatsFile + " does not exist or is not a (readable) file.");
             return;
@@ -366,8 +368,8 @@ public class QuerySelector {
 
             String[] parts = whiteSpaceSplitter.split(line);
 
-            if (parts.length != 4)
-                throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
+            if (parts.length != 4) continue;
+                //throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
 
 
             String term = parts[0];
