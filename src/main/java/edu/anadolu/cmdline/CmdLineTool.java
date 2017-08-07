@@ -5,6 +5,7 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.freq.*;
 import edu.anadolu.knn.Winner;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -170,10 +171,23 @@ public abstract class CmdLineTool {
         return pathList;
     }
 
+    /**
+     *
+     * As of release 7.0.0 replaced by {@link #distinctTerms(List, Analyzer)}
+     * @throws IOException
+     */
+    @Deprecated
     public Set<String> distinctTerms(List<InfoNeed> needs) throws IOException {
         Set<String> set = new HashSet<>();
         for (InfoNeed need : needs)
             set.addAll(Analyzers.getAnalyzedTokens(need.query()));
+        return Collections.unmodifiableSet(set);
+    }
+
+    public Set<String> distinctTerms(List<InfoNeed> needs,Analyzer analyzer) throws IOException {
+        Set<String> set = new HashSet<>();
+        for (InfoNeed need : needs)
+            set.addAll(Analyzers.getAnalyzedTokens(need.query(),analyzer));
         return Collections.unmodifiableSet(set);
     }
 }

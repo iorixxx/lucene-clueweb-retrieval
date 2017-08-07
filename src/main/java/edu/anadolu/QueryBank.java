@@ -2,6 +2,7 @@ package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 
@@ -16,10 +17,20 @@ public final class QueryBank {
 
     private final List<InfoNeed> ALL_QUERIES;
 
+    /**
+     * As of release 7.0.0 replaced by {@link #distinctTerms(Analyzer)}
+     */
+    @Deprecated
     public Set<String> distinctTerms() throws IOException {
         Set<String> set = new HashSet<>();
         for (InfoNeed need : ALL_QUERIES)
             set.addAll(Analyzers.getAnalyzedTokens(need.query()));
+        return Collections.unmodifiableSet(set);
+    }
+    public Set<String> distinctTerms(Analyzer analyzer) throws IOException {
+        Set<String> set = new HashSet<>();
+        for (InfoNeed need : ALL_QUERIES)
+            set.addAll(Analyzers.getAnalyzedTokens(need.query(),analyzer));
         return Collections.unmodifiableSet(set);
     }
 

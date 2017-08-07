@@ -1,6 +1,8 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.QueryBank;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.stats.CorpusStatistics;
@@ -66,9 +68,10 @@ final class StatsTool extends CmdLineTool {
             try (CorpusStatistics statistics = new CorpusStatistics(indexPath, statsPath)) {
                 statistics.saveFieldStats(fields);
                 statistics.saveLaTexStats(fields);
-
+                Tag t = Tag.tag(indexPath.getFileName().toString());
+                System.out.println("StatsTool Tag: "+t.name());
                 for (String field : fields)
-                    statistics.saveTermStatsForWords(field, new QueryBank(dataset).distinctTerms(), field + "_term_stats.csv");
+                    statistics.saveTermStatsForWords(field, new QueryBank(dataset).distinctTerms(Analyzers.analyzer(t)), field + "_term_stats.csv");
 
                 for (String field : fields)
                     statistics.saveTermStatsForWords(field, StopWordTool.getStopWords(props), field + "_stop_stats.csv");

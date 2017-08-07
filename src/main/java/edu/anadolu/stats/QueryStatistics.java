@@ -25,7 +25,7 @@ public final class QueryStatistics {
 
     public void queryLengthHistogram() {
 
-        int[] counts = new int[15];
+        int[] counts = new int[20];
         Arrays.fill(counts, 0);
 
         for (Track track : dataset.tracks()) {

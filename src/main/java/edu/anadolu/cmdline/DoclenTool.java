@@ -1,5 +1,7 @@
 package edu.anadolu.cmdline;
 
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.stats.DocLengthStats;
@@ -54,15 +56,17 @@ public final class DoclenTool extends CmdLineTool {
         for (Track track : dataset.tracks())
             needs.addAll(track.getTopics());
 
-        Set<String> words = distinctTerms(needs);
+
 
         final String[] fields = props.getProperty("freq.fields", "description,keywords,title,contents").split(",");
 
-        for (final Path indexPath : discoverIndexes(dataset))
+        for (final Path indexPath : discoverIndexes(dataset)) {
+            Tag t = Tag.tag(indexPath.getFileName().toString());
+            Set<String> words = distinctTerms(needs, Analyzers.analyzer(t));
             for (String field : fields)
                 try (DocLengthStats docLengthStats = new DocLengthStats(dataset.collectionPath(), indexPath, field)) {
                     docLengthStats.process(words);
                 }
-
+        }
     }
 }
