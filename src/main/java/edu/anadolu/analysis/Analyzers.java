@@ -8,7 +8,6 @@ import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.UAX29URLEmailTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.analysis.tr.Zemberek3StemFilterFactory;
-import org.apache.lucene.analysis.util.TokenizerFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -178,10 +177,5 @@ public class Analyzers {
                 throw new AssertionError(Analyzers.class);
 
         }
-
-    }
-
-    public static void main(String[] args) {
-        System.out.println(TokenizerFactory.availableTokenizers());
     }
 }
