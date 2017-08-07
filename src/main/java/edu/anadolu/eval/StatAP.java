@@ -10,18 +10,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
+
 /**
- * handles output of statAP_MQ_eval_v3.pl
+ * handles output of statAP_MQ_eval_v4.pl
  * <p>
- * topic=1  MIXED
- * Relevant=220.290989  sampled=246 sampled_relev=86
- * sampled_in_list=145  sampled_relev_in_list=85
- * AP=0.315661  R-prec=0.316174  Prec_at_30=0.133333  nDCG=0.0765437554960422
- * varAP=0.000267967353551343
+ * topic=44  UMASS
+ * </p>
+ * <p>
+ * topic=50
+ * Relevant=51.514  sampled=40 sampled_relev=12
+ * sampled_in_list=28  sampled_relev_in_list=6
+ * AP=0.021  R-prec=0.048
+ * Prec_at_10=0.150 Prec_at_30=0.083 Prec_at_50=0.050 Prec_at_50=0.025
+ * nDCG_10=0.064 nDCG_30=0.084 nDCG_50=0.084 nDCG_100=0.084
+ * varAP=0.000110909610257051
+ * </p>
+ * <p>
+ * topic=57  NEU
+ * Relevant=1.563  sampled=40 sampled_relev=1
+ * sampled_in_list=36  sampled_relev_in_list=1
+ * AP=0.167  R-prec=0.000
+ * Prec_at_10=0.156 Prec_at_30=0.052 Prec_at_50=0.031 Prec_at_50=0.016
+ * nDCG_10=0.356 nDCG_30=0.356 nDCG_50=0.356 nDCG_100=0.356
+ * varAP=0
+ * </p>
  */
 public final class StatAP implements EvalTool {
 
-    Map<Integer, Element> elementList = new HashMap<>();
+    private Map<Integer, Element> elementList = new HashMap<>();
 
     private class Element {
         int topic;
@@ -32,17 +49,25 @@ public final class StatAP implements EvalTool {
         String ap;
         String p30;
 
-        public Element(String paragraph) {
+        Element(String paragraph) {
 
             paragraph = paragraph.trim().replaceAll("--no relevant docs", "");
 
             if (!paragraph.startsWith("topic="))
                 throw new IllegalArgumentException("unexpected formatted line : " + paragraph);
 
-            String[] parts = paragraph.split("\\s+");
+            String[] parts = whiteSpaceSplitter.split(paragraph);
 
-            if (parts.length != 17 && parts.length != 18)
+            if (parts.length != 17 && parts.length != 18) {
+
+                //TODO Read http://maroo.cs.umass.edu/getpdf.php?id=800 and understand UMASS and related statAP flags
+                if (parts.length == 2 && "UMASS".equals(parts[1]) && parts[0].startsWith("topic=")) {
+                    topic = Integer.parseInt(parts[0].substring(6));
+                    nDCG_30 = nDCG_100 = ap = p30 = "0.00000";
+                    return;
+                }
                 throw new IllegalArgumentException("paragraph does not have 17 nor 18 entries : " + paragraph);
+            }
 
             for (String entry : parts) {
 

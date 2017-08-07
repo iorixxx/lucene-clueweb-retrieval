@@ -929,6 +929,8 @@ public class Evaluator {
     }
 
     private EvalTool toolFactory(Path path, InfoNeed need) throws IOException {
+        if (edu.anadolu.datasets.Collection.MQ07.equals(need.dataSet().collection()))
+            return new StatAP(path, k);
         if (edu.anadolu.datasets.Collection.MQ08.equals(need.dataSet().collection()))
             return new StatAP(path, k);
         if (edu.anadolu.datasets.Collection.MQ09.equals(need.dataSet().collection()))
@@ -942,6 +944,8 @@ public class Evaluator {
     }
 
     private List<Path> pathFactory(InfoNeed need) throws IOException {
+        if (edu.anadolu.datasets.Collection.MQ07.equals(need.dataSet().collection()))
+            return getPathList(need, "");
         if (edu.anadolu.datasets.Collection.MQ08.equals(need.dataSet().collection()))
             return getPathList(need, "");
         if (edu.anadolu.datasets.Collection.MQ09.equals(need.dataSet().collection()))
