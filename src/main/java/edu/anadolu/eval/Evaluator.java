@@ -240,8 +240,10 @@ public class Evaluator {
 
         populatePerformanceMap();
 
-        fillBestModelMap();
-        fillWorstModelMap();
+        if (!models.endsWith("*")) {
+            fillBestModelMap();
+            fillWorstModelMap();
+        }
 
         Map<String, Double> scoreMap = new HashMap<>();
 
@@ -1724,7 +1726,9 @@ public class Evaluator {
             addSingleItem2Map(map, bestModel, need);
         }
 
-        modelSet.stream().filter(model -> !map.containsKey(model) || map.get(model).isEmpty()).forEach(model -> System.out.println("Evaluator : There is no winner for the model : " + model));
+        if (!models.endsWith("*"))
+            modelSet.stream().filter(model -> !map.containsKey(model) || map.get(model).isEmpty()).forEach(model -> System.out.println("Evaluator : There is no winner for the model : " + model));
+
         this.bestModelMap = Collections.unmodifiableMap(map);
     }
 
@@ -1839,7 +1843,8 @@ public class Evaluator {
 
         }
 
-        modelSet.stream().filter(model -> !map.containsKey(model) || map.get(model).isEmpty()).forEach((model) -> System.out.println("Evaluator : There is no loser for the model : " + model));
+        if (!models.endsWith("*"))
+            modelSet.stream().filter(model -> !map.containsKey(model) || map.get(model).isEmpty()).forEach((model) -> System.out.println("Evaluator : There is no loser for the model : " + model));
         this.worstModelMap = Collections.unmodifiableMap(map);
     }
 
