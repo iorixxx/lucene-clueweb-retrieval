@@ -181,11 +181,6 @@ public final class ParamTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
         Evaluator evaluator = new Evaluator(dataset, tag, measure, models, "parameter_evals", op);
 
         System.out.println("========= mean effective measures ===========");

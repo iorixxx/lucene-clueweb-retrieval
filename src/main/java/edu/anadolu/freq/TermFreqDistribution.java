@@ -2,6 +2,8 @@ package edu.anadolu.freq;
 
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.clueweb09.InfoNeed;
@@ -14,25 +16,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Traverse posting list of given term over the field.
  */
-public class TermFreqDistribution {
+public class TermFreqDistribution implements TFD {
 
     protected final IndexReader reader;
-    protected final BinningStrategy binningStrategy;
+    final BinningStrategy binningStrategy;
     protected final NumericDocValues norms;
     protected final String field;
 
-    public TermFreqDistribution(IndexReader reader, BinningStrategy binningStrategy, String field) throws IOException {
+    protected final Analyzer analyzer;
+
+    public TermFreqDistribution(IndexReader reader, BinningStrategy binningStrategy, String field, Analyzer analyzer) throws IOException {
         this.reader = reader;
         this.binningStrategy = binningStrategy;
         this.norms = MultiDocValues.getNormValues(reader, field);
         this.field = field;
+        this.analyzer = analyzer;
     }
 
     public String getTermDistributionStats(String word) throws IOException {
@@ -74,7 +76,7 @@ public class TermFreqDistribution {
      * @param max maximum length
      * @return String
      */
-    protected static String rollCountArray(int max, final int[] array) {
+    static String rollCountArray(int max, final int[] array) {
         StringBuilder buffer = new StringBuilder();
 
         for (int i = 1; i <= max; i++) {
@@ -92,9 +94,9 @@ public class TermFreqDistribution {
      * @param field field
      * @param track track
      * @param need  topic
-     * @throws IOException
+     * @throws IOException if occurs during file write operations
      */
-    public void saveQRelDistribution(String word, String field, Track track, InfoNeed need, final Map<Integer, PrintWriter> writerMap) throws IOException {
+    private void saveQRelDistribution(String word, String field, Track track, InfoNeed need, final Map<Integer, PrintWriter> writerMap) throws IOException {
 
         Term term = new Term(field, word);
         PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
@@ -129,7 +131,7 @@ public class TermFreqDistribution {
     }
 
 
-    public String generateFileName(int judge) {
+    private String generateFileName(int judge) {
         return field + "_" + judge + "_freq.csv";
     }
 
@@ -141,7 +143,7 @@ public class TermFreqDistribution {
 
         for (InfoNeed need : track.getTopics()) {
 
-            List<String> subParts = Analyzers.getAnalyzedTokens(need.query());
+            List<String> subParts = Analyzers.getAnalyzedTokens(need.query(), analyzer);
 
             // Topics 95 and 100 from WT10 do not have relevance judgments.
             if (!track.isJudged(need.id())) {
@@ -165,14 +167,14 @@ public class TermFreqDistribution {
         return field + "_all_freq_" + binningStrategy.numBins() + ".csv";
     }
 
-    public void saveDistributionStats(Path base, Track track) throws IOException {
+    private void saveDistributionStats(Path base, Track track) throws IOException {
 
         final HashMap<String, String> cache = new HashMap<>(150);
         PrintWriter allOutput = new PrintWriter(Files.newBufferedWriter(base.resolve(outputFileName()), StandardCharsets.US_ASCII));
 
         for (InfoNeed need : track.getTopics()) {
 
-            List<String> subParts = Analyzers.getAnalyzedTokens(need.query());
+            List<String> subParts = Analyzers.getAnalyzedTokens(need.query(), analyzer);
 
             for (String word : subParts) {
                 final String line;
@@ -192,16 +194,26 @@ public class TermFreqDistribution {
         allOutput.close();
     }
 
+    @Override
     public void processSingeTrack(Track track, Path path) throws IOException {
         System.out.println(field + "=" + track.toString() + track.getJudgeLevels());
         saveDistributionStats(path, track);
     }
 
+    @Override
+    public String toString() {
+        return "Good Old Term Freq. Distribution";
+    }
+
+
     public static void mainForStopWords(final BinningStrategy binningStrategy, final String field, Path indexPath, final Path freqsPath, final Set<String> stopWords) throws IOException {
 
         final IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
         final String indexTag = indexPath.getFileName().toString();
-        final TermFreqDistribution distribution = new TermFreqDistribution(reader, binningStrategy, field);
+        Tag tag = Tag.tag(indexTag);
+        System.out.println("analyzer tag " + tag);
+        Analyzer analyzer = Analyzers.analyzer(tag);
+        final TermFreqDistribution distribution = new TermFreqDistribution(reader, binningStrategy, field, analyzer);
         final Path path = Paths.get(freqsPath.toString(), indexTag, "StopWords");
         if (!Files.exists(path)) Files.createDirectories(path);
 
@@ -213,59 +225,7 @@ public class TermFreqDistribution {
 
         stopOutput.flush();
         stopOutput.close();
-
-
         reader.close();
 
     }
-
-    public static void mainWithThreads(final BinningStrategy binningStrategy, final Track[] tracks, final String field, Path indexPath, final Path freqsPath, int numThreads) throws IOException, InterruptedException {
-
-        final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-        final IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath));
-        System.out.println("Good Old Freq.Dist opened index directory : " + indexPath + " has " + reader.numDocs() + " numDocs and has " + reader.maxDoc() + " maxDocs");
-
-        TermFreqDistribution distribution = new TermFreqDistribution(reader, binningStrategy, field);
-        final String indexTag = indexPath.getFileName().toString();
-
-        for (final Track track : tracks) {
-
-            final Path path = Paths.get(freqsPath.toString(), indexTag, track.toString());
-            if (!Files.exists(path))
-                Files.createDirectories(path);
-
-            executor.execute(new Thread(indexTag + track.toString()) {
-                @Override
-                public void run() {
-                    try {
-                        distribution.processSingeTrack(track, path);
-                    } catch (IOException ioe) {
-                        System.out.println(Thread.currentThread().getName() + ": ERROR: unexpected IOException:");
-                        ioe.printStackTrace();
-                    }
-
-                }
-            });
-        }
-
-
-        //add some delay to let some threads spawn by scheduler
-        Thread.sleep(30000);
-        executor.shutdown(); // Disable new tasks from being submitted
-
-        try {
-            // Wait for existing tasks to terminate
-            while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                Thread.sleep(1000);
-            }
-        } catch (InterruptedException ie) {
-            // (Re-)Cancel if current thread also interrupted
-            executor.shutdownNow();
-            // Preserve interrupt status
-            Thread.currentThread().interrupt();
-        }
-
-        reader.close();
-    }
-
 }

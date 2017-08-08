@@ -44,12 +44,6 @@ public final class VerboseTFDumperTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
-
         List<InfoNeed> needs = new ArrayList<>();
         for (Track track : dataset.tracks())
             needs.addAll(track.getTopics());

@@ -41,11 +41,6 @@ public class AbsoluteTool extends KNNTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
         Path excelPath = dataset.collectionPath().resolve("excels");
 
         if (!Files.exists(excelPath))

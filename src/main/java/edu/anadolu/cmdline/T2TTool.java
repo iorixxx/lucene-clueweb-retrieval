@@ -57,13 +57,7 @@ class T2TTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
         Path collectionPath = Paths.get(tfd_home, collection.toString());
-
 
         Path excelPath = collectionPath.resolve("excels");
         if (!Files.exists(excelPath))

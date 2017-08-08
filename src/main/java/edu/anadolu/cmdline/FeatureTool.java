@@ -68,11 +68,6 @@ public final class FeatureTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
         if ("labels".equals(task)) {
             Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", evalDirectory(dataset), "OR");
             List<InfoNeed> needs = evaluator.getNeeds();

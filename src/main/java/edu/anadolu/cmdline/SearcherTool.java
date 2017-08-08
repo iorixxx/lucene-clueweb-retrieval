@@ -91,11 +91,6 @@ public final class SearcherTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
         final List<String> fields;
         if (field) {
             final String[] arr = props.getProperty(collection.toString() + ".fields", "description,keywords,title,body,anchor,url").split(",");

@@ -29,8 +29,8 @@ public final class QueryFreqDistribution extends TermFreqDistribution {
     private final IndexSearcher searcher;
     private final Path freqsPath;
 
-    public QueryFreqDistribution(IndexReader reader, Path freqsPath, BinningStrategy binningStrategy, String field) throws IOException {
-        super(reader, binningStrategy, field);
+    public QueryFreqDistribution(IndexReader reader, Path freqsPath, BinningStrategy binningStrategy, String field, String indexTag) throws IOException {
+        super(reader, binningStrategy, field, Analyzers.analyzer(Tag.tag(indexTag)));
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(new MetaTerm());
         this.freqsPath = freqsPath;
@@ -41,7 +41,7 @@ public final class QueryFreqDistribution extends TermFreqDistribution {
 
     public void process(List<InfoNeed> needs, String indexTag, int numHits) throws ParseException, IOException {
 
-        QueryParser queryParser = new QueryParser(field, Analyzers.analyzer(Tag.tag(indexTag)));
+        QueryParser queryParser = new QueryParser(field, analyzer);
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
 
         PrintWriter output = new PrintWriter(Files.newBufferedWriter(Paths.get(freqsPath.toString(), "QueryFreqDist" + indexTag + ".csv"), StandardCharsets.US_ASCII));

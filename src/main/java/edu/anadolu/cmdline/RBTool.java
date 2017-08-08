@@ -60,15 +60,8 @@ public final class RBTool extends EvaluatorTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        if (dataset == null) {
-            System.out.println(collection + " returned null dataset");
-            return;
-        }
-
-        Path collectionPath = Paths.get(tfd_home, collection.toString());
-
-
         QueryBank bank = new QueryBank(dataset);
+
         // queries having lambda greater than one
         if (-1 == query) {
             needs = new QuerySelector(dataset, tag).lambdaQueries(e);
