@@ -58,7 +58,7 @@ public class ZeroDistribution extends Phi {
 
         ScoreDoc[] hits = searcher.search(new ConstantScoreQuery(builder.build()), Integer.MAX_VALUE).scoreDocs;
 
-        if (counter1 + hits.length != reader.numDocs()) {
+        if ((counter1 + hits.length) != reader.numDocs()) {
             System.out.println("term enum : " + counter1 + " filter clause : " + hits.length);
             System.out.println("docCount : " + collectionStatistics.docCount() + " sum : " + Integer.toString(counter1 + hits.length));
         }
