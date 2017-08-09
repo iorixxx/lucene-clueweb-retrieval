@@ -368,7 +368,10 @@ public class QuerySelector {
 
             String[] parts = whiteSpaceSplitter.split(line);
 
-            if (parts.length != 4) continue;
+            if (parts.length != 4) {
+                System.out.println(collectionPath.toString()+" "+tag+": While enriching termstatmap, parts is not equal to 4 for line: "+line);
+                continue;
+            }
                 //throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
 
 
