@@ -31,11 +31,12 @@ public class ZeroDistribution extends Phi {
         final int[] array = new int[binningStrategy.numBins() + 1];
         Arrays.fill(array, 0);
 
+        int counter1 = 0;
         int max = 0;
         while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
             final int freq = postingsEnum.freq() + 1;
-            final long numTerms = norms.get(postingsEnum.docID());
+            final long numTerms = norms.get(postingsEnum.docID()) + 1;
             final double relativeFrequency = (double) freq / (double) numTerms;
 
             if (!(relativeFrequency > 0 && relativeFrequency <= 1))
@@ -47,18 +48,24 @@ public class ZeroDistribution extends Phi {
             if (value > max)
                 max = value;
 
+            counter1++;
         }
 
 
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST)
-                .add(new TermQuery(term), BooleanClause.Occur.FILTER);
+        builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.FILTER)
+                .add(new ConstantScoreQuery(new TermQuery(term)), BooleanClause.Occur.MUST_NOT);
 
         ScoreDoc[] hits = searcher.search(new ConstantScoreQuery(builder.build()), Integer.MAX_VALUE).scoreDocs;
 
+        if (counter1 + hits.length != reader.numDocs()) {
+            System.out.println("term enum : " + counter1 + " filter clause : " + hits.length);
+            System.out.println("docCount : " + collectionStatistics.docCount() + " sum : " + Integer.toString(counter1 + hits.length));
+        }
+
         for (ScoreDoc scoreDoc : hits) {
             int docId = scoreDoc.doc;
-            final long numTerms = norms.get(docId);
+            final long numTerms = norms.get(docId) + 1;
             final double relativeFrequency = 1.0d / (double) numTerms;
 
             if (!(relativeFrequency > 0 && relativeFrequency <= 1))

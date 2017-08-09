@@ -18,12 +18,14 @@ public class Phi extends TermFreqDistribution {
     private final NormalDistribution normalDistribution = new NormalDistribution();
     protected final IndexSearcher searcher;
     private final long sumTotalTermFreq;
+    protected final CollectionStatistics collectionStatistics;
 
     public Phi(IndexReader reader, BinningStrategy binningStrategy, String field, Analyzer analyzer) throws IOException {
         super(reader, binningStrategy, field, analyzer);
         this.searcher = new IndexSearcher(reader);
         CollectionStatistics collectionStatistics = searcher.collectionStatistics(field);
         sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
+        this.collectionStatistics = collectionStatistics;
         System.out.println("This index has " + sumTotalTermFreq + " many terms");
     }
 
