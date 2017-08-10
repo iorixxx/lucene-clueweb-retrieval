@@ -38,6 +38,11 @@ public class ParseURL {
         int b[] = {3, 4, 5, 6, 7, 8};
 
         printDifference(a, b, a.length, b.length);
+
+        int x[] = {1, 2, 3, 4, 5};
+        int y[] = {};
+
+        printDifference(x, y, x.length, y.length);
     }
 
 

@@ -26,4 +26,9 @@ class ClueWeb12B extends DataSet {
     public String getNoDocumentsID() {
         return "clueweb12-0000wb-00-00000";
     }
+
+    @Override
+    public boolean spamAvailable() {
+        return true;
+    }
 }

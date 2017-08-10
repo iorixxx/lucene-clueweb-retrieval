@@ -1,9 +1,10 @@
 package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
-import org.apache.poi.ss.usermodel.Cell;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -27,6 +28,7 @@ public final class Exporter {
 
     private final DataSet dataSet;
     private final String tag;
+    private final Analyzer analyzer;
     private final long numberOfDocuments;
 
     public final int DOC_ID_LENGTH;
@@ -34,6 +36,7 @@ public final class Exporter {
     public Exporter(DataSet dataSet, String tag) {
         this.dataSet = dataSet;
         this.tag = tag;
+        this.analyzer = Analyzers.analyzer(Tag.tag(tag));
 
         String line = Evaluator.loadCorpusStats(dataSet.collectionPath(), "contents", tag);
         String[] parts = whiteSpaceSplitter.split(line);
@@ -265,7 +268,7 @@ public final class Exporter {
         for (InfoNeed need : needs) {
 
             if (need.termCount() > 1) continue;
-            final String term = Analyzers.getAnalyzedToken(need.query());
+            final String term = Analyzers.getAnalyzedToken(need.query(), analyzer);
 
             List<Integer> set = new ArrayList<>(new HashSet<>(need.getJudgeMap().values()));
             Collections.sort(set);

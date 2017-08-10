@@ -1,7 +1,9 @@
 package edu.anadolu.freq;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import org.apache.commons.math3.util.Precision;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
@@ -37,9 +39,13 @@ public final class VerboseTFDumper implements Closeable {
         return this.D_BAR;
     }
 
+    private final Analyzer analyzer;
+
     public VerboseTFDumper(Path collectionPath, Path indexPath, Set<String> distinctTerms) throws IOException {
 
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+
+        this.analyzer = Analyzers.analyzer(Tag.tag(indexPath.getFileName().toString()));
 
         IndexSearcher searcher = new IndexSearcher(this.reader);
         final long docCount = searcher.collectionStatistics("contents").docCount();
@@ -92,7 +98,7 @@ public final class VerboseTFDumper implements Closeable {
                 // QRels of a topic, docID, judgeLevel pairs
                 Map<String, Integer> judgeMap = need.getJudgeMap();
 
-                String word = Analyzers.getAnalyzedToken(need.query());
+                String word = Analyzers.getAnalyzedToken(need.query(), analyzer);
 
                 saveTermFrequencies(word, field, judgeMap);
 

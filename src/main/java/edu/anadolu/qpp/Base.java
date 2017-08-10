@@ -2,7 +2,9 @@ package edu.anadolu.qpp;
 
 import edu.anadolu.QueryBank;
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.similarities.MetaTerm;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermContext;
@@ -32,6 +34,7 @@ public abstract class Base implements Predictor, Closeable {
     protected final DirectoryReader reader;
 
     protected final Path indexPath;
+    protected final Analyzer analyzer;
 
     public Base(Path indexPath, String field) throws IOException {
 
@@ -40,6 +43,7 @@ public abstract class Base implements Predictor, Closeable {
         }
 
         this.indexPath = indexPath;
+        this.analyzer = Analyzers.analyzer(Tag.tag(indexPath.getFileName().toString()));
         this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.searcher = new IndexSearcher(reader);
         this.searcher.setSimilarity(new MetaTerm());
@@ -98,7 +102,7 @@ public abstract class Base implements Predictor, Closeable {
     @Override
     public final double aggregated(InfoNeed need, Aggregate aggregate) throws IOException {
 
-        final List<String> terms = Analyzers.getAnalyzedTokens(need.query());
+        final List<String> terms = Analyzers.getAnalyzedTokens(need.query(), analyzer);
         final double[] values = new double[terms.size()];
 
         int c = 0;

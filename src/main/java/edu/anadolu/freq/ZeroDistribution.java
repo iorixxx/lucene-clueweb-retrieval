@@ -26,30 +26,29 @@ public class ZeroDistribution extends Phi {
         Term term = new Term(field, word);
         PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
 
-        if (postingsEnum == null) return word + "(stopword)";
-
         final int[] array = new int[binningStrategy.numBins() + 1];
         Arrays.fill(array, 0);
 
         int counter1 = 0;
         int max = 0;
-        while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+        if (postingsEnum != null)
+            while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
-            final int freq = postingsEnum.freq() + 1;
-            final long numTerms = norms.get(postingsEnum.docID()) + 1;
-            final double relativeFrequency = (double) freq / (double) numTerms;
+                final int freq = postingsEnum.freq() + 1;
+                final long numTerms = norms.get(postingsEnum.docID()) + 1;
+                final double relativeFrequency = (double) freq / (double) numTerms;
 
-            if (!(relativeFrequency > 0 && relativeFrequency <= 1))
-                throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
+                if (!(relativeFrequency > 0 && relativeFrequency <= 1))
+                    throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
 
-            final int value = binningStrategy.calculateBinValue(relativeFrequency);
+                final int value = binningStrategy.calculateBinValue(relativeFrequency);
 
-            array[value]++;
-            if (value > max)
-                max = value;
+                array[value]++;
+                if (value > max)
+                    max = value;
 
-            counter1++;
-        }
+                counter1++;
+            }
 
 
         BooleanQuery.Builder builder = new BooleanQuery.Builder();

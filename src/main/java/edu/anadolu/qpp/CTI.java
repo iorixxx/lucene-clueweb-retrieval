@@ -53,12 +53,5 @@ public class CTI extends Base {
         cti += remainingDocs * e;
         return cti / docCount;
 
-
-    }
-
-    public static void main(String[] args) throws IOException {
-        try (Base cti = new CTI(Paths.get("/Volumes/clueweb09/indexes/KStemAnalyzer"))) {
-            display(cti, new Aggregate.Variance());
-        }
     }
 }

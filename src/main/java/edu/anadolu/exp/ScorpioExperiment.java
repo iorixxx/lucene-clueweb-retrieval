@@ -3,6 +3,7 @@ package edu.anadolu.exp;
 import edu.anadolu.QueryBank;
 import edu.anadolu.QuerySelector;
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
@@ -11,6 +12,7 @@ import edu.anadolu.freq.L0;
 import edu.anadolu.similarities.*;
 import edu.anadolu.stats.TermStats;
 import org.apache.commons.math3.util.Precision;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.similarities.ModelBase;
 
 import java.io.IOException;
@@ -34,6 +36,7 @@ public class ScorpioExperiment {
     final long numberOfDocuments;
     final long numberOfTokens;
 
+    final protected Analyzer analyzer;
 
     /**
      * Statistics of document being scored
@@ -44,6 +47,7 @@ public class ScorpioExperiment {
         this.model = model;
         this.dataSet = dataSet;
         this.tag = tag;
+        this.analyzer = Analyzers.analyzer(Tag.tag(tag));
         this.termStatsMap = new QuerySelector(dataSet, tag).loadTermStatsMap();
 
         String line = Evaluator.loadCorpusStats(dataSet.collectionPath(), "contents", tag);
@@ -62,11 +66,11 @@ public class ScorpioExperiment {
 
     public void expected(String... terms) throws IOException {
         for (String term : terms)
-            System.out.println("expected(" + term + ") = " + expectedUnderDBar(Analyzers.getAnalyzedToken(term)));
+            System.out.println("expected(" + term + ") = " + expectedUnderDBar(Analyzers.getAnalyzedToken(term, analyzer)));
     }
 
     public double f(int tf, String term) {
-        return model.f(tf, docLength, termStatsMap.get(Analyzers.getAnalyzedToken(term)).docFreq(), termStatsMap.get(Analyzers.getAnalyzedToken(term)).totalTermFreq(), numberOfDocuments, numberOfTokens);
+        return model.f(tf, docLength, termStatsMap.get(Analyzers.getAnalyzedToken(term, analyzer)).docFreq(), termStatsMap.get(Analyzers.getAnalyzedToken(term, analyzer)).totalTermFreq(), numberOfDocuments, numberOfTokens);
     }
 
     public double expectedUnderDBar(String term) {
@@ -221,9 +225,9 @@ public class ScorpioExperiment {
 
         List<StringDoublePair> list = new ArrayList<>();
 
-        for (String s : new QueryBank(dataSet).distinctTerms()) {
+        for (String s : new QueryBank(dataSet).distinctTerms(experiment.analyzer)) {
 
-            String string = Analyzers.getAnalyzedToken(s);
+            String string = Analyzers.getAnalyzedToken(s, experiment.analyzer);
             double d = experiment.expectedUnderDBar(string);
 
             if (d > 1.0)

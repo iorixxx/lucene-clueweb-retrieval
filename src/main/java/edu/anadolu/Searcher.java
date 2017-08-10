@@ -78,9 +78,9 @@ public class Searcher implements Closeable {
     }
 
     protected final DataSet dataSet;
-    protected final int numHits;
+    private final int numHits;
 
-    protected final Tag analyzerTag;
+    private final Tag analyzerTag;
 
     public Searcher(Path indexPath, DataSet dataSet, int numHits) throws IOException {
 
@@ -259,7 +259,7 @@ public class Searcher implements Closeable {
 
             BooleanQuery.Builder bq = new BooleanQuery.Builder().setDisableCoord(true);
 
-            for (String word : Analyzers.getAnalyzedTokens(need.query())) {
+            for (String word : Analyzers.getAnalyzedTokens(need.query(), Analyzers.analyzer(analyzerTag))) {
 
                 List<Query> queryList = new ArrayList<>();
 

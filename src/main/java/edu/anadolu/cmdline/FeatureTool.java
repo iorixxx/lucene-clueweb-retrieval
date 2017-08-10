@@ -3,6 +3,7 @@ package edu.anadolu.cmdline;
 import edu.anadolu.ModelSelection;
 import edu.anadolu.QuerySelector;
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
@@ -11,6 +12,7 @@ import edu.anadolu.knn.Measure;
 import edu.anadolu.stats.TermStats;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
@@ -29,8 +31,8 @@ public final class FeatureTool extends CmdLineTool {
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzerAnchor";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = Tag.KStem.toString();
 
     @Option(name = "-measure", required = false, usage = "Effectiveness measure")
     protected Measure measure = Measure.NDCG100;
@@ -77,6 +79,7 @@ public final class FeatureTool extends CmdLineTool {
             return;
         }
 
+        Analyzer analyzer = Analyzers.analyzer(Tag.tag(tag));
         ModelSelection modelSelection = new ModelSelection(dataset, tag);
 
         QuerySelector querySelector = new QuerySelector(dataset, tag);
@@ -86,7 +89,7 @@ public final class FeatureTool extends CmdLineTool {
 
             Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");
 
-            List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query());
+            List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), analyzer);
 
             double[] idf = new double[analyzedTokens.size()];
             double[] cti = new double[analyzedTokens.size()];

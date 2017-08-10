@@ -17,7 +17,10 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
@@ -38,8 +41,8 @@ import static edu.anadolu.knn.Predict.*;
  */
 public class XTool extends CmdLineTool {
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzerAnchor";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = "KStemAnchor";
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
     protected String op = "OR";
@@ -52,6 +55,9 @@ public class XTool extends CmdLineTool {
 
     @Option(name = "-sigma0", required = false, usage = "use sigma0 for accuracy")
     protected boolean sigma0 = false;
+
+    @Option(name = "-freq", required = false, usage = "Frequency implementation")
+    protected Freq freq = Freq.Rel;
 
     @Override
     public String getShortDescription() {
@@ -223,7 +229,7 @@ public class XTool extends CmdLineTool {
     }
 
     protected String evalDirectory(DataSet dataset, Measure measure) {
-        if (Collection.GOV2.equals(dataset.collection()) || Collection.MC.equals(dataset.collection()) || Collection.ROB04.equals(dataset.collection())) {
+        if (!dataset.spamAvailable()) {
             return "evals";
         } else if (catB && (Collection.CW09B.equals(dataset.collection()) || Collection.CW12B.equals(dataset.collection()))) {
             return "catb_evals";
@@ -298,8 +304,8 @@ public class XTool extends CmdLineTool {
         final DataSet testDataSet = CollectionFactory.dataset(test, tfd_home);
         final DataSet trainDataSet = CollectionFactory.dataset(train, tfd_home);
 
-        final Decorator testDecorator = new Decorator(testDataSet, tag, Freq.Rel);
-        final Decorator trainDecorator = new Decorator(trainDataSet, tag, Freq.Rel);
+        final Decorator testDecorator = new Decorator(testDataSet, tag, freq);
+        final Decorator trainDecorator = new Decorator(trainDataSet, tag, freq);
 
 
         final Evaluator trainEvaluator = new Evaluator(trainDataSet, tag, optimize, models, evalDirectory(trainDataSet, optimize), op);
@@ -366,7 +372,7 @@ public class XTool extends CmdLineTool {
         doSelectiveTermWeighting(testQueries, testEvaluator);
         Map<String, Double> geoRiskMap = addGeoRisk2Sheet(RxT);
 
-        accuracyList.sort(((o1, o2) -> o1.key.compareTo(o2.key)));
+        accuracyList.sort(Comparator.comparing(o -> o.key));
         accuracyList.forEach(this::writeSolution2SummarySheet);
 
 

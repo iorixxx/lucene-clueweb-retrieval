@@ -100,7 +100,7 @@ public class ModelSelection {
 
     public void printSolutionList() {
 
-        Collections.sort(solutionList, (o1, o2) -> Double.compare(o2.sigma1, o1.sigma1));
+        solutionList.sort((o1, o2) -> Double.compare(o2.sigma1, o1.sigma1));
 
         for (Solution solution : solutionList)
             System.out.println(solution.k + "\t" + String.format("%.2f", solution.sigma1) + "\t" + String.format("%.5f", solution.getMean()));

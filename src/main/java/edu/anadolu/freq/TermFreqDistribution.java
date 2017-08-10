@@ -220,7 +220,7 @@ public class TermFreqDistribution implements TFD {
         final PrintWriter stopOutput = new PrintWriter(Files.newBufferedWriter(path.resolve(field + "_stop_freq.csv"), StandardCharsets.US_ASCII));
 
         for (final String stopWord : stopWords) {
-            stopOutput.println(Analyzers.getAnalyzedToken(stopWord) + "\t" + distribution.getTermDistributionStats(Analyzers.getAnalyzedToken(stopWord)));
+            stopOutput.println(Analyzers.getAnalyzedToken(stopWord, analyzer) + "\t" + distribution.getTermDistributionStats(Analyzers.getAnalyzedToken(stopWord, analyzer)));
         }
 
         stopOutput.flush();

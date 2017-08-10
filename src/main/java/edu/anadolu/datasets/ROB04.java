@@ -19,4 +19,9 @@ class ROB04 extends DataSet {
     public String getNoDocumentsID() {
         return "LA000000-0040";
     }
+
+    @Override
+    public boolean spamAvailable() {
+        return false;
+    }
 }

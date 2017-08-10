@@ -23,4 +23,9 @@ class Gov2 extends DataSet {
     public String getNoDocumentsID() {
         return "GX000-00-0000000";
     }
+
+    @Override
+    public boolean spamAvailable() {
+        return false;
+    }
 }

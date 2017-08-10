@@ -91,7 +91,7 @@ final class ExportTool extends CmdLineTool {
             int row = 1;
             for (InfoNeed need : selector.allQueries) {
 
-                List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query());
+                List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), selector.analyzer());
 
                 for (String word : analyzedTokens) {
 
@@ -174,7 +174,7 @@ final class ExportTool extends CmdLineTool {
         for (TFDAwareNeed tfdAwareNeed : tfdAwareNeeds) {
 
             for (String word : tfdAwareNeed.distinctSet) {
-                Double[] array = tfdAwareNeed.termFreqDistNormalized(word);
+                Double[] array = tfdAwareNeed.termFreqDistNormalized(word, decorator.analyzer());
 
                 Row r = freqDist.createRow(row);
 
@@ -213,7 +213,7 @@ final class ExportTool extends CmdLineTool {
 
 
             for (String word : tfdAwareNeed.distinctSet) {
-                Double[] array = tfdAwareNeed.termFreqDistZeroNormalized(word);
+                Double[] array = tfdAwareNeed.termFreqDistZeroNormalized(word, decorator.analyzer());
 
                 Row r = freqDistZero.createRow(row);
 
@@ -222,7 +222,7 @@ final class ExportTool extends CmdLineTool {
 
                 write(array, r, pdf);
 
-                Long[] longs = tfdAwareNeed.termFreqDistZeroRaw(word);
+                Long[] longs = tfdAwareNeed.termFreqDistZeroRaw(word, decorator.analyzer());
                 rawRow = raw.createRow(row);
                 rawRow.createCell(0).setCellValue(tfdAwareNeed.id());
                 rawRow.createCell(1).setCellValue(word);

@@ -205,7 +205,7 @@ public final class Decorator extends QuerySelector {
                 String term = entry.getKey();
                 String line = entry.getValue();
                 Long[] l = parseFreqLine(line);
-                Long[] z = parseFreqLine(addZeroColumnToLine((line)));
+                Long[] z = Freq.Zero.equals(type) ? l.clone() : addZeroColumnToLine(l);
                 termFreqDist.add(l);
                 termFreqDistMap.put(term, l);
                 termFreqDistZero.add(z);
@@ -257,37 +257,37 @@ public final class Decorator extends QuerySelector {
 
         final String[] parts = whiteSpaceSplitter.split(line);
 
+        // TODO some query terms do not exist in the Collection
+        if (parts[1].endsWith("(stopword)"))
+            return array;
+
         for (int i = 1; i < parts.length; i++)
             array[i - 1] = Long.parseLong(parts[i]);
 
         return array;
     }
 
-    public String addZeroColumnToLine(String line) {
-        final long zero = numberOfDocuments - DF(line);
-        int i = line.indexOf("\t");
-        return line.substring(0, i) + "\t" + zero + line.substring(i);
+    public Long[] addZeroColumnToLine(Long[] input) {
+
+        final long df = TFDAwareNeed.df(input);
+
+        long zero = numberOfDocuments - df;
+        if (zero < 0) {
+            System.out.println("numberOfDocuments - df < 0 " + zero);
+            return insertZerothPosition(input, 0);
+        } else
+            return insertZerothPosition(input, numberOfDocuments - df);
     }
 
-    /**
-     * Calculates document frequency of the term <i>t<i/>
-     *
-     * @param line frequency line
-     * @return DocFreq
-     */
-    public static long DF(String line) {
-        final String[] parts = whiteSpaceSplitter.split(line);
+    static Long[] insertZerothPosition(Long[] input, long key) {
 
-        if (!parts[0].contains(":") && !isInteger(parts[0]))
-            throw new RuntimeException(parts[0] + " does not contain colon (:) or is not an integer!");
+        final Long[] array = new Long[input.length];
+        Arrays.fill(array, 0L);
 
-        long df = 0;
-        for (int i = 1; i < parts.length; i++) {
-            long value = Long.parseLong(parts[i]);
-            df += value;
-        }
+        System.arraycopy(input, 0, array, 1, input.length - 1);
+        array[0] = key;
+        return array;
 
-        return df;
     }
 
     static boolean isInteger(String s) {
