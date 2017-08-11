@@ -154,6 +154,11 @@ public final class SearcherTool extends CmdLineTool {
 
             for (final Path path : discoverIndexes(dataset)) {
 
+                final String tag = path.getFileName().toString();
+
+                // search for a specific tag, skip the rest
+                if (this.tag != null && !tag.equals(this.tag)) continue;
+
                 try (Searcher searcher = new Searcher(path, dataset, 1000)) {
                     searcher.searchWithThreads(numThreads, models, fields, "parameter_runs");
                 }
@@ -186,6 +191,8 @@ public final class SearcherTool extends CmdLineTool {
 
                     final String tag = path.getFileName().toString();
 
+                    // search for a specific tag, skip the rest
+                    if (this.tag != null && !tag.equals(this.tag)) continue;
 
                     final Set<ModelBase> modelBaseList = new HashSet<>();
 
