@@ -1,7 +1,6 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Searcher;
-import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.exp.Prob;
@@ -182,8 +181,7 @@ public final class SearcherTool extends CmdLineTool {
 
             final long start = System.nanoTime();
 
-            if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) ||
-                    Collection.MQE1.equals(collection) || Collection.CW12B.equals(collection)) {
+            if (dataset.spamAvailable()) {
                 for (final Path path : discoverIndexes(dataset)) {
 
                     final String tag = path.getFileName().toString();
@@ -204,7 +202,7 @@ public final class SearcherTool extends CmdLineTool {
                     modelBaseList.add(new DFRee());
 
                     try (Searcher searcher = new Searcher(path, dataset, 10000)) {
-                        searcher.searchWithThreads(numThreads, modelBaseList, fields, "spam_0_runs");
+                        searcher.searchWithThreads(numThreads, modelBaseList, fields, "base_spam_runs");
                     }
                     modelBaseList.clear();
                 }

@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
  */
 public final class SpamTool extends CmdLineTool {
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzer";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = "KStem";
 
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
@@ -72,7 +72,7 @@ public final class SpamTool extends CmdLineTool {
             return;
         }
 
-        List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("spam_0_runs"), ".txt");
+        List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("base_spam_runs"), ".txt");
 
         System.out.println("there are " + pathList.size() + " many TREC submission files found to be processed...");
 
@@ -123,7 +123,7 @@ public final class SpamTool extends CmdLineTool {
 
         final SubmissionFile submissionFile = new SubmissionFile(submission);
 
-        Path relPath = dataset.collectionPath().resolve("spam_0_runs").relativize(submission);
+        Path relPath = dataset.collectionPath().resolve("base_spam_runs").relativize(submission);
 
         Map<Integer, List<SubmissionFile.Tuple>> submissionFileMap = submissionFile.entryMap();
         String runTag = submissionFile.runTag();
