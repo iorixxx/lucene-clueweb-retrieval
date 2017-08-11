@@ -211,7 +211,7 @@ public final class SpamTool extends CmdLineTool {
      */
     private static int percentile(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
 
-        SolrDocumentList resp = solr.query(new SolrQuery(docID)).getResults();
+        SolrDocumentList resp = solr.query(new SolrQuery(docID).setFields("percentile")).getResults();
 
         if (resp.size() == 0) {
             System.out.println("cannot find docID " + docID + " in " + solr.getBaseURL());
@@ -222,6 +222,8 @@ public final class SpamTool extends CmdLineTool {
         }
 
         int percentile = (int) resp.get(0).getFieldValue("percentile");
+
+        resp.clear();
 
         if (percentile >= 0 && percentile < 100)
             return percentile;

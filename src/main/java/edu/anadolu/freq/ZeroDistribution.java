@@ -53,9 +53,9 @@ public class ZeroDistribution extends Phi {
 
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.FILTER)
-                .add(new ConstantScoreQuery(new TermQuery(term)), BooleanClause.Occur.MUST_NOT);
+                .add(new TermQuery(term), BooleanClause.Occur.MUST_NOT);
 
-        ScoreDoc[] hits = searcher.search(new ConstantScoreQuery(builder.build()), Integer.MAX_VALUE).scoreDocs;
+        ScoreDoc[] hits = searcher.search(builder.build(), Integer.MAX_VALUE).scoreDocs;
 
         if ((counter1 + hits.length) != reader.numDocs()) {
             System.out.println("term enum : " + counter1 + " filter clause : " + hits.length);
