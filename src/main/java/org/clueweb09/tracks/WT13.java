@@ -23,14 +23,4 @@ public class WT13 extends Track {
         super(home);
     }
 
-    /**
-     * An experimental run consists of the top 10,000 documents for 2013 Web Track
-     * http://research.microsoft.com/en-us/projects/trec-web-2013/
-     *
-     * @return 10, 000
-     */
-    @Override
-    protected int getTopN() {
-        return 10000;
-    }
 }

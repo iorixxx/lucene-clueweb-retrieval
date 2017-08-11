@@ -16,7 +16,7 @@ public abstract class Track implements Comparable<Track> {
 
     protected final Map<Integer, Map<String, Integer>> map = new TreeMap<>();
 
-    protected final SortedSet<Integer> judgeLevels = new TreeSet<>();
+    final SortedSet<Integer> judgeLevels = new TreeSet<>();
 
     protected final List<InfoNeed> needs = new ArrayList<>();
 
@@ -240,12 +240,4 @@ public abstract class Track implements Comparable<Track> {
     public String toString() {
         return getClass().getSimpleName();
     }
-
-    /**
-     * An experimental run consists of the top N documents for each topic query.
-     *
-     * @return N cut-off level
-     */
-    protected abstract int getTopN();
-
 }

@@ -32,9 +32,6 @@ public final class SpamTool extends CmdLineTool {
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     protected String tag = "KStem";
 
-    @Option(name = "-task", required = false, usage = "task to be executed")
-    private String task;
-
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
 
@@ -61,6 +58,11 @@ public final class SpamTool extends CmdLineTool {
         }
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
+
+        if (!dataset.spamAvailable()) {
+            System.out.println(dataset.toString() + " do not have spam filtering option!");
+            return;
+        }
 
         final HttpSolrClient solr;
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {

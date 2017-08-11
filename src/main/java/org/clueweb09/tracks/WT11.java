@@ -24,16 +24,6 @@ public class WT11 extends Track {
     }
 
 
-    /**
-     * top 10,000 documents for 2011 Web Track http://plg.uwaterloo.ca/~trecweb/2011.html
-     *
-     * @return 10, 000
-     */
-    @Override
-    protected int getTopN() {
-        return 10000;
-    }
-
     private static final String[] wt11 = {
             "101:ritz carlton lake las vegas",
             "102:fickle creek farm",

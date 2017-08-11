@@ -23,15 +23,6 @@ public class WT10 extends Track {
         populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrels.web.51-100.txt"));
     }
 
-    /**
-     * top 10,000 documents for 2010 Web Track http://plg.uwaterloo.ca/~trecweb/2010.html
-     */
-    @Override
-    public int getTopN() {
-        return 10000;
-    }
-
-
     private static final String[] wt10 = {
 
             "51:horse hooves",

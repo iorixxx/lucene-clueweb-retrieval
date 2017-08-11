@@ -111,15 +111,4 @@ public class MQ09 extends Track {
         }
         lines.clear();
     }
-
-    /**
-     * Each run should have 1,000 documents ranked for each query, though may have fewer.
-     *
-     * @return 1000
-     */
-    @Override
-    protected int getTopN() {
-        return 1000;
-    }
-
 }
