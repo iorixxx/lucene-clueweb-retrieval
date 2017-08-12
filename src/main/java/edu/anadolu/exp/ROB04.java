@@ -74,11 +74,21 @@ public class ROB04 {
 
 
             String id = dd.getName();
-            String contents = dd.getBody();
+            String body = dd.getBody();
+            String title = dd.getTitle();
+
+            StringBuilder contents = new StringBuilder();
+
+            if (title != null && title.trim().length() > 0)
+                contents.append(title.trim()).append(' ');
+
+            if (body != null && body.trim().length() > 0) {
+                contents.append(body.trim());
+            }
 
             // don't index empty documents
-            if (contents == null || contents.trim().length() == 0) {
-                System.err.println(id + " " + dd.getTitle());
+            if (contents.length() == 0) {
+                System.err.println(id + " " + dd.getTitle() + " " + dd.getBody());
                 continue;
             }
 
@@ -89,7 +99,10 @@ public class ROB04 {
             document.add(new StringField(Indexer.FIELD_ID, id, Field.Store.YES));
 
             // entire document
-            document.add(new Indexer.NoPositionsTextField(Indexer.FIELD_CONTENTS, contents));
+            document.add(new Indexer.NoPositionsTextField(Indexer.FIELD_CONTENTS, contents.toString().trim()));
+
+            // add artificial: every document should have this
+            document.add(Indexer.ARTIFICIAL);
 
             writer.addDocument(document);
 

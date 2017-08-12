@@ -12,10 +12,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.ConcurrentMergeScheduler;
-import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.SolrClient;
@@ -53,6 +50,11 @@ import java.util.zip.GZIPInputStream;
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public final class Indexer {
+
+    /**
+     * artificial field and token: every document should have this
+     */
+    public static final IndexableField ARTIFICIAL = new NoPositionsTextField("all", "all");
 
     public static final class NoPositionsTextField extends Field {
 
