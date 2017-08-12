@@ -27,6 +27,9 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-field", usage = "Boolean switch to index different document representations")
     private boolean field = false;
 
+    @Option(name = "-artificial", usage = "Boolean switch to index artificial field and token")
+    private boolean artificial = false;
+
     @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU|NoStemTurkish|Zemberek]", required = false, usage = "Analyzer Tag")
     private Tag tag = KStem;
 
@@ -52,8 +55,8 @@ public final class IndexerTool extends CmdLineTool {
 
         if (parseArguments(props) == -1) return;
 
-        if (Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection) || Collection.MQE2.equals(collection)) {
-            System.out.println("No need to run separate indexer for MQ09!");
+        if (Collection.MQ07.equals(collection) || Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection) || Collection.MQE2.equals(collection)) {
+            System.out.println("No need to run separate indexer for Million Query!");
             return;
         }
 
@@ -72,7 +75,7 @@ public final class IndexerTool extends CmdLineTool {
             return;
         }
 
-        if (Collection.MC.equals(collection)){
+        if (Collection.MC.equals(collection)) {
             final long start = System.nanoTime();
             final int numIndexed = MCIndexer.index(docsPath, indexPath, tag);
             System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
@@ -87,9 +90,8 @@ public final class IndexerTool extends CmdLineTool {
             return;
         }
 
+        final HttpSolrClient solr;
         if (anchor) {
-
-            final HttpSolrClient solr;
             if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {
                 solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
             } else if (Collection.CW12B.equals(collection))
@@ -98,20 +100,15 @@ public final class IndexerTool extends CmdLineTool {
                 System.out.println("anchor text is only available to ClueWeb09 and ClueWeb12 collections!");
                 return;
             }
-
-            long s = System.nanoTime();
-            Indexer i = new Indexer(collection, docsPath, indexPath, solr, anchor, tag, field);
-            int nIndexed = i.indexWithThreads(numThreads);
-            solr.close();
-            System.out.println("Total " + nIndexed + " documents (with anchor text) indexed in " + execution(s));
-
         } else {
-
-            long start = System.nanoTime();
-            Indexer indexer = new Indexer(collection, docsPath, indexPath, null, anchor, tag, field);
-            int numIndexed = indexer.indexWithThreads(numThreads);
-            System.out.println("Total " + numIndexed + " documents (without anchor text) indexed in " + execution(start));
-
+            solr = null;
         }
+
+        long start = System.nanoTime();
+        Indexer.IndexerConfig config = new Indexer.IndexerConfig().useAnchorText(anchor).useMetaFields(field).useArtificialField(artificial);
+        config.useAnchorText(anchor);
+        Indexer indexer = new Indexer(collection, docsPath, indexPath, solr, tag, config);
+        int numIndexed = indexer.indexWithThreads(numThreads);
+        System.out.println("Total " + numIndexed + " documents (without anchor text) indexed in " + execution(start));
     }
 }

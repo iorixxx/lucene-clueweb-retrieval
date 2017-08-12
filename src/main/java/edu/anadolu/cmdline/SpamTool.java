@@ -9,6 +9,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -23,6 +24,9 @@ import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
+import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 
 /**
  * Tool for integration Waterloo Spam Rankings
@@ -211,7 +215,11 @@ public final class SpamTool extends CmdLineTool {
      */
     private static int percentile(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
 
-        SolrDocumentList resp = solr.query(new SolrQuery(docID).setFields("percentile")).getResults();
+        SolrQuery query = new SolrQuery(docID).setFields("percentile");
+        query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
+        query.set(OMIT_HEADER, true);
+        SolrDocumentList resp = solr.query(query).getResults();
+
 
         if (resp.size() == 0) {
             System.out.println("cannot find docID " + docID + " in " + solr.getBaseURL());
@@ -224,6 +232,7 @@ public final class SpamTool extends CmdLineTool {
         int percentile = (int) resp.get(0).getFieldValue("percentile");
 
         resp.clear();
+        query.clear();
 
         if (percentile >= 0 && percentile < 100)
             return percentile;

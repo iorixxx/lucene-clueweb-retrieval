@@ -20,6 +20,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
@@ -45,6 +46,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
+
+import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
+import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 
 /**
  * Indexer for ClueWeb{09|12} plus GOV2
@@ -101,6 +105,10 @@ public final class Indexer {
             // entire document
             document.add(new NoPositionsTextField(FIELD_CONTENTS, contents));
 
+            // add artificial: every document should have this
+            if (!config.field && config.artificial)
+                document.add(ARTIFICIAL);
+
             // URLs only
             // document.add(new NoPositionsTextField("url", contents));
 
@@ -129,7 +137,7 @@ public final class Indexer {
 
             StringBuilder contents = new StringBuilder(jDoc.text()).append(" ");
 
-            if (anchor && solr != null) {
+            if (config.anchor && solr != null) {
                 String anchor = anchor(id);
                 if (anchor != null)
                     stripHTMLAndAppend(anchor, contents);
@@ -148,7 +156,7 @@ public final class Indexer {
             if (!RESPONSE.equals(warcRecord.type()))
                 return 0;
 
-            if (field) {
+            if (config.field) {
                 Document document = warc2LuceneDocument(warcRecord);
                 if (document != null)
                     writer.addDocument(document);
@@ -168,7 +176,7 @@ public final class Indexer {
                 return 1;
             }
 
-            if (anchor)
+            if (config.anchor)
                 return indexJDocWithAnchor(jDoc, id);
             else
                 return indexJDoc(jDoc, id);
@@ -268,14 +276,15 @@ public final class Indexer {
     private final Path indexPath;
     private final Path docsPath;
 
-    private final boolean anchor;
-    private final boolean field;
+    private final IndexerConfig config;
     private final Collection collection;
 
     private String anchor(String id) {
         SolrQuery query = new SolrQuery();
         query.setQuery(id);
         query.setFields("anchor");
+        query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
+        query.set(OMIT_HEADER, true);
         QueryResponse response;
 
         try {
@@ -286,6 +295,7 @@ public final class Indexer {
 
         SolrDocumentList list = response.getResults();
 
+        query.clear();
         if (list.size() == 0) return null;
 
         if (list.size() == 1)
@@ -297,11 +307,11 @@ public final class Indexer {
 
     private final Tag tag;
 
-    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, boolean anchor, Tag tag, boolean field) throws IOException {
+    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, Tag tag, IndexerConfig config) throws IOException {
 
         this.collection = collection;
-        this.field = field;
-        this.anchor = this.field || anchor;
+        this.config = config;
+        boolean anchor = config.field || config.anchor;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
@@ -312,7 +322,7 @@ public final class Indexer {
         this.solr = solr;
         this.tag = tag;
 
-        if (this.field)
+        if (this.config.field)
             this.indexPath = Paths.get(indexPath, tag + "Field");
         else
             this.indexPath = Paths.get(indexPath, tag + (anchor ? "Anchor" : ""));
@@ -466,7 +476,7 @@ public final class Indexer {
         }
 
 
-        if (anchor && solr != null) {
+        if (config.anchor && solr != null) {
             String anchor = anchor(wDoc.id());
             if (anchor != null)
                 document.add(new NoPositionsTextField("anchor", anchor));
@@ -558,7 +568,7 @@ public final class Indexer {
 
         Analyzer analyzer;
 
-        if (field) {
+        if (config.field) {
             Map<String, Analyzer> analyzerPerField = new HashMap<>();
             analyzerPerField.put("url", new SimpleAnalyzer());
             analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
@@ -657,7 +667,7 @@ public final class Indexer {
 
         Analyzer analyzer;
 
-        if (field) {
+        if (config.field) {
             Map<String, Analyzer> analyzerPerField = new HashMap<>();
             analyzerPerField.put("url", new SimpleAnalyzer());
             analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
@@ -717,5 +727,28 @@ public final class Indexer {
             return (name != null && name.toString().endsWith(suffix));
 
         }
+    }
+
+    public static final class IndexerConfig {
+
+        boolean anchor = false;
+        boolean field = false;
+        boolean artificial = false;
+
+        public IndexerConfig useAnchorText(boolean anchor) {
+            this.anchor = anchor;
+            return this;
+        }
+
+        public IndexerConfig useArtificialField(boolean artificial) {
+            this.artificial = artificial;
+            return this;
+        }
+
+        public IndexerConfig useMetaFields(boolean field) {
+            this.field = field;
+            return this;
+        }
+
     }
 }
