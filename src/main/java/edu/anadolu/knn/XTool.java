@@ -59,6 +59,9 @@ public class XTool extends CmdLineTool {
     @Option(name = "-freq", required = false, usage = "Frequency implementation")
     protected Freq freq = Freq.Rel;
 
+    @Option(name = "-var", required = false, usage = "filter training queries by variance threshold", metaVar = "0 1 2")
+    protected int var = 0;
+
     @Override
     public String getShortDescription() {
         return "X Utility";
@@ -235,6 +238,7 @@ public class XTool extends CmdLineTool {
             return "catb_evals";
         } else {
             final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, measure, op);
+            System.out.println("best spam threshold " + bestSpamThreshold);
             return bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
         }
     }
@@ -364,8 +368,14 @@ public class XTool extends CmdLineTool {
         SGL.key = "SGL";
         SGL.predict = Predict.DIV;
 
-        winnerMap = trainDecorator.decorate(trainEvaluator.bestModelMap);
-        loserMap = trainDecorator.decorate(trainEvaluator.worstModelMap);
+
+        if (var == 0) {
+            winnerMap = trainDecorator.decorate(trainEvaluator.bestModelMap);
+            loserMap = trainDecorator.decorate(trainEvaluator.worstModelMap);
+        } else {
+            winnerMap = trainDecorator.decorate(trainEvaluator.filter(trainEvaluator.bestModelMap, var));
+            loserMap = trainDecorator.decorate(trainEvaluator.filter(trainEvaluator.worstModelMap, var));
+        }
 
         checkNoWinnerLoserCase();
 

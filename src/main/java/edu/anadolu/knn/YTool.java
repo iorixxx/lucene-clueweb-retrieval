@@ -40,9 +40,6 @@ public class YTool extends XTool {
 
     private Collection[] collections;
 
-    @Option(name = "-var", required = false, usage = "variance threshold", metaVar = "0 1 2")
-    private int var = 0;
-
     @Option(name = "-msK", required = false, usage = "k of MS", metaVar = "1 2 3 4 5 6 7 8 9")
     private int msK = 7;
 

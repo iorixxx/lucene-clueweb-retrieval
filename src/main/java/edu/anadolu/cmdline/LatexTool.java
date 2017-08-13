@@ -56,6 +56,7 @@ public final class LatexTool extends EvaluatorTool {
         if ("CW09B".equals(dataSet)) return "ClueWeb09B";
         if ("CW12B".equals(dataSet)) return "ClueWeb12-B13";
         if ("ROB04".equals(dataSet)) return "Robust Track 2004";
+        if ("GOV2".equals(dataSet)) return "Terabyte Track";
         throw new RuntimeException(dataSet + " is unrecognized!");
     }
 
