@@ -109,6 +109,6 @@ public final class IndexerTool extends CmdLineTool {
         config.useAnchorText(anchor);
         Indexer indexer = new Indexer(collection, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
-        System.out.println("Total " + numIndexed + " documents (without anchor text) indexed in " + execution(start));
+        System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
     }
 }

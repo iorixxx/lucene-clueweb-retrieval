@@ -196,12 +196,10 @@ public final class SearcherTool extends CmdLineTool {
 
                     final Set<ModelBase> modelBaseList = new HashSet<>();
 
-                    for (String parametricModel : parametricModels)
-                        for (Measure measure : Measure.values())
-                            modelBaseList.add(train(parametricModel, dataset, tag, measure, "OR"));
-
-
-                    // modelBaseList.addAll(parametricModelList());
+                    if (!field)
+                        for (String parametricModel : parametricModels)
+                            for (Measure measure : Measure.values())
+                                modelBaseList.add(train(parametricModel, dataset, tag, measure, "OR"));
 
                     modelBaseList.add(new DFIC());
                     modelBaseList.add(new DPH());
@@ -232,9 +230,6 @@ public final class SearcherTool extends CmdLineTool {
                 for (String parametricModel : parametricModels)
                     for (Measure measure : Measure.values())
                         modelBaseList.add(train(parametricModel, dataset, tag, measure, "OR"));
-
-
-            // modelBaseList.addAll(parametricModelList());
 
             modelBaseList.add(new DFIC());
             modelBaseList.add(new DPH());
