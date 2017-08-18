@@ -105,8 +105,10 @@ public final class IndexerTool extends CmdLineTool {
         }
 
         long start = System.nanoTime();
-        Indexer.IndexerConfig config = new Indexer.IndexerConfig().useAnchorText(anchor).useMetaFields(field).useArtificialField(artificial);
-        config.useAnchorText(anchor);
+        Indexer.IndexerConfig config = new Indexer.IndexerConfig()
+                .useAnchorText(anchor)
+                .useMetaFields(field)
+                .useArtificialField(artificial);
         Indexer indexer = new Indexer(collection, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));

@@ -3,6 +3,7 @@ package edu.anadolu;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.field.MetaTag;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
@@ -28,7 +29,6 @@ import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -47,6 +47,7 @@ import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
+import static edu.anadolu.field.MetaTag.notEmpty;
 import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
 import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 
@@ -354,78 +355,6 @@ public final class Indexer {
         return out;
     }
 
-    private static void append(String content, StringBuilder builder) {
-        if (content != null && content.trim().length() > 1)
-            builder.append(content.trim()).append(" ");
-    }
-
-    /**
-     * Enrich Lucene document with metadata extracted from JSoup document.
-     * <p>
-     * <head>
-     * <meta charset="UTF-8">
-     * <meta name="description" content="Free Web tutorials">
-     * <meta name="keywords" content="HTML,CSS,XML,JavaScript">
-     * <meta name="author" content="Hege Refsnes">
-     * </head>
-     *
-     * @param meta      name of the metadata
-     * @param jDoc      JSoup document
-     * @param fieldName name of the field
-     * @param document  Lucene document
-     */
-    private static void enrich(String meta, org.jsoup.nodes.Document jDoc, String fieldName, Document document) {
-
-        Elements elements = jDoc.select("meta[name=" + meta + "]");
-        elements.addAll(jDoc.select("meta[name=" + meta + "s]"));
-
-        if (elements.isEmpty()) return;
-
-        StringBuilder builder = new StringBuilder();
-
-        for (Element e : elements) {
-            append(e.attr("contents"), builder);
-            append(e.attr("content"), builder);
-        }
-
-        if (builder.length() > 1)
-            document.add(new NoPositionsTextField(fieldName, builder.toString().trim()));
-
-        elements.empty();
-    }
-
-    /**
-     * Enrich Lucene document with metadata extracted from JSoup document.
-     * <p>
-     * <head>
-     * <meta charset="UTF-8">
-     * <meta name="description" content="Free Web tutorials">
-     * <meta name="keywords" content="HTML,CSS,XML,JavaScript">
-     * <meta name="author" content="Hege Refsnes">
-     * </head>
-     *
-     * @param jDoc      JSoup document
-     * @param fieldName name of the metadata/field
-     * @param document  Lucene document
-     */
-    private static void enrich2(org.jsoup.nodes.Document jDoc, String fieldName, Document document) {
-
-        Elements elements = jDoc.select("meta[name=" + fieldName + "]");
-
-        if (elements.isEmpty()) return;
-
-        StringBuilder builder = new StringBuilder();
-
-        for (Element e : elements) {
-            append(e.attr("content"), builder);
-        }
-
-        if (builder.length() > 1)
-            document.add(new NoPositionsTextField(fieldName, builder.toString().trim()));
-
-        elements.empty();
-    }
-
     /**
      * Indexes different document representations (keywords, body, title, description, URL) into separate fields.
      *
@@ -448,8 +377,7 @@ public final class Indexer {
 
         String title = null;
         String body = null;
-        String keywords = null;
-        String description = null;
+
 
         document.add(new StringField("id", wDoc.id(), Field.Store.YES));
 
@@ -461,12 +389,15 @@ public final class Indexer {
             document.add(new NoPositionsTextField("title", title));
         }
 
+        String keywords = MetaTag.enrich2(jDoc, "keywords");
+        String description = MetaTag.enrich2(jDoc, "description");
 
-        enrich2(jDoc, "description", document);
-        enrich2(jDoc, "keywords", document);
+        if (notEmpty.test(keywords))
+            document.add(new NoPositionsTextField("keywords", keywords));
 
-        keywords = document.get("keywords");
-        description = document.get("description");
+        if (notEmpty.test(description))
+            document.add(new NoPositionsTextField("description", description));
+
 
         // HTML <body> Tag
         Element bodyEl = jDoc.body();
@@ -481,6 +412,11 @@ public final class Indexer {
             if (anchor != null)
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
+
+        String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
+
+        if (notEmpty.test(metaNames))
+            document.add(new NoPositionsTextField("meta", metaNames));
 
         document.add(new NoPositionsTextField("bt", body + " " + title));
         document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
@@ -509,6 +445,9 @@ public final class Indexer {
                     url += " " + aURL.getRef();
 
                 document.add(new NoPositionsTextField("url", url));
+
+                if (notEmpty.test(aURL.getHost()))
+                    document.add(new NoPositionsTextField("host", aURL.getHost()));
 
             } catch (MalformedURLException me) {
                 System.out.println("Malformed URL = " + URLString);
@@ -559,6 +498,16 @@ public final class Indexer {
         return stack;
     }
 
+    private Analyzer analyzer() throws IOException {
+        if (config.field) {
+            Map<String, Analyzer> analyzerPerField = new HashMap<>();
+            analyzerPerField.put("url", new SimpleAnalyzer());
+            analyzerPerField.put("meta", MetaTag.whitespaceAnalyzer());
+            analyzerPerField.put("host", MetaTag.whitespaceAnalyzer());
+            return new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
+        } else
+            return Analyzers.analyzer(tag);
+    }
 
     public int indexWithThreads(int numThreads) throws IOException, InterruptedException {
 
@@ -566,17 +515,7 @@ public final class Indexer {
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        Analyzer analyzer;
-
-        if (config.field) {
-            Map<String, Analyzer> analyzerPerField = new HashMap<>();
-            analyzerPerField.put("url", new SimpleAnalyzer());
-            analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
-        } else
-            analyzer = Analyzers.analyzer(tag);
-
-
-        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -659,23 +598,19 @@ public final class Indexer {
         return numIndexed;
     }
 
+    /**
+     * Indexer based on Java8's parallel streams
+     *
+     * @return number of indexed documents
+     * @throws IOException if IO exception occurs
+     */
     public int indexParallel() throws IOException {
 
         System.out.println("Parallel Indexing to directory '" + indexPath.toAbsolutePath() + "'...");
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        Analyzer analyzer;
-
-        if (config.field) {
-            Map<String, Analyzer> analyzerPerField = new HashMap<>();
-            analyzerPerField.put("url", new SimpleAnalyzer());
-            analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
-        } else
-            analyzer = Analyzers.analyzer(tag);
-
-
-        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);

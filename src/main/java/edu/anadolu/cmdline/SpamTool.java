@@ -34,10 +34,10 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 public final class SpamTool extends CmdLineTool {
 
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStem";
+    private String tag = "KStem";
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    protected edu.anadolu.datasets.Collection collection;
+    private edu.anadolu.datasets.Collection collection;
 
     @Override
     public String getShortDescription() {

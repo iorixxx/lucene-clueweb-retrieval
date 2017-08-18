@@ -1,8 +1,6 @@
 package edu.anadolu.exp;
 
 import org.apache.lucene.index.PostingsEnum;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import java.io.IOException;
 import java.net.URL;
@@ -26,8 +24,6 @@ public class ParseURL {
         System.out.println("filename = " + aURL.getFile());
         System.out.println("ref = " + aURL.getRef());
 
-        jSoupTest();
-        System.out.println();
         int arr1[] = {2, 3, 4, 5, 7, 8, 9, 10};
         int arr2[] = {2, 3, 6};
         int m = arr1.length;
@@ -134,29 +130,5 @@ public class ParseURL {
         }
 
         System.out.println("end");
-    }
-
-
-    static void jSoupTest() {
-        String html = "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<head>\n" +
-                "  <title>Title of the document</title>\n" +
-                "  <meta charset=\"UTF-8\">\n" +
-                "  <meta name=\"description\" content=\"Free Web tutorials\">\n" +
-                "  <meta name=\"keywords\" content=\"HTML,CSS,XML,JavaScript\">\n" +
-                "  <meta name=\"author\" content=\"John Doe\">\n" +
-                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "\n" +
-                "<p>All meta information goes in the head section...</p>\n" +
-                "\n" +
-                "</body>\n" +
-                "</html>";
-
-        Document jDoc = Jsoup.parse(html);
-
-        System.out.printf(jDoc.text());
     }
 }

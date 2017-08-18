@@ -213,6 +213,7 @@ public final class SearcherTool extends CmdLineTool {
                 }
 
                 System.out.println("Base search for spam filtering 10,000 documents per query completed in " + execution(start));
+                return;
             }
         }
 
