@@ -546,7 +546,7 @@ public class XTool extends CmdLineTool {
 
     protected String latexHeader() {
 
-        String anchor = "KStemAnalyzerAnchor".equals(tag) ? "Anchor" : "NoAnchor";
+        String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
         String tableName = test.toString() + report.toString() + train.toString() + optimize.toString() + anchor;
         String header = header();
@@ -619,12 +619,12 @@ public class XTool extends CmdLineTool {
 
     void persistSolutionsLists() throws IOException {
         System.out.println("Result sorted by mean effectiveness");
-        solutionList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.mean - o1.mean));
+        solutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.mean, o1.mean));
         solutionList.forEach(System.out::println);
 
 
         System.out.println("Result sorted by sigma0");
-        solutionList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.sigma0 - o1.sigma0));
+        solutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.sigma0, o1.sigma0));
         solutionList.forEach(System.out::println);
 
 
@@ -637,7 +637,7 @@ public class XTool extends CmdLineTool {
         printInterActionPlot("IPxAxCar", cartesianSolutionList, new String[]{"MODEL", "AGG", "PRED"});
 
         System.out.println("Cartesian Results sorted by sigma0");
-        cartesianSolutionList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.sigma0 - o1.sigma0));
+        cartesianSolutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.sigma0, o1.sigma0));
         cartesianSolutionList.forEach(System.out::println);
 
 
@@ -901,7 +901,7 @@ public class XTool extends CmdLineTool {
 
                             }
 
-                            Rank rank = Collections.max(ranks, (r1, r2) -> (int) Math.signum(r1.e() - r2.e()));
+                            Rank rank = Collections.max(ranks, Comparator.comparing(Rank::e));
                             predictedModel = rank.model;
                             break;
 

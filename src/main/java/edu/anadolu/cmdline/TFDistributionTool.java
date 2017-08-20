@@ -13,16 +13,12 @@ import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Term Frequency Distribution Analysis Tool
@@ -61,8 +57,6 @@ public final class TFDistributionTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
-        int numThreads = Integer.parseInt(props.getProperty("numThreads", "2"));
-
         String[] fields = props.getProperty("freq.fields", "anchor,description,keywords,title,contents").split(",");
 
         final Path freqsPath = dataset.collectionPath().resolve("freqs");
@@ -95,10 +89,9 @@ public final class TFDistributionTool extends CmdLineTool {
 
         long start = System.nanoTime();
         for (Path indexPath : indexList) {
-            final ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
             try (final IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath))) {
                 System.out.println("Term Freq. Dist opened index directory : " + indexPath + " has " + reader.numDocs() + " numDocs and has " + reader.maxDoc() + " maxDocs");
-
                 final String indexTag = indexPath.getFileName().toString();
                 Tag tag = Tag.tag(indexTag);
                 System.out.println("analyzer tag " + tag);
@@ -121,41 +114,16 @@ public final class TFDistributionTool extends CmdLineTool {
                     for (final Track track : dataset.tracks()) {
 
                         final Path path = Paths.get(freqsPath.toString(), indexTag, track.toString());
+
                         if (!Files.exists(path))
                             Files.createDirectories(path);
 
-                        executor.execute(new Thread(indexTag + track.toString()) {
-                            @Override
-                            public void run() {
-                                try {
-                                    distribution.processSingeTrack(track, path);
-                                } catch (IOException ioe) {
-                                    System.out.println(Thread.currentThread().getName() + ": ERROR: unexpected IOException:");
-                                    ioe.printStackTrace();
-                                }
+                        distribution.processSingeTrack(track, path);
 
-                            }
-                        });
                     }
-
-                }
-                //add some delay to let some threads spawn by scheduler
-                Thread.sleep(30000);
-                executor.shutdown(); // Disable new tasks from being submitted
-
-                try {
-                    // Wait for existing tasks to terminate
-                    while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                        Thread.sleep(1000);
-                    }
-                } catch (InterruptedException ie) {
-                    // (Re-)Cancel if current thread also interrupted
-                    executor.shutdownNow();
-                    // Preserve interrupt status
-                    Thread.currentThread().interrupt();
                 }
             }
         }
-        System.out.println("Term Frequency Distribution extraction finished in " + execution(start));
+        System.out.println(task + " Frequency Distribution extraction finished in " + execution(start));
     }
 }

@@ -75,3 +75,10 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 #./run.sh Stats
 #./run.sh VerboseTFDumper
 #./run.sh Export
+
+./run.sh Stats -collection CW09A
+./run.sh Stats -collection CW09A -task query
+./run.sh Doclen -collection CW09A
+./run.sh TFDistribution -collection CW09A -task query
+./run.sh TFDistribution -collection CW09A -task term
+./run.sh TFDistribution -collection CW09A -task zero
