@@ -26,7 +26,7 @@ import static edu.anadolu.field.FieldTool.sortByValue;
 
 
 public class SelectiveStemmingTool extends CmdLineTool {
-    @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "Zemberek_NoStemTurkish")
+    @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "MQ08")
     protected Collection collection;
 
     @Override

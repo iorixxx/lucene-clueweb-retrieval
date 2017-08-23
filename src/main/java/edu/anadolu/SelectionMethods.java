@@ -62,6 +62,7 @@ public class SelectionMethods {
 
         public void setTF(long TF) {
             this.TF = TF;
+            setBinTF(TF);
         }
 
         public long getDF() {
@@ -70,6 +71,7 @@ public class SelectionMethods {
 
         public void setDF(long DF) {
             this.DF = DF;
+            setBinDF(DF);
         }
 
         public int getBinTF() {
@@ -78,7 +80,7 @@ public class SelectionMethods {
 
         public void setBinTF(long TF) {
             int size=maxTF/NumberOfBIN;
-            this.binTF=(int)TF/NumberOfBIN;
+            this.binTF=(int)TF/size;
         }
 
         public int getBinDF() {
