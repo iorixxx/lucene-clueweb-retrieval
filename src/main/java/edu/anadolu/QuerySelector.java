@@ -1,12 +1,13 @@
 package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.stats.QueryStats;
 import edu.anadolu.stats.TermStats;
-import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 
@@ -36,6 +37,12 @@ public class QuerySelector {
 
     public final List<InfoNeed> allQueries;
     private final DataSet dataSet;
+    protected final Analyzer analyzer;
+
+    public Analyzer analyzer() {
+        return this.analyzer;
+    }
+
 
     public QuerySelector(DataSet dataSet, String tag) {
         this.dataSet = dataSet;
@@ -47,6 +54,7 @@ public class QuerySelector {
         }
 
         this.tag = tag;
+        this.analyzer = Analyzers.analyzer(Tag.tag(tag));
         this.collectionPath = dataSet.collectionPath();
         this.termStatisticsMap = loadTermStatsMap();
         this.queryStatsMap = loadQueryStatsMap();
@@ -72,7 +80,7 @@ public class QuerySelector {
 
         final List<String> lines = readAllLines(path);
 
-        Set<String> analyzedTokens = new HashSet<>(Analyzers.getAnalyzedTokens(need.query()));
+        Set<String> analyzedTokens = new HashSet<>(Analyzers.getAnalyzedTokens(need.query(), analyzer));
 
         LinkedHashMap<String, String> map = new LinkedHashMap<>();
 
@@ -201,7 +209,7 @@ public class QuerySelector {
 
         double max = Double.NEGATIVE_INFINITY;
 
-        for (String s : Analyzers.getAnalyzedTokens(need.query())) {
+        for (String s : Analyzers.getAnalyzedTokens(need.query(), analyzer)) {
             double e = expectedUnderDBar(s);
             if (e > max)
                 max = e;
@@ -216,7 +224,7 @@ public class QuerySelector {
     }
 
     public boolean isLambdaGreaterThan(InfoNeed need, double e) {
-        for (String s : Analyzers.getAnalyzedTokens(need.query()))
+        for (String s : Analyzers.getAnalyzedTokens(need.query(), analyzer))
             if (expectedUnderDBar(s) > e)
                 return true;
         return false;
@@ -231,7 +239,7 @@ public class QuerySelector {
      */
     public double termRatio(InfoNeed need, String metric) {
 
-        List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query());
+        List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), analyzer);
 
         if (analyzedTokens.size() == 1) {
             return termStatisticsMap.get(analyzedTokens.get(0)).metric(metric);
@@ -240,7 +248,7 @@ public class QuerySelector {
         double max = Double.NEGATIVE_INFINITY;
         double min = Double.POSITIVE_INFINITY;
 
-        for (String s : Analyzers.getAnalyzedTokens(need.query())) {
+        for (String s : Analyzers.getAnalyzedTokens(need.query(), analyzer)) {
 
             double d = termStatisticsMap.get(s).metric(metric);
 
@@ -266,7 +274,7 @@ public class QuerySelector {
 
         double max = Double.NEGATIVE_INFINITY;
 
-        for (String s : Analyzers.getAnalyzedTokens(need.query())) {
+        for (String s : Analyzers.getAnalyzedTokens(need.query(), analyzer)) {
 
             double l = termStatisticsMap.get(s).metric(metric);
 

@@ -82,9 +82,4 @@ public class MC extends Track {
 
         qrels.clear();
     }
-
-    @Override
-    protected int getTopN() {
-        return 1000;
-    }
 }

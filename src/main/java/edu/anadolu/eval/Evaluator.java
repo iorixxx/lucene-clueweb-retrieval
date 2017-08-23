@@ -502,26 +502,9 @@ public class Evaluator {
             throw new RuntimeException(key + " does not exist in scoreMap!");
         else {
 
-            final double score = scoreMap.get(key);
-
-            if (score != scoreOld(need, model))
-                throw new RuntimeException("score and old score differs!!!");
-
-            return score;
+            return scoreMap.get(key);
         }
     }
-
-    public double scoreOld(InfoNeed need, String model) {
-        if (performanceMap.containsKey(need)) {
-            for (ModelScore modelScore : performanceMap.get(need))
-                if (modelScore.model.equals(model))
-                    return modelScore.score;
-
-            throw new RuntimeException("model-score list does not contain model " + model);
-        }
-        throw new RuntimeException("performance map does not contain need " + need);
-    }
-
 
     private Map<InfoNeed, ModelScore> oracleMap() {
 
@@ -1135,15 +1118,7 @@ public class Evaluator {
 
         List<InfoNeed> needs = new ArrayList<>();
         needs.addAll(this.needs);
-
-        needs.sort((o1, o2) ->
-                {
-                    double v1 = varianceMap.get(o1);
-                    double v2 = varianceMap.get(o2);
-                    return (int) Math.signum(v1 - v2);
-                }
-        );
-
+        needs.sort(Comparator.comparing(varianceMap::get));
         return needs;
     }
 
@@ -2009,7 +1984,7 @@ public class Evaluator {
     }
 
     private ModelScore max(List<ModelScore> list) {
-        return Collections.max(list, (o1, o2) -> (int) Math.signum(o1.score - o2.score));
+        return Collections.max(list, Comparator.comparing(ModelScore::score));
     }
 
     public ModelScore bestModel() {

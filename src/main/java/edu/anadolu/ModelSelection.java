@@ -100,7 +100,7 @@ public class ModelSelection {
 
     public void printSolutionList() {
 
-        Collections.sort(solutionList, (o1, o2) -> Double.compare(o2.sigma1, o1.sigma1));
+        solutionList.sort((o1, o2) -> Double.compare(o2.sigma1, o1.sigma1));
 
         for (Solution solution : solutionList)
             System.out.println(solution.k + "\t" + String.format("%.2f", solution.sigma1) + "\t" + String.format("%.5f", solution.getMean()));
@@ -142,11 +142,7 @@ public class ModelSelection {
             solution.key = "MS" + k;
             solutionList.add(solution);
         }
-
-
-        return Collections.max(solutionList, (o1, o2) -> Double.compare(o1.sigma1, o2.sigma1));
-
-
+        return Collections.max(solutionList, Comparator.comparing(s -> s.sigma1));
     }
 
     static List<InfoNeed> trainingQueries(List<InfoNeed> residualNeeds, Track track) {
@@ -205,7 +201,7 @@ public class ModelSelection {
         for (int i = 0; i < clusters.size(); i++) {
             Set<InfoNeed> cluster = clusters.get(i);
             List<ModelScore> list = evaluator.averageForAllModels(cluster);
-            bestModelPerCluster.add(i, Collections.max(list, (o1, o2) -> Double.compare(o1.score, o2.score)).model);
+            bestModelPerCluster.add(i, Collections.max(list, Comparator.comparing(ModelScore::score)).model);
         }
 
         if (bestModelPerCluster.size() != clusters.size()) throw new RuntimeException("expect the unexpected");
@@ -248,7 +244,7 @@ public class ModelSelection {
         for (int i = 0; i < clusters.size(); i++) {
             Set<InfoNeed> cluster = clusters.get(i);
             List<ModelScore> list = evaluator.averageForAllModels(cluster);
-            bestModelPerCluster.add(i, Collections.max(list, (o1, o2) -> Double.compare(o1.score, o2.score)).model);
+            bestModelPerCluster.add(i, Collections.max(list, Comparator.comparing(ModelScore::score)).model);
         }
 
         if (bestModelPerCluster.size() != clusters.size()) throw new RuntimeException("expect the unexpected");

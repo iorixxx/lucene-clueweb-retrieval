@@ -17,7 +17,10 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
@@ -38,8 +41,8 @@ import static edu.anadolu.knn.Predict.*;
  */
 public class XTool extends CmdLineTool {
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzerAnchor";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = "KStemAnchor";
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
     protected String op = "OR";
@@ -52,6 +55,12 @@ public class XTool extends CmdLineTool {
 
     @Option(name = "-sigma0", required = false, usage = "use sigma0 for accuracy")
     protected boolean sigma0 = false;
+
+    @Option(name = "-freq", required = false, usage = "Frequency implementation")
+    protected Freq freq = Freq.Rel;
+
+    @Option(name = "-var", required = false, usage = "filter training queries by variance threshold", metaVar = "0 1 2")
+    protected int var = 0;
 
     @Override
     public String getShortDescription() {
@@ -223,12 +232,13 @@ public class XTool extends CmdLineTool {
     }
 
     protected String evalDirectory(DataSet dataset, Measure measure) {
-        if (Collection.GOV2.equals(dataset.collection()) || Collection.MC.equals(dataset.collection()) || Collection.ROB04.equals(dataset.collection())) {
+        if (!dataset.spamAvailable()) {
             return "evals";
         } else if (catB && (Collection.CW09B.equals(dataset.collection()) || Collection.CW12B.equals(dataset.collection()))) {
             return "catb_evals";
         } else {
             final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, measure, op);
+            System.out.println("best spam threshold " + bestSpamThreshold);
             return bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
         }
     }
@@ -298,8 +308,8 @@ public class XTool extends CmdLineTool {
         final DataSet testDataSet = CollectionFactory.dataset(test, tfd_home);
         final DataSet trainDataSet = CollectionFactory.dataset(train, tfd_home);
 
-        final Decorator testDecorator = new Decorator(testDataSet, tag, Freq.Rel);
-        final Decorator trainDecorator = new Decorator(trainDataSet, tag, Freq.Rel);
+        final Decorator testDecorator = new Decorator(testDataSet, tag, freq);
+        final Decorator trainDecorator = new Decorator(trainDataSet, tag, freq);
 
 
         final Evaluator trainEvaluator = new Evaluator(trainDataSet, tag, optimize, models, evalDirectory(trainDataSet, optimize), op);
@@ -358,15 +368,21 @@ public class XTool extends CmdLineTool {
         SGL.key = "SGL";
         SGL.predict = Predict.DIV;
 
-        winnerMap = trainDecorator.decorate(trainEvaluator.bestModelMap);
-        loserMap = trainDecorator.decorate(trainEvaluator.worstModelMap);
+
+        if (var == 0) {
+            winnerMap = trainDecorator.decorate(trainEvaluator.bestModelMap);
+            loserMap = trainDecorator.decorate(trainEvaluator.worstModelMap);
+        } else {
+            winnerMap = trainDecorator.decorate(trainEvaluator.filter(trainEvaluator.bestModelMap, var));
+            loserMap = trainDecorator.decorate(trainEvaluator.filter(trainEvaluator.worstModelMap, var));
+        }
 
         checkNoWinnerLoserCase();
 
         doSelectiveTermWeighting(testQueries, testEvaluator);
         Map<String, Double> geoRiskMap = addGeoRisk2Sheet(RxT);
 
-        accuracyList.sort(((o1, o2) -> o1.key.compareTo(o2.key)));
+        accuracyList.sort(Comparator.comparing(o -> o.key));
         accuracyList.forEach(this::writeSolution2SummarySheet);
 
 
@@ -530,7 +546,7 @@ public class XTool extends CmdLineTool {
 
     protected String latexHeader() {
 
-        String anchor = "KStemAnalyzerAnchor".equals(tag) ? "Anchor" : "NoAnchor";
+        String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
         String tableName = test.toString() + report.toString() + train.toString() + optimize.toString() + anchor;
         String header = header();
@@ -603,12 +619,12 @@ public class XTool extends CmdLineTool {
 
     void persistSolutionsLists() throws IOException {
         System.out.println("Result sorted by mean effectiveness");
-        solutionList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.mean - o1.mean));
+        solutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.mean, o1.mean));
         solutionList.forEach(System.out::println);
 
 
         System.out.println("Result sorted by sigma0");
-        solutionList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.sigma0 - o1.sigma0));
+        solutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.sigma0, o1.sigma0));
         solutionList.forEach(System.out::println);
 
 
@@ -621,7 +637,7 @@ public class XTool extends CmdLineTool {
         printInterActionPlot("IPxAxCar", cartesianSolutionList, new String[]{"MODEL", "AGG", "PRED"});
 
         System.out.println("Cartesian Results sorted by sigma0");
-        cartesianSolutionList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.sigma0 - o1.sigma0));
+        cartesianSolutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.sigma0, o1.sigma0));
         cartesianSolutionList.forEach(System.out::println);
 
 
@@ -885,7 +901,7 @@ public class XTool extends CmdLineTool {
 
                             }
 
-                            Rank rank = Collections.max(ranks, (r1, r2) -> (int) Math.signum(r1.e() - r2.e()));
+                            Rank rank = Collections.max(ranks, Comparator.comparing(Rank::e));
                             predictedModel = rank.model;
                             break;
 

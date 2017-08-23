@@ -9,6 +9,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -24,19 +25,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
+import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
+
 /**
  * Tool for integration Waterloo Spam Rankings
  */
 public final class SpamTool extends CmdLineTool {
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzer";
-
-    @Option(name = "-task", required = false, usage = "task to be executed")
-    private String task;
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    private String tag = "KStem";
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    protected edu.anadolu.datasets.Collection collection;
+    private edu.anadolu.datasets.Collection collection;
 
     @Override
     public String getShortDescription() {
@@ -62,6 +63,11 @@ public final class SpamTool extends CmdLineTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
+        if (!dataset.spamAvailable()) {
+            System.out.println(dataset.toString() + " do not have spam filtering option!");
+            return;
+        }
+
         final HttpSolrClient solr;
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {
             solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam09A").build();
@@ -72,7 +78,7 @@ public final class SpamTool extends CmdLineTool {
             return;
         }
 
-        List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("spam_0_runs"), ".txt");
+        List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("base_spam_runs"), ".txt");
 
         System.out.println("there are " + pathList.size() + " many TREC submission files found to be processed...");
 
@@ -123,7 +129,7 @@ public final class SpamTool extends CmdLineTool {
 
         final SubmissionFile submissionFile = new SubmissionFile(submission);
 
-        Path relPath = dataset.collectionPath().resolve("spam_0_runs").relativize(submission);
+        Path relPath = dataset.collectionPath().resolve("base_spam_runs").relativize(submission);
 
         Map<Integer, List<SubmissionFile.Tuple>> submissionFileMap = submissionFile.entryMap();
         String runTag = submissionFile.runTag();
@@ -209,7 +215,11 @@ public final class SpamTool extends CmdLineTool {
      */
     private static int percentile(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
 
-        SolrDocumentList resp = solr.query(new SolrQuery(docID)).getResults();
+        SolrQuery query = new SolrQuery(docID).setFields("percentile");
+        query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
+        query.set(OMIT_HEADER, true);
+        SolrDocumentList resp = solr.query(query).getResults();
+
 
         if (resp.size() == 0) {
             System.out.println("cannot find docID " + docID + " in " + solr.getBaseURL());
@@ -220,6 +230,9 @@ public final class SpamTool extends CmdLineTool {
         }
 
         int percentile = (int) resp.get(0).getFieldValue("percentile");
+
+        resp.clear();
+        query.clear();
 
         if (percentile >= 0 && percentile < 100)
             return percentile;

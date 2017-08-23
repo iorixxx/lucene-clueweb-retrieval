@@ -38,17 +38,6 @@ public class WT09 extends Track {
     }
 
 
-    /**
-     * top 1,000 documents for 2009 Web Track http://plg.uwaterloo.ca/~trecweb/2009.html
-     *
-     * @return 1000
-     */
-    @Override
-    protected int getTopN() {
-        return 1000;
-    }
-
-
     private static final String[] wt09 = {
 
             "wt09-1:obama family tree",

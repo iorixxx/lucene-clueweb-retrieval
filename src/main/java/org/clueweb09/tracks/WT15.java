@@ -70,13 +70,6 @@ public class WT15 extends Track {
         output.close();
     }
 
-
-    @Override
-    protected int getTopN() {
-        return 1000;
-    }
-
-
     /**
      * Document qrels for Task Track
      *

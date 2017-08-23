@@ -69,7 +69,8 @@ final class StatsTool extends CmdLineTool {
                 statistics.saveFieldStats(fields);
                 statistics.saveLaTexStats(fields);
                 Tag t = Tag.tag(indexPath.getFileName().toString());
-                System.out.println("StatsTool Tag: "+t.name());
+                System.out.println("StatsTool Tag: " + t.name());
+                if (Tag.Script.equals(t) || Tag.KStemField.equals(t)) continue;
                 for (String field : fields)
                     statistics.saveTermStatsForWords(field, new QueryBank(dataset).distinctTerms(Analyzers.analyzer(t)), field + "_term_stats.csv");
 

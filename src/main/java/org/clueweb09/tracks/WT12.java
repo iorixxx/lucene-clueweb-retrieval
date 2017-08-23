@@ -23,16 +23,6 @@ public class WT12 extends Track {
         super(home);
     }
 
-    /**
-     * top 10,000 documents for 2012 Web Track http://plg.uwaterloo.ca/~trecweb/2012.html
-     *
-     * @return 10, 000
-     */
-    @Override
-    protected int getTopN() {
-        return 10000;
-    }
-
     private static final String[] wt12 = {
 
             "151:403b",

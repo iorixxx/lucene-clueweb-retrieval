@@ -23,14 +23,4 @@ public class WT14 extends Track {
         super(home);
     }
 
-    /**
-     * An experimental run consists of the top 10,000 documents for 2014 Web Track
-     * http://www-personal.umich.edu/~kevynct/trec-web-2014/
-     *
-     * @return 10, 000
-     */
-    @Override
-    protected int getTopN() {
-        return 10000;
-    }
 }

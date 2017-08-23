@@ -1,8 +1,8 @@
 package edu.anadolu.exp;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
+import org.apache.lucene.index.PostingsEnum;
 
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -24,30 +24,111 @@ public class ParseURL {
         System.out.println("filename = " + aURL.getFile());
         System.out.println("ref = " + aURL.getRef());
 
-        jSoupTest();
+        int arr1[] = {2, 3, 4, 5, 7, 8, 9, 10};
+        int arr2[] = {2, 3, 6};
+        int m = arr1.length;
+        int n = arr2.length;
+        printDifference(arr1, arr2, m, n);
+
+        int a[] = {1, 2, 3, 4, 5};
+        int b[] = {3, 4, 5, 6, 7, 8};
+
+        printDifference(a, b, a.length, b.length);
+
+        int x[] = {1, 2, 3, 4, 5};
+        int y[] = {};
+
+        printDifference(x, y, x.length, y.length);
     }
 
 
-    static void jSoupTest() {
-        String html = "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<head>\n" +
-                "  <title>Title of the document</title>\n" +
-                "  <meta charset=\"UTF-8\">\n" +
-                "  <meta name=\"description\" content=\"Free Web tutorials\">\n" +
-                "  <meta name=\"keywords\" content=\"HTML,CSS,XML,JavaScript\">\n" +
-                "  <meta name=\"author\" content=\"John Doe\">\n" +
-                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "\n" +
-                "<p>All meta information goes in the head section...</p>\n" +
-                "\n" +
-                "</body>\n" +
-                "</html>";
+    /**
+     * The difference of two posting lists, written A - B is the set of all elements of A that are not elements of B.
+     * <p>
+     * https://www.thoughtco.com/difference-of-two-sets-3126580
+     *
+     * @param first  universal set
+     * @param second negative clause
+     * @return complement of second
+     * @throws IOException if any
+     */
+    private static int differenceOfTwoPostings(PostingsEnum first, PostingsEnum second) throws IOException {
 
-        Document jDoc = Jsoup.parse(html);
+        int count = 0;
+        int firstDocId = first.nextDoc();
+        int secondDocId = second.nextDoc();
+        // We are assuming that docEnum are in doc id order
+        // According to Lucene documentation, the doc ids are in non decreasing order
+        while (true) {
 
-        System.out.printf(jDoc.text());
+            if (firstDocId == PostingsEnum.NO_MORE_DOCS || secondDocId == PostingsEnum.NO_MORE_DOCS) {
+                break;
+            }
+            if (firstDocId < secondDocId) {
+
+                count++;
+
+                final int freq = first.freq();
+                if (freq != 1) throw new RuntimeException("artificial term frequency should be 1! " + freq);
+                final int docID = first.docID();
+
+                // get document length from this docID
+
+                firstDocId = first.nextDoc();
+
+            } else if (firstDocId > secondDocId) {
+
+                secondDocId = second.nextDoc();
+
+            } else {
+
+                firstDocId = first.nextDoc();
+                secondDocId = second.nextDoc();
+            }
+        }
+
+
+        while (firstDocId != PostingsEnum.NO_MORE_DOCS) {
+
+            count++;
+
+            final int freq = first.freq();
+            if (freq != 1) throw new RuntimeException("artificial term frequency should be 1! " + freq);
+            final int docID = first.docID();
+
+            // get document length from this docID
+
+            firstDocId = first.nextDoc();
+        }
+
+        return count;
+
+    }
+
+
+    /* Function prints all elements of A that are not elements of B. */
+    static void printDifference(int first[], int second[], int m, int n) {
+        int i = 0, j = 0;
+        while (i < m && j < n) {
+            if (first[i] < second[j]) {
+                System.out.println(first[i]);
+                i++;
+            } else if (second[j] < first[i]) {
+                j++;
+            } else {
+                j++;
+                i++;
+            }
+        }
+
+        System.out.println("larger");
+        /* Print remaining elements of the larger array */
+        while (i < m) {
+            System.out.println(first[i] + " ");
+            i++;
+
+        }
+
+        System.out.println("end");
     }
 }

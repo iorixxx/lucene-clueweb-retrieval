@@ -21,6 +21,8 @@ public abstract class DataSet {
 
     public abstract String getNoDocumentsID();
 
+    public abstract boolean spamAvailable();
+
     private final List<InfoNeed> needs;
 
     protected DataSet(Collection collection, Track[] tracks, String tfd_home) {

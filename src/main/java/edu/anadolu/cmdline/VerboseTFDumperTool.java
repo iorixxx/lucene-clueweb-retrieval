@@ -1,5 +1,7 @@
 package edu.anadolu.cmdline;
 
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.freq.*;
@@ -48,9 +50,13 @@ public final class VerboseTFDumperTool extends CmdLineTool {
         for (Track track : dataset.tracks())
             needs.addAll(track.getTopics());
 
-        Set<String> words = distinctTerms(needs);
 
         for (final Path indexPath : discoverIndexes(dataset)) {
+
+            Tag t = Tag.tag(indexPath.getFileName().toString());
+
+            Set<String> words = distinctTerms(needs, Analyzers.analyzer(t));
+
             VerboseTFDumper verboseTFDumper = new VerboseTFDumper(dataset.collectionPath(), indexPath, words);
             verboseTFDumper.saveTermFrequenciesForOneTermQueries("contents", dataset.tracks());
             verboseTFDumper.saveTermFrequenciesForAllQueries("contents");

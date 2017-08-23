@@ -1,7 +1,5 @@
 package edu.anadolu.qpp;
 
-import edu.anadolu.analysis.Analyzers;
-import edu.anadolu.analysis.Tag;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.clueweb09.InfoNeed;
@@ -18,7 +16,7 @@ public class Scope extends Base {
 
     public Scope(Path indexPath) throws IOException {
         super(indexPath, "contents");
-        queryParser = new QueryParser(field, Analyzers.analyzer(Tag.tag(indexPath.getFileName().toString())));
+        queryParser = new QueryParser(field, analyzer);
         queryParser.setDefaultOperator(QueryParser.Operator.OR);
     }
 

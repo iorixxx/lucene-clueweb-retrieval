@@ -31,35 +31,11 @@ public class Analyzers {
      * @param text input string to analyze
      * @return analyzed input
      */
-    public static String getAnalyzedToken(String text) {
-        final List<String> list = getAnalyzedTokens(text);
+    public static String getAnalyzedToken(String text, Analyzer analyzer) {
+        final List<String> list = getAnalyzedTokens(text, analyzer);
         if (list.size() != 1)
             throw new RuntimeException("Text : " + text + " contains more than one tokens : " + list.toString());
         return list.get(0);
-    }
-
-    /**
-     * @deprecated As of release 7.0.0 replaced by {@link #getAnalyzedTokens(java.lang.String, org.apache.lucene.analysis.Analyzer)()}
-     * In early stages of research KStem was constant, for simplicity KStem was hardcoded.
-     * Now we are dealing with different analyzers and document representations. Its time to parametrize it.
-     */
-
-    @Deprecated
-    public static List<String> getAnalyzedTokens(String text) {
-
-        final List<String> list = new ArrayList<>();
-        try (TokenStream ts = analyzer(KStem).tokenStream(FIELD, new StringReader(text))) {
-
-            final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);
-            ts.reset(); // Resets this stream to the beginning. (Required)
-            while (ts.incrementToken())
-                list.add(termAtt.toString());
-
-            ts.end();   // Perform end-of-stream operations, e.g. set the final offset.
-        } catch (IOException ioe) {
-            throw new RuntimeException("happened during string analysis", ioe);
-        }
-        return list;
     }
 
     /**

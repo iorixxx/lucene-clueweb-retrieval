@@ -56,7 +56,7 @@ public class GOF extends ScorpioExperiment {
 
     public void gof2Poisson(String t) throws IOException {
 
-        String term = Analyzers.getAnalyzedToken(t);
+        String term = Analyzers.getAnalyzedToken(t, analyzer);
 
         Map<Integer, Long> observedFrequencies = observedFrequencies(term);
 
@@ -79,16 +79,5 @@ public class GOF extends ScorpioExperiment {
             double chi = (double) observedMinusExpected * observedMinusExpected / expected;
             System.out.println(tf + "\t& " + observed + "\t& " + String.format("%.4f", prob) + "\t& " + expected + "\t& " + observedMinusExpected + "\t& " + String.format("%.2f", chi) + "\\\\");
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        final String tfd_home = "/Users/iorixxx/clueweb09";
-
-        Collection collection = Collection.CW09A;
-
-        DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
-
-        GOF gof = new GOF("KStemAnalyzer", dataSet);
-        gof.gof2Poisson("the");
     }
 }

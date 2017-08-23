@@ -52,7 +52,6 @@ public final class DoclenTool extends CmdLineTool {
             needs.addAll(track.getTopics());
 
 
-
         final String[] fields = props.getProperty("freq.fields", "description,keywords,title,contents").split(",");
 
         for (final Path indexPath : discoverIndexes(dataset)) {

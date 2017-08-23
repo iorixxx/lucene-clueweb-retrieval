@@ -33,7 +33,7 @@ public abstract class CmdLineTool {
 
     public final static String[] parametricModels = {"BM25", "LGD", "PL2", "DirichletLM"};
 
-    final static String[] tags = {"KStemAnalyzer", "KStemAnalyzerAnchor"};
+    final static String[] tags = {"KStem", "KStemAnchor"};
     protected final static String[] operators = {"OR"};
 
 
@@ -171,23 +171,11 @@ public abstract class CmdLineTool {
         return pathList;
     }
 
-    /**
-     *
-     * As of release 7.0.0 replaced by {@link #distinctTerms(List, Analyzer)}
-     * @throws IOException
-     */
-    @Deprecated
-    public Set<String> distinctTerms(List<InfoNeed> needs) throws IOException {
-        Set<String> set = new HashSet<>();
-        for (InfoNeed need : needs)
-            set.addAll(Analyzers.getAnalyzedTokens(need.query()));
-        return Collections.unmodifiableSet(set);
-    }
 
-    public Set<String> distinctTerms(List<InfoNeed> needs,Analyzer analyzer) throws IOException {
+    Set<String> distinctTerms(List<InfoNeed> needs, Analyzer analyzer) throws IOException {
         Set<String> set = new HashSet<>();
         for (InfoNeed need : needs)
-            set.addAll(Analyzers.getAnalyzedTokens(need.query(),analyzer));
+            set.addAll(Analyzers.getAnalyzedTokens(need.query(), analyzer));
         return Collections.unmodifiableSet(set);
     }
 }

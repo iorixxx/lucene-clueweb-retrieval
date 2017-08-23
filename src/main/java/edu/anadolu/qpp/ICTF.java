@@ -20,10 +20,4 @@ public class ICTF extends Base {
     public double value(String word) throws IOException {
         return Math.log(sumTotalTermFreq / ctf(field, word));
     }
-
-    public static void main(String[] args) throws IOException {
-        try (Base ictf = new ICTF(Paths.get("/Volumes/clueweb09/indexes/KStemAnalyzer"))) {
-            display(ictf, new Aggregate.Variance());
-        }
-    }
 }

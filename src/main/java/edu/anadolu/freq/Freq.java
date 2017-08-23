@@ -6,10 +6,11 @@ package edu.anadolu.freq;
  */
 public enum Freq {
 
-    Phi, Rel, Sqrt, Log, Ratio;
+    Phi, Rel, Sqrt, Log, Ratio, Zero;
 
     public String fileName(int numBins) {
 
+        if (Zero.equals(this)) return "contents_zero_freq_" + numBins + ".csv";
         if (Phi.equals(this)) return "contents_phi_freq_" + numBins + ".csv";
         if (Rel.equals(this)) return "contents_all_freq_" + numBins + ".csv";
         if (Sqrt.equals(this) || Log.equals(this) || Ratio.equals(this)) return "contents_all_freq_" + numBins + ".csv";

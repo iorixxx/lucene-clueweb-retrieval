@@ -22,9 +22,4 @@ public class TT06 extends Track {
     protected void populateQRelsMap() throws Exception {
         populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrels.801-850.txt"));
     }
-
-    @Override
-    public int getTopN() {
-        return 10000;
-    }
 }

@@ -1,5 +1,6 @@
 package edu.anadolu.cmdline;
 
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
@@ -55,8 +56,8 @@ public class EvaluatorTool extends CmdLineTool {
     @Option(name = "-rel", metaVar = "[0|27|69]", required = false, usage = "Minimum number of relevant documents")
     protected int minRel = 0;
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzer";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = Tag.KStem.toString();
 
     @Option(name = "-query", metaVar = "[0|1|2|3|4|5|8]", required = false, usage = "Query set option")
     protected int query = 0;

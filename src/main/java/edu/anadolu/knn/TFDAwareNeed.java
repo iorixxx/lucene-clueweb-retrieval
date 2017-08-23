@@ -1,6 +1,8 @@
 package edu.anadolu.knn;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
+import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 
 import java.util.*;
@@ -10,12 +12,13 @@ import java.util.*;
  */
 public class TFDAwareNeed extends InfoNeed {
 
-    final List<Long[]> termFreqDist;
-    List<Long[]> termFreqDistZero;
-    public final List<Double[]> termFreqDistNormalized;
+    //  private final Analyzer analyzer;
+    private final List<Long[]> termFreqDist;
+    private List<Long[]> termFreqDistZero;
+    final List<Double[]> termFreqDistNormalized;
 
-    public final Double[] termFreqDistNormalized(String word) {
-        return termFreqDistMap.get(Analyzers.getAnalyzedToken(word));
+    public final Double[] termFreqDistNormalized(String word, Analyzer analyzer) {
+        return termFreqDistMap.get(Analyzers.getAnalyzedToken(word, analyzer));
     }
 
 
@@ -80,10 +83,10 @@ public class TFDAwareNeed extends InfoNeed {
     }
 
 
-    public List<Double[]> termFreqDistZeroNormalized;
+    List<Double[]> termFreqDistZeroNormalized;
 
-    public Double[] termFreqDistZeroNormalized(String word) {
-        return termFreqDistZeroMap.get(Analyzers.getAnalyzedToken(word));
+    public Double[] termFreqDistZeroNormalized(String word, Analyzer analyzer) {
+        return termFreqDistZeroMap.get(Analyzers.getAnalyzedToken(word, analyzer));
     }
 
     Double[] dfAndAverageZero;
@@ -92,12 +95,12 @@ public class TFDAwareNeed extends InfoNeed {
     Double[] geoAndDFZero;
     Double[] dfAndGeoZero;
 
-    public Long[] termFreqDistZeroRaw(String word) {
-        return rawTermFreqDistZeroMap.get(Analyzers.getAnalyzedToken(word));
+    public Long[] termFreqDistZeroRaw(String word, Analyzer analyzer) {
+        return rawTermFreqDistZeroMap.get(Analyzers.getAnalyzedToken(word, analyzer));
     }
 
-    LinkedHashMap<String, Long[]> rawTermFreqDistZeroMap = new LinkedHashMap<>();
-    LinkedHashMap<String, Long[]> rawTermFreqDistMap = new LinkedHashMap<>();
+    private LinkedHashMap<String, Long[]> rawTermFreqDistZeroMap = new LinkedHashMap<>();
+    private LinkedHashMap<String, Long[]> rawTermFreqDistMap = new LinkedHashMap<>();
 
 
     public <T extends Number> void setZero(List<T[]> termFreqDistZero) {
@@ -131,7 +134,7 @@ public class TFDAwareNeed extends InfoNeed {
 
         for (String word : distinctSet) {
 
-            Long[] array = rawTermFreqDistZeroMap.get(Analyzers.getAnalyzedToken(word));
+            Long[] array = rawTermFreqDistZeroMap.get(Analyzers.getAnalyzedToken(word, Analyzers.analyzer(Tag.KStem)));
 
             builder.append(id()).append(":").append(word).append("\t");
 
@@ -162,7 +165,7 @@ public class TFDAwareNeed extends InfoNeed {
         return builder.toString();
     }
 
-    static <T extends Number> Double[] average(List<T[]> list) {
+    private static <T extends Number> Double[] average(List<T[]> list) {
 
         if (list.size() == 1) return number2double(list.get(0));
 

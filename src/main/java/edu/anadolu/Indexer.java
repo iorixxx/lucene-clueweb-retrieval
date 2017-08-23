@@ -3,6 +3,7 @@ package edu.anadolu;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.field.MetaTag;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
@@ -12,10 +13,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.ConcurrentMergeScheduler;
-import org.apache.lucene.index.IndexOptions;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.SolrClient;
@@ -23,6 +21,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
@@ -30,7 +29,6 @@ import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -49,10 +47,19 @@ import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
+import static edu.anadolu.field.MetaTag.notEmpty;
+import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
+import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
+
 /**
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public final class Indexer {
+
+    /**
+     * artificial field and token: every document should have this
+     */
+    public static final IndexableField ARTIFICIAL = new NoPositionsTextField("all", "all");
 
     public static final class NoPositionsTextField extends Field {
 
@@ -99,6 +106,10 @@ public final class Indexer {
             // entire document
             document.add(new NoPositionsTextField(FIELD_CONTENTS, contents));
 
+            // add artificial: every document should have this
+            if (!config.field && config.artificial)
+                document.add(ARTIFICIAL);
+
             // URLs only
             // document.add(new NoPositionsTextField("url", contents));
 
@@ -127,7 +138,7 @@ public final class Indexer {
 
             StringBuilder contents = new StringBuilder(jDoc.text()).append(" ");
 
-            if (anchor && solr != null) {
+            if (config.anchor && solr != null) {
                 String anchor = anchor(id);
                 if (anchor != null)
                     stripHTMLAndAppend(anchor, contents);
@@ -146,7 +157,7 @@ public final class Indexer {
             if (!RESPONSE.equals(warcRecord.type()))
                 return 0;
 
-            if (field) {
+            if (config.field) {
                 Document document = warc2LuceneDocument(warcRecord);
                 if (document != null)
                     writer.addDocument(document);
@@ -166,7 +177,7 @@ public final class Indexer {
                 return 1;
             }
 
-            if (anchor)
+            if (config.anchor)
                 return indexJDocWithAnchor(jDoc, id);
             else
                 return indexJDoc(jDoc, id);
@@ -266,14 +277,15 @@ public final class Indexer {
     private final Path indexPath;
     private final Path docsPath;
 
-    private final boolean anchor;
-    private final boolean field;
+    private final IndexerConfig config;
     private final Collection collection;
 
     private String anchor(String id) {
         SolrQuery query = new SolrQuery();
         query.setQuery(id);
         query.setFields("anchor");
+        query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
+        query.set(OMIT_HEADER, true);
         QueryResponse response;
 
         try {
@@ -284,6 +296,7 @@ public final class Indexer {
 
         SolrDocumentList list = response.getResults();
 
+        query.clear();
         if (list.size() == 0) return null;
 
         if (list.size() == 1)
@@ -295,11 +308,11 @@ public final class Indexer {
 
     private final Tag tag;
 
-    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, boolean anchor, Tag tag, boolean field) throws IOException {
+    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, Tag tag, IndexerConfig config) throws IOException {
 
         this.collection = collection;
-        this.field = field;
-        this.anchor = this.field || anchor;
+        this.config = config;
+        boolean anchor = config.field || config.anchor;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
@@ -310,7 +323,7 @@ public final class Indexer {
         this.solr = solr;
         this.tag = tag;
 
-        if (this.field)
+        if (this.config.field)
             this.indexPath = Paths.get(indexPath, tag + "Field");
         else
             this.indexPath = Paths.get(indexPath, tag + (anchor ? "Anchor" : ""));
@@ -342,78 +355,6 @@ public final class Indexer {
         return out;
     }
 
-    private static void append(String content, StringBuilder builder) {
-        if (content != null && content.trim().length() > 1)
-            builder.append(content.trim()).append(" ");
-    }
-
-    /**
-     * Enrich Lucene document with metadata extracted from JSoup document.
-     * <p>
-     * <head>
-     * <meta charset="UTF-8">
-     * <meta name="description" content="Free Web tutorials">
-     * <meta name="keywords" content="HTML,CSS,XML,JavaScript">
-     * <meta name="author" content="Hege Refsnes">
-     * </head>
-     *
-     * @param meta      name of the metadata
-     * @param jDoc      JSoup document
-     * @param fieldName name of the field
-     * @param document  Lucene document
-     */
-    private static void enrich(String meta, org.jsoup.nodes.Document jDoc, String fieldName, Document document) {
-
-        Elements elements = jDoc.select("meta[name=" + meta + "]");
-        elements.addAll(jDoc.select("meta[name=" + meta + "s]"));
-
-        if (elements.isEmpty()) return;
-
-        StringBuilder builder = new StringBuilder();
-
-        for (Element e : elements) {
-            append(e.attr("contents"), builder);
-            append(e.attr("content"), builder);
-        }
-
-        if (builder.length() > 1)
-            document.add(new NoPositionsTextField(fieldName, builder.toString().trim()));
-
-        elements.empty();
-    }
-
-    /**
-     * Enrich Lucene document with metadata extracted from JSoup document.
-     * <p>
-     * <head>
-     * <meta charset="UTF-8">
-     * <meta name="description" content="Free Web tutorials">
-     * <meta name="keywords" content="HTML,CSS,XML,JavaScript">
-     * <meta name="author" content="Hege Refsnes">
-     * </head>
-     *
-     * @param jDoc      JSoup document
-     * @param fieldName name of the metadata/field
-     * @param document  Lucene document
-     */
-    private static void enrich2(org.jsoup.nodes.Document jDoc, String fieldName, Document document) {
-
-        Elements elements = jDoc.select("meta[name=" + fieldName + "]");
-
-        if (elements.isEmpty()) return;
-
-        StringBuilder builder = new StringBuilder();
-
-        for (Element e : elements) {
-            append(e.attr("content"), builder);
-        }
-
-        if (builder.length() > 1)
-            document.add(new NoPositionsTextField(fieldName, builder.toString().trim()));
-
-        elements.empty();
-    }
-
     /**
      * Indexes different document representations (keywords, body, title, description, URL) into separate fields.
      *
@@ -436,8 +377,7 @@ public final class Indexer {
 
         String title = null;
         String body = null;
-        String keywords = null;
-        String description = null;
+
 
         document.add(new StringField("id", wDoc.id(), Field.Store.YES));
 
@@ -449,12 +389,15 @@ public final class Indexer {
             document.add(new NoPositionsTextField("title", title));
         }
 
+        String keywords = MetaTag.enrich2(jDoc, "keywords");
+        String description = MetaTag.enrich2(jDoc, "description");
 
-        enrich2(jDoc, "description", document);
-        enrich2(jDoc, "keywords", document);
+        if (notEmpty.test(keywords))
+            document.add(new NoPositionsTextField("keywords", keywords));
 
-        keywords = document.get("keywords");
-        description = document.get("description");
+        if (notEmpty.test(description))
+            document.add(new NoPositionsTextField("description", description));
+
 
         // HTML <body> Tag
         Element bodyEl = jDoc.body();
@@ -464,11 +407,16 @@ public final class Indexer {
         }
 
 
-        if (anchor && solr != null) {
+        if (config.anchor && solr != null) {
             String anchor = anchor(wDoc.id());
             if (anchor != null)
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
+
+        String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
+
+        if (notEmpty.test(metaNames))
+            document.add(new NoPositionsTextField("meta", metaNames));
 
         document.add(new NoPositionsTextField("bt", body + " " + title));
         document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
@@ -497,6 +445,9 @@ public final class Indexer {
                     url += " " + aURL.getRef();
 
                 document.add(new NoPositionsTextField("url", url));
+
+                if (notEmpty.test(aURL.getHost()))
+                    document.add(new NoPositionsTextField("host", aURL.getHost()));
 
             } catch (MalformedURLException me) {
                 System.out.println("Malformed URL = " + URLString);
@@ -547,6 +498,16 @@ public final class Indexer {
         return stack;
     }
 
+    private Analyzer analyzer() throws IOException {
+        if (config.field) {
+            Map<String, Analyzer> analyzerPerField = new HashMap<>();
+            analyzerPerField.put("url", new SimpleAnalyzer());
+            analyzerPerField.put("meta", MetaTag.whitespaceAnalyzer());
+            analyzerPerField.put("host", MetaTag.whitespaceAnalyzer());
+            return new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
+        } else
+            return Analyzers.analyzer(tag);
+    }
 
     public int indexWithThreads(int numThreads) throws IOException, InterruptedException {
 
@@ -554,17 +515,7 @@ public final class Indexer {
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        Analyzer analyzer;
-
-        if (field) {
-            Map<String, Analyzer> analyzerPerField = new HashMap<>();
-            analyzerPerField.put("url", new SimpleAnalyzer());
-            analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
-        } else
-            analyzer = Analyzers.analyzer(tag);
-
-
-        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -647,23 +598,19 @@ public final class Indexer {
         return numIndexed;
     }
 
+    /**
+     * Indexer based on Java8's parallel streams
+     *
+     * @return number of indexed documents
+     * @throws IOException if IO exception occurs
+     */
     public int indexParallel() throws IOException {
 
         System.out.println("Parallel Indexing to directory '" + indexPath.toAbsolutePath() + "'...");
 
         final Directory dir = FSDirectory.open(indexPath);
 
-        Analyzer analyzer;
-
-        if (field) {
-            Map<String, Analyzer> analyzerPerField = new HashMap<>();
-            analyzerPerField.put("url", new SimpleAnalyzer());
-            analyzer = new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
-        } else
-            analyzer = Analyzers.analyzer(tag);
-
-
-        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
 
         iwc.setSimilarity(new MetaTerm());
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
@@ -715,5 +662,28 @@ public final class Indexer {
             return (name != null && name.toString().endsWith(suffix));
 
         }
+    }
+
+    public static final class IndexerConfig {
+
+        boolean anchor = false;
+        boolean field = false;
+        boolean artificial = false;
+
+        public IndexerConfig useAnchorText(boolean anchor) {
+            this.anchor = anchor;
+            return this;
+        }
+
+        public IndexerConfig useArtificialField(boolean artificial) {
+            this.artificial = artificial;
+            return this;
+        }
+
+        public IndexerConfig useMetaFields(boolean field) {
+            this.field = field;
+            return this;
+        }
+
     }
 }

@@ -1,6 +1,5 @@
 package edu.anadolu.cmdline;
 
-import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
@@ -95,6 +94,11 @@ public final class SpamEvalTool extends EvaluatorTool {
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
+        if (!dataset.spamAvailable()) {
+            System.out.println(dataset.toString() + " do not have spam filtering option!");
+            return;
+        }
+
         SortedMap<Integer, List<ModelScore>> map = new TreeMap<>();
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", "evals", op);
@@ -137,8 +141,8 @@ public final class SpamEvalTool extends EvaluatorTool {
 
     public static int bestSpamThreshold(DataSet dataset, String tag, Measure measure, String op) {
 
-        if (Collection.GOV2.equals(dataset.collection()) || Collection.MC.equals(dataset.collection()) || Collection.ROB04.equals(dataset.collection())) {
-            throw new RuntimeException("GOV2, ROB04, and MC do not have spam filtering option!");
+        if (!dataset.spamAvailable()) {
+            throw new RuntimeException(dataset.toString() + " do not have spam filtering option!");
         }
 
         String key = cacheKey(tag, measure, op);

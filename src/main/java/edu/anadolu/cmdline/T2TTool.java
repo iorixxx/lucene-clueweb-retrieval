@@ -66,7 +66,7 @@ class T2TTool extends CmdLineTool {
         Map<String, String> map = new HashMap<>();
 
         for (String tag : tags) {
-            if ("KStemAnalyzerAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
+            if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
                 continue;
 
             Workbook workbook = new XSSFWorkbook();
@@ -104,9 +104,8 @@ class T2TTool extends CmdLineTool {
                             for (String other : map.keySet()) {
 
 
-                                Double[] first = normalize(zero ? decorator.parseFreqLine(decorator.addZeroColumnToLine(map.get(term))) : decorator.parseFreqLine(map.get(term)));
-                                Double[] second = normalize(zero ? decorator.parseFreqLine(decorator.addZeroColumnToLine(map.get(other))) : decorator.parseFreqLine(map.get(other)));
-
+                                Double[] first = normalize(zero ? decorator.addZeroColumnToLine(decorator.parseFreqLine(map.get(term))) : decorator.parseFreqLine(map.get(term)));
+                                Double[] second = normalize(zero ? decorator.addZeroColumnToLine(decorator.parseFreqLine(map.get(other))) : decorator.parseFreqLine(map.get(other)));
 
                                 final double similarity = chi.chiSquared(first, second);
 

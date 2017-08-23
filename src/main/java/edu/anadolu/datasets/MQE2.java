@@ -30,4 +30,9 @@ public class MQE2 extends DataSet {
         return "clueweb09-en0000-00-00000";
     }
 
+    @Override
+    public boolean spamAvailable() {
+        return true;
+    }
+
 }

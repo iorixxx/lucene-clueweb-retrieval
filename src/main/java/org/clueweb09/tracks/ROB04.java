@@ -22,9 +22,4 @@ public class ROB04 extends Track {
     public void populateQRelsMap() throws Exception {
         populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrels.robust2004.txt"));
     }
-
-    @Override
-    public int getTopN() {
-        return 1000;
-    }
 }

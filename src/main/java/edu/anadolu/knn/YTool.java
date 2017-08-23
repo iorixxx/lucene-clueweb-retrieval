@@ -5,7 +5,6 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
-import edu.anadolu.freq.Freq;
 import org.apache.commons.math3.stat.ranking.NaturalRanking;
 import org.apache.commons.math3.stat.ranking.RankingAlgorithm;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -40,9 +39,6 @@ public class YTool extends XTool {
     }
 
     private Collection[] collections;
-
-    @Option(name = "-var", required = false, usage = "variance threshold", metaVar = "0 1 2")
-    private int var = 0;
 
     @Option(name = "-msK", required = false, usage = "k of MS", metaVar = "1 2 3 4 5 6 7 8 9")
     private int msK = 7;
@@ -125,7 +121,7 @@ public class YTool extends XTool {
         for (int i = 0; i < collections.length; i++) {
             dataSets[i] = CollectionFactory.dataset(collections[i], tfd_home);
             evalDirs[i] = evalDirectory(dataSets[i], optimize);
-            decorators.put(dataSets[i], new Decorator(dataSets[i], tag, Freq.Rel));
+            decorators.put(dataSets[i], new Decorator(dataSets[i], tag, freq));
         }
 
         System.out.println(Arrays.toString(dataSets));
@@ -149,10 +145,11 @@ public class YTool extends XTool {
 
         List<Solution> accuracyList = evaluator.modelsAsSolutionList(residualNeeds);
 
-        Solution bestSingle = Collections.max(accuracyList, (o1, o2) -> (int) Math.signum(o1.sigma1 - o2.sigma1));
+        Solution bestSingle = Collections.max(accuracyList, Comparator.comparing(o -> o.sigma1));
+
         bestSingleScores = bestSingle.scores;
 
-        Solution SGL = Collections.max(accuracyList, (o1, o2) -> (int) Math.signum(o1.sigma1 - o2.sigma1)).clone();
+        Solution SGL = Collections.max(accuracyList, Comparator.comparing(o -> o.sigma1)).clone();
         SGL.model = "SGL";
         SGL.key = "SGL";
         SGL.predict = Predict.DIV;
@@ -161,7 +158,7 @@ public class YTool extends XTool {
         // accuracyList.add(oracleMax);
 
 
-        accuracyList.sort((Solution o1, Solution o2) -> (int) Math.signum(o2.sigma1 - o1.sigma1));
+        accuracyList.sort((Solution o1, Solution o2) -> Double.compare(o2.sigma1, o1.sigma1));
         System.out.println("Number of hits (percentage) : ");
         accuracyList.forEach(System.out::println);
 
@@ -193,7 +190,8 @@ public class YTool extends XTool {
 
         Map<String, Double> geoRiskMap = addGeoRisk2Sheet(RxT);
 
-        accuracyList.sort(((o1, o2) -> o1.key.compareTo(o2.key)));
+        accuracyList.sort(Comparator.comparing(o -> o.key));
+
         accuracyList.forEach(this::writeSolution2SummarySheet);
 
         writeSolution2SummarySheet(oracleMax);
