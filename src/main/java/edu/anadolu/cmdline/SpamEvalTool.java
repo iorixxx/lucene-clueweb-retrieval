@@ -59,7 +59,7 @@ public final class SpamEvalTool extends EvaluatorTool {
                 }
             }
 
-            list.sort((o1, o2) -> o1.model.compareTo(o2.model));
+            list.sort(Comparator.comparing(ModelScore::model));
             list.forEach(modelScore -> System.out.print(modelScore.score + "\t"));
 
             if (t == 0)

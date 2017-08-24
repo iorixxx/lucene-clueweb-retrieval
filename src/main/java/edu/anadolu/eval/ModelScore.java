@@ -1,5 +1,6 @@
 package edu.anadolu.eval;
 
+import java.util.Comparator;
 import java.util.TreeSet;
 
 /**
@@ -18,6 +19,9 @@ final public class ModelScore implements Comparable<ModelScore> {
 
     public double score() {
         return score;
+    }
+    public String model() {
+        return model;
     }
 
     @Override
