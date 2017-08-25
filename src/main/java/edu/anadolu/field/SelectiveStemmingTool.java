@@ -26,7 +26,7 @@ import static edu.anadolu.field.FieldTool.sortByValue;
 
 
 public class SelectiveStemmingTool extends CmdLineTool {
-    @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "Zemberek_NoStemTurkish")
+    @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "MQ08")
     protected Collection collection;
 
     @Override
@@ -44,6 +44,13 @@ public class SelectiveStemmingTool extends CmdLineTool {
 
     @Option(name = "-tags", metaVar = "[NoStemTurkish_Zemberek|NoStem_KStem]", required = false, usage = "Index Tag")
     protected String tags = "NoStemTurkish_Zemberek";
+
+    @Option(name = "-selection", metaVar = "[MSTTF|MSTDF|TFOrder|DFOrder|KendallTauTFOrder|KendallTauDFOrder|MSTTFBinning|MSTDFBinning" +
+            "TFOrderBinning|DFOrderBinning|KendallTauTFOrderBinning|KendallTauDFOrderBinning]", required = true, usage = "Selection Tag")
+    protected String selection;
+
+    @Option(name = "-KTT", required = false, usage = "Kendall Tau correlation threshold [-1...1]")
+    protected double ktt = 0.99;
 
     protected String baseline;
 
@@ -72,6 +79,8 @@ public class SelectiveStemmingTool extends CmdLineTool {
             System.out.println(getHelp());
             return;
         }
+
+        SelectionMethods.KendallTauThreshold=ktt;
 
         DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
 
@@ -225,6 +234,7 @@ public class SelectiveStemmingTool extends CmdLineTool {
                 for (String term : Analyzers.getAnalyzedTokens(query, analyzer)) {
                     TermStats termStats = statsMap.get(term);
                     if (termStats == null) {
+                        System.out.println(tag+" index does not contain the term: "+ term);
                         termStats = new TermStats(term,0,0,0);//indexes do not contain query term
                         //throw new RuntimeException("Term stats cannot be null: "+ term );
                     }
@@ -240,7 +250,8 @@ public class SelectiveStemmingTool extends CmdLineTool {
                    // System.out.println(tag + " " + need.id() + " " + score);
                 }
             }
-            predictedTag = SelectionMethods.MSTTermFreq(tagTermStatsMap,tagsArr);
+
+            predictedTag = SelectionMethods.getPredictedTag(selection,tagTermStatsMap,tagsArr);
             double predictedScore = evaluatorMap.get(predictedTag).score(need, model);
             Prediction prediction = new Prediction(need, predictedTag, predictedScore);
             list.add(prediction);

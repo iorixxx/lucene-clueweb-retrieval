@@ -376,9 +376,11 @@ public class QuerySelector {
 
             String[] parts = whiteSpaceSplitter.split(line);
 
-            // TODO add meaning stats for non-existing terms
-            if (parts.length != 4) continue;
-            //throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
+            if (parts.length != 4) {
+                System.out.println(collectionPath.toString()+" "+tag+": While enriching termstatmap, parts is not equal to 4 for line: "+line);
+                continue;
+            }
+                //throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
 
 
             String term = parts[0];
