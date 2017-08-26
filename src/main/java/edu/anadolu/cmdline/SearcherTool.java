@@ -44,7 +44,7 @@ public final class SearcherTool extends CmdLineTool {
     @Option(name = "-field", usage = "Boolean switch to search different document representations")
     private boolean field = false;
 
-    @Option(name = "-tag", usage = "If you want to search use specific tag, e.g. KStemField")
+    @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
     private String tag = null;
 
     @Override

@@ -205,7 +205,7 @@ public final class Decorator extends QuerySelector {
                 String term = entry.getKey();
                 String line = entry.getValue();
                 Long[] l = parseFreqLine(line);
-                Long[] z = Freq.Zero.equals(type) ? l.clone() : addZeroColumnToLine(l);
+                Long[] z = Freq.Zero.equals(type) || Freq.Diri.equals(type) ? l.clone() : addZeroColumnToLine(l);
                 termFreqDist.add(l);
                 termFreqDistMap.put(term, l);
                 termFreqDistZero.add(z);
