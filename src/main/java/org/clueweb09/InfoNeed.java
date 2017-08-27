@@ -153,11 +153,7 @@ public class InfoNeed {
     }
 
     public int getJudge(String docID) {
-
-        if (judgeMap.containsKey(docID)) {
-            return judgeMap.get(docID);
-        } else
-            return -5;  // un-judged
+        return judgeMap.getOrDefault(docID, -5);
     }
 
     public String getPartOfQuery(int k) {

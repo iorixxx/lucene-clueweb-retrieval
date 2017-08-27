@@ -128,6 +128,8 @@ public final class CLI {
 
         tools.add(new HighTool());
 
+        tools.add(new JudgeTool());
+
         tools.add(new SelectiveStemmingTool());
 
         for (CmdLineTool tool : tools) {

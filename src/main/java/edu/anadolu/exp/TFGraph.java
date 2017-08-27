@@ -63,17 +63,4 @@ public final class TFGraph extends ScorpioExperiment {
             System.out.println();
         }
     }
-
-    public static void main(String[] args) {
-
-
-        final String tfd_home = "/Users/iorixxx/clueweb09";
-
-        Collection collection = Collection.CW09B;
-
-        DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
-
-        TFGraph tfGraph = new TFGraph(new DPH(), "KStemAnalyzer", dataSet);
-        tfGraph.graph("pork", "tenderloin", "disneyland", "hotel", "the", "for");
-    }
 }
