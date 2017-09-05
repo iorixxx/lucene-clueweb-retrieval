@@ -30,6 +30,9 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-artificial", usage = "Boolean switch to index artificial field and token")
     private boolean artificial = false;
 
+    @Option(name = "-semantic", usage = "Boolean switch to index HTML5 semantic elements")
+    private boolean semantic = false;
+
     @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU|NoStemTurkish|Zemberek]", required = false, usage = "Analyzer Tag")
     private Tag tag = KStem;
 
@@ -108,7 +111,8 @@ public final class IndexerTool extends CmdLineTool {
         Indexer.IndexerConfig config = new Indexer.IndexerConfig()
                 .useAnchorText(anchor)
                 .useMetaFields(field)
-                .useArtificialField(artificial);
+                .useArtificialField(artificial)
+                .useSemanticElements(semantic);
         Indexer indexer = new Indexer(collection, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
