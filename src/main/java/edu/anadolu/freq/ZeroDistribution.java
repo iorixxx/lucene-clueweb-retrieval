@@ -9,6 +9,7 @@ import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static edu.anadolu.cmdline.CmdLineTool.execution;
 
@@ -85,29 +86,40 @@ public class ZeroDistribution extends Phi {
         builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.FILTER)
                 .add(new TermQuery(term), BooleanClause.Occur.MUST_NOT);
 
-        ScoreDoc[] hits = searcher.search(builder.build(), Integer.MAX_VALUE).scoreDocs;
+        final AtomicInteger cnt = new AtomicInteger(0);
+        final AtomicInteger mx = new AtomicInteger(max);
+        searcher.search(builder.build(), new SimpleCollector() {
+            @Override
+            public void collect(int doc) throws IOException {
 
-        if ((counter1 + hits.length) != reader.numDocs()) {
-            System.out.println("term enum : " + counter1 + " filter clause : " + hits.length);
-            System.out.println("docCount : " + collectionStatistics.docCount() + " sum : " + Integer.toString(counter1 + hits.length));
+                final long numTerms = norms.get(doc) + 1;
+                final double relativeFrequency = 1.0d / (double) numTerms;
+
+                if (!(relativeFrequency > 0 && relativeFrequency <= 1))
+                    throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
+
+                final int value = binningStrategy.calculateBinValue(relativeFrequency);
+
+                array[value]++;
+                if (value > mx.intValue())
+                    mx.set(value);
+
+                cnt.incrementAndGet();
+            }
+
+            @Override
+            public boolean needsScores() {
+                return false;
+            }
+        });
+
+
+        if ((counter1 + cnt.intValue()) != reader.numDocs()) {
+            System.out.println("term enum : " + counter1 + " filter clause : " + cnt.intValue());
+            System.out.println("docCount : " + collectionStatistics.docCount() + " sum : " + Integer.toString(counter1 + cnt.intValue()));
         }
 
-        for (ScoreDoc scoreDoc : hits) {
-            int docId = scoreDoc.doc;
-            final long numTerms = norms.get(docId) + 1;
-            final double relativeFrequency = 1.0d / (double) numTerms;
-
-            if (!(relativeFrequency > 0 && relativeFrequency <= 1))
-                throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
-
-            final int value = binningStrategy.calculateBinValue(relativeFrequency);
-
-            array[value]++;
-            if (value > max)
-                max = value;
-        }
-
-        return rollCountArray(max, array);
+        return rollCountArray(mx.intValue(), array);
     }
 
     @Override
