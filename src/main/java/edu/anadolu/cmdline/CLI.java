@@ -130,6 +130,8 @@ public final class CLI {
 
         tools.add(new SelectiveStemmingTool());
 
+        tools.add(new QueryPerTFTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
