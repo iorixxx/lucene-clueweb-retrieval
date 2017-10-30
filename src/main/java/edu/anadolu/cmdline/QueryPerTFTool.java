@@ -1,27 +1,27 @@
 package edu.anadolu.cmdline;
 
 
+import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.eval.Evaluator;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
-import org.apache.lucene.misc.HighFreqTerms;
-import org.apache.lucene.misc.TermStats;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.FSDirectory;
 import org.clueweb09.InfoNeed;
-import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
-import org.xml.sax.DocumentHandler;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static org.apache.lucene.misc.HighFreqTerms.DEFAULT_NUMTERMS;
-import static org.apache.lucene.misc.HighFreqTerms.getHighFreqTerms;
+import static edu.anadolu.Indexer.FIELD_ID;
 
 /**
  * QueryPerTFTool class extracts term frequencies per query from relevant documents of the query
@@ -73,8 +73,11 @@ public class QueryPerTFTool extends CmdLineTool {
 
         for(InfoNeed need: infoneeds){
             if(need.wordCount()!=length) continue;
+
+
             Set<String> relevantDocs = need.getJudgeMap().entrySet().stream().filter(e -> e.getValue() > 0)
                     .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
+
 
             Set<String> fields = new TreeSet<String>();
             fields.add(field);
@@ -105,8 +108,16 @@ public class QueryPerTFTool extends CmdLineTool {
     private static HashMap<String,Integer> termFreq4MultipleDocs(String field,IndexReader reader,Set<String> relevantDocIds) throws IOException {
         HashMap<String,Integer> termFreqMap = new HashMap<>();
 
-        for(String docid:relevantDocIds) {
-            Terms terms = reader.getTermVector(Integer.valueOf(docid), field);
+        Set<Integer> relevantDocsWithIndexID = new HashSet<>();
+        IndexSearcher searcher = new IndexSearcher(reader);
+        for (String s:relevantDocIds){
+            TermQuery termQuery = new TermQuery(new Term(FIELD_ID,s));
+            ScoreDoc[] docs = searcher.search(termQuery, 1).scoreDocs;
+            relevantDocsWithIndexID.add(docs[0].doc);
+        }
+
+        for(Integer docid:relevantDocsWithIndexID) {
+            Terms terms = reader.getTermVector(docid, field);
 
             TermsEnum termsEnum = terms.iterator();
             PostingsEnum postings = null;
