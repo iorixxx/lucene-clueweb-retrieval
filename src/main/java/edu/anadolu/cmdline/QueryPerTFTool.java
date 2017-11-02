@@ -1,19 +1,17 @@
 package edu.anadolu.cmdline;
 
 
-import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
@@ -47,7 +45,7 @@ public class QueryPerTFTool extends CmdLineTool {
     @Option(name = "-tag", required = true, usage = "If you want to search use specific tag, e.g. UAX or Script")
     private String tag = null;
 
-    @Option(name = "-length", required = true, usage = "length of topic")
+    @Option(name = "-length", required = false, usage = "length of topic")
     private int length = 2;
 
 
@@ -72,8 +70,11 @@ public class QueryPerTFTool extends CmdLineTool {
         final long start = System.nanoTime();
 
         for(InfoNeed need: infoneeds){
-            if(need.wordCount()!=length) continue;
-
+            String query = need.query();
+            System.out.println("Query: "+query);
+            Analyzer analyzer = Analyzers.analyzer(Tag.tag(tag));
+            List<String> tokens = Analyzers.getAnalyzedTokens(query, analyzer);
+            if(tokens.size()!=length) continue;
 
             Set<String> relevantDocs = need.getJudgeMap().entrySet().stream().filter(e -> e.getValue() > 0)
                     .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
@@ -91,12 +92,7 @@ public class QueryPerTFTool extends CmdLineTool {
 
 
                 try (IndexReader reader = DirectoryReader.open(FSDirectory.open(path))) {
-                    HashMap<String, Integer> termFreqMap = termFreq4MultipleDocs(field, reader, relevantDocs);
-                    for (Map.Entry<String, Integer> termStats : termFreqMap.entrySet()) {
-                        System.out.printf(Locale.ROOT, "%s \t %d \n",
-                                termStats.getKey(), termStats.getValue());
-                    }
-
+                    termFreq4MultipleDocs(tokens,field, reader, relevantDocs);
                 }
             }
         }
@@ -105,33 +101,85 @@ public class QueryPerTFTool extends CmdLineTool {
 
     }
 
-    private static HashMap<String,Integer> termFreq4MultipleDocs(String field,IndexReader reader,Set<String> relevantDocIds) throws IOException {
-        HashMap<String,Integer> termFreqMap = new HashMap<>();
+    private static void termFreq4MultipleDocs(List<String> queryTokens, String field,IndexReader reader,Set<String> relevantDocIds) throws IOException {
+        HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs = new HashMap<>(); //DocId and Term stats
+        for(String s:relevantDocIds) termStats4RelevantDocs.put(s,new ArrayList<>());
 
-        Set<Integer> relevantDocsWithIndexID = new HashSet<>();
-        IndexSearcher searcher = new IndexSearcher(reader);
-        for (String s:relevantDocIds){
-            TermQuery termQuery = new TermQuery(new Term(FIELD_ID,s));
-            ScoreDoc[] docs = searcher.search(termQuery, 1).scoreDocs;
-            relevantDocsWithIndexID.add(docs[0].doc);
-        }
+        for(String token:queryTokens) {
+            Term term = new Term(field, token);
+            PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
 
-        for(Integer docid:relevantDocsWithIndexID) {
-            Terms terms = reader.getTermVector(docid, field);
+            if (postingsEnum == null){
+                System.out.println(token + "(stopword)"+" Skipping...");
+                return;
+            }
 
-            TermsEnum termsEnum = terms.iterator();
-            PostingsEnum postings = null;
-            while (termsEnum.next() != null) {
-                String term = termsEnum.term().utf8ToString();
-                postings = termsEnum.postings(postings, PostingsEnum.FREQS);
-                int freq = postings.freq();
 
-                if (termFreqMap.containsKey(term)) termFreqMap.merge(term, freq, Integer::sum);
-                else termFreqMap.put(term, freq);
+            while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+
+                final long freq = postingsEnum.freq();
+
+                Document doc = reader.document(postingsEnum.docID());
+
+                String docID = doc.get(FIELD_ID);
+
+                if (relevantDocIds.contains(docID)){
+                    //Relevant doc is detected
+                    ArrayList<TermTFStats> entry = termStats4RelevantDocs.get(docID);
+                    entry.add(new TermTFStats(term.text(),reader.totalTermFreq(term),freq));
+                }
             }
         }
+        printRsults(termStats4RelevantDocs);
 
-        return termFreqMap;
+    }
+
+    private static void printRsults(HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs) {
+        System.out.print("DocId:\t");
+        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet())
+            System.out.printf("%s\t", entry.getKey());
+
+        System.out.print("\nW1 TF:\t");
+        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+            if (entry.getValue().size() > 0)
+                System.out.printf("%s %d\t", entry.getValue().get(0).term().utf8ToString(), entry.getValue().get(0).termFreq());
+            else System.out.printf("%d\t", 0);
+        }
+        System.out.print("\nW2 TF:\t");
+        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+            if (entry.getValue().size() > 1)
+                System.out.printf("%s %d\t", entry.getValue().get(1).term().utf8ToString(), entry.getValue().get(1).termFreq());
+            else System.out.printf("%d\t", 0);
+        }
+
+        System.out.print("\nRatio:\t");
+        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+            if(entry.getValue().size()==2){
+                long w1 = entry.getValue().get(0).termFreq();
+                long w2 = entry.getValue().get(1).termFreq();
+                double ratio;
+                if (w1 > w2) ratio = w2 / (double)w1;
+                else ratio = w1 / (double)w2;
+                System.out.printf("%.4f\t", ratio);
+            }else System.out.printf("%.4f\t", 0.0);
+        }
+        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+            if (entry.getValue().size() > 2) System.out.println("More than 2 !!! "+entry.getKey());
+        }
+        System.out.println("\n=========================================");
+    }
+
+    private static final class TermTFStats extends TermStatistics {
+
+        private final long termFreq;
+        public TermTFStats(String term, long totalTermFreq, long termFreq) {
+            super(new BytesRef(term), 0l, totalTermFreq);
+            this.termFreq = termFreq;
+        }
+        public final long termFreq() {
+            return termFreq;
+        }
+
     }
 
 
