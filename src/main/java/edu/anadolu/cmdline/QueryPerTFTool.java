@@ -157,30 +157,49 @@ public class QueryPerTFTool extends CmdLineTool {
 
         System.out.printf("\nW1 tf:\t%d\t",TF1);
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
-            if (entry.getValue().size() > 0 && entry.getValue().get(0).termPositionInQuery() == 0)
-                System.out.printf("%s %d\t", entry.getValue().get(0).term().utf8ToString(), entry.getValue().get(0).termFreq());
+            if (entry.getValue().size() > 0 ){
+                boolean isFound=false;
+                for (TermTFStats t : entry.getValue()) {
+                    if (t.termPositionInQuery() == 0) {
+                        System.out.printf("%s %d\t", t.term().utf8ToString(), t.termFreq());
+                        isFound=true;
+                        break;
+                    }
+                }
+                if(!isFound) System.out.printf("%d\t", 0);
+            }
             else System.out.printf("%d\t", 0);
         }
+
         System.out.printf("\nW2 tf:\t%d\t",TF2);
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
-            if (entry.getValue().size() > 1 && entry.getValue().get(0).termPositionInQuery() == 1)
-                System.out.printf("%s %d\t", entry.getValue().get(1).term().utf8ToString(), entry.getValue().get(1).termFreq());
+            if (entry.getValue().size() > 0 ) {
+                boolean isFound=false;
+                for (TermTFStats t : entry.getValue()) {
+                    if (t.termPositionInQuery() == 1) {
+                        System.out.printf("%s %d\t", t.term().utf8ToString(), t.termFreq());
+                        isFound=true;
+                        break;
+                    }
+                }
+                if(!isFound) System.out.printf("%d\t", 0);
+            }
             else System.out.printf("%d\t", 0);
         }
 
         System.out.print("\nRatio:\t\t");
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
             if(entry.getValue().size()==0){
-                System.out.println(entry.getKey()+" is skipping...(No term in the document ");
+                System.out.printf("%d\t",-2);  //No term freq for both tokens even if their document is relevant
 
             }
             else if(entry.getValue().size()==1){
                 if(first2second) {
-                    if (entry.getValue().get(0).termPositionInQuery() == 0) System.out.printf("%s\t", "INFINITY");
+                    if (entry.getValue().get(0).termPositionInQuery() == 0) System.out.printf("%d\t", -1); //INFINITY
                     else System.out.printf("%.4f\t", 0.0);
                 }else{
                     if (entry.getValue().get(0).termPositionInQuery() == 0) System.out.printf("%.4f\t", 0.0);
-                    else System.out.printf("%s\t", "INFINITY");
+                    else System.out.printf("%d\t", -1);
                 }
             }
             else if(entry.getValue().size()==2){
