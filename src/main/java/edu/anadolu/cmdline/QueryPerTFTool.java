@@ -45,6 +45,9 @@ public class QueryPerTFTool extends CmdLineTool {
     @Option(name = "-tag", required = true, usage = "If you want to search use specific tag, e.g. UAX or Script")
     private String tag = null;
 
+    @Option(name = "-orderFactor", metaVar = "[TF|avgTF(TF/docFreq)|DF]", required = true)
+    protected String orderFactor = "avgTF";
+
     @Option(name = "-length", required = false, usage = "length of topic")
     private int length = 2;
 
@@ -95,7 +98,7 @@ public class QueryPerTFTool extends CmdLineTool {
 
 
                 try (IndexReader reader = DirectoryReader.open(FSDirectory.open(path))) {
-                    termFreq4MultipleDocs(tokens, field, reader, relevantDocs);
+                    termFreq4MultipleDocs(tokens, field, reader, relevantDocs,orderFactor);
                    // System.out.println("NONRELEVANTS");
                    // termFreq4MultipleDocs(tokens,field, reader, nonRelevantDocs);
                 }
@@ -106,7 +109,7 @@ public class QueryPerTFTool extends CmdLineTool {
 
     }
 
-    private static void termFreq4MultipleDocs(List<String> queryTokens, String field,IndexReader reader,Set<String> relevantDocIds) throws IOException {
+    private static void termFreq4MultipleDocs(List<String> queryTokens, String field,IndexReader reader,Set<String> relevantDocIds,String orderFactor) throws IOException {
         HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs = new HashMap<>(); //DocId and Term stats
         for(String s:relevantDocIds) termStats4RelevantDocs.put(s,new ArrayList<>());
 
@@ -131,31 +134,63 @@ public class QueryPerTFTool extends CmdLineTool {
                 if (relevantDocIds.contains(docID)){
                     //Relevant doc is detected
                     ArrayList<TermTFStats> entry = termStats4RelevantDocs.get(docID);
-                    entry.add(new TermTFStats(term.text(),reader.totalTermFreq(term),freq,queryTokens.indexOf(token)));
+                    entry.add(new TermTFStats(term.text(),reader.totalTermFreq(term),freq,queryTokens.indexOf(token),reader.docFreq(term)));
                 }
             }
         }
-        printResults(termStats4RelevantDocs);
+        printResults(termStats4RelevantDocs,orderFactor);
 
     }
 
-    private static void printResults(HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs) {
+    private static void printResults(HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs,String orderFactor) {
         boolean first2second=true;
-        long TF1=0;
-        long TF2=0;
-        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()){
-            if(entry.getValue().size()!=2)continue;
-            TF1=entry.getValue().get(0).totalTermFreq();
-            TF2=entry.getValue().get(1).totalTermFreq();
-            if(TF1 > TF2) first2second=false;
-            break;
-        }
+        double orderVal1=0;
+        double orderVal2=0;
+        double totalRatio=0;
+        if(orderFactor.equals("TF")){
+            for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+                if (entry.getValue().size() != 2) continue;
+                orderVal1 = entry.getValue().get(0).totalTermFreq();
+                orderVal2 = entry.getValue().get(1).totalTermFreq();
+                if (orderVal1 > orderVal2) {
+                    first2second = false;
+                    totalRatio = orderVal2 / (double) orderVal1;
+                } else totalRatio = orderVal1 / (double) orderVal2;
+                break;
+            }
+        }else if(orderFactor.equals("DF")){
+            for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()){
+                if(entry.getValue().size()!=2)continue;
+                orderVal1=entry.getValue().get(0).docFreq();
+                orderVal2=entry.getValue().get(1).docFreq();
+                if(orderVal1 > orderVal2){
+                    first2second=false;
+                    totalRatio=orderVal2/(double)orderVal1;
+                } else totalRatio=orderVal1/(double)orderVal2;
+                break;
+            }
+        }else if(orderFactor.equals("avgTF")) {
+            for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+                if (entry.getValue().size() != 2) continue;
+                long df1 = entry.getValue().get(0).docFreq();
+                long df2 = entry.getValue().get(1).docFreq();
+                long tf1 = entry.getValue().get(0).totalTermFreq();
+                long tf2 = entry.getValue().get(1).totalTermFreq();
+                orderVal1=tf1/(double)df1;
+                orderVal2=tf2/(double)df2;
+                if (orderVal1 > orderVal2) {
+                    first2second = false;
+                    totalRatio = orderVal2 / orderVal1;
+                } else totalRatio = orderVal1 / orderVal2;
+                break;
+            }
+        }else return;
 
         System.out.print("DocId:\t\t");
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet())
             System.out.printf("%s\t", entry.getKey());
 
-        System.out.printf("\nW1 tf:\t%d\t",TF1);
+        System.out.printf("\nW1 tf:\t%.4f\t",orderVal1);
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
             if (entry.getValue().size() > 0 ){
                 boolean isFound=false;
@@ -171,7 +206,7 @@ public class QueryPerTFTool extends CmdLineTool {
             else System.out.printf("%d\t", 0);
         }
 
-        System.out.printf("\nW2 tf:\t%d\t",TF2);
+        System.out.printf("\nW2 tf:\t%.4f\t",orderVal2);
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
             if (entry.getValue().size() > 0 ) {
                 boolean isFound=false;
@@ -187,7 +222,7 @@ public class QueryPerTFTool extends CmdLineTool {
             else System.out.printf("%d\t", 0);
         }
 
-        System.out.print("\nRatio:\t\t");
+        System.out.print("\nRatio:\t"+totalRatio+"\t");
         for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
             if(entry.getValue().size()==0){
                 System.out.printf("%d\t",-2);  //No term freq for both tokens even if their document is relevant
@@ -211,6 +246,27 @@ public class QueryPerTFTool extends CmdLineTool {
                 System.out.printf("%.4f\t", ratio);
             }else System.out.println("More than 2 !!! " + entry.getKey());
         }
+
+        for (Map.Entry<String, ArrayList<TermTFStats>> entry : termStats4RelevantDocs.entrySet()) {
+            if (entry.getValue().size() != 2) continue;
+            double TF,DF,avgTF;
+            long df1 = entry.getValue().get(0).docFreq();
+            long df2 = entry.getValue().get(1).docFreq();
+            long tf1 = entry.getValue().get(0).totalTermFreq();
+            long tf2 = entry.getValue().get(1).totalTermFreq();
+            if(first2second){
+                TF=tf1 / (double) tf2;
+                DF=df1 / (double) df2;
+                avgTF = TF/DF;
+            }else{
+                TF=tf2 / (double) tf1;
+                DF=df2 / (double) df1;
+                avgTF = TF/DF;
+            }
+
+            System.out.printf("\nTFRatio\t%.4f\tDFRatio\t%.4f\tavgTF\t%.4f",TF,DF,avgTF);
+            break;
+        }
         System.out.println("\n=========================================");
     }
 
@@ -218,10 +274,13 @@ public class QueryPerTFTool extends CmdLineTool {
 
         private final long termFreq;
         private final int termPositionInQuery;
-        public TermTFStats(String term, long totalTermFreq, long termFreq, int termPositionInQuery) {
-            super(new BytesRef(term), 0l, totalTermFreq);
+        private final long documentFreq;
+
+        public TermTFStats(String term, long totalTermFreq, long termFreq, int termPositionInQuery,long documentFreq) {
+            super(new BytesRef(term), documentFreq, totalTermFreq);
             this.termFreq = termFreq;
             this.termPositionInQuery = termPositionInQuery;
+            this.documentFreq=documentFreq;
         }
         public final long termFreq() {
             return termFreq;
