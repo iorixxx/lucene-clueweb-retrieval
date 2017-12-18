@@ -46,7 +46,10 @@ public class QueryPerTFTool extends CmdLineTool {
     private String tag = null;
 
     @Option(name = "-orderFactor", metaVar = "[TF|avgTF(TF/docFreq)|DF]", required = true)
-    protected String orderFactor = "avgTF";
+    protected static String orderFactor = "avgTF";
+
+    @Option(name = "-docSubset", metaVar = "[rel|nonRel|whole]", required = true)
+    protected static String docSubset = "rel";
 
     @Option(name = "-length", required = false, usage = "length of topic")
     private int length = 2;
@@ -78,13 +81,15 @@ public class QueryPerTFTool extends CmdLineTool {
             if(tokens.size()!=length) continue;
             System.out.println(query);
 
-
-            Set<String> relevantDocs = need.getJudgeMap().entrySet().stream().filter(e -> e.getValue() > 0)
-                    .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
-
-           // Set<String> nonRelevantDocs = need.getJudgeMap().entrySet().stream().filter(e -> e.getValue() <= 0)
-            //        .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
-
+            Set<String> docs;
+            if(docSubset.equals("rel")) {
+                docs = need.getJudgeMap().entrySet().stream().filter(e -> e.getValue() > 0)
+                        .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
+            }else if(docSubset.equals("nonRel")) {
+                docs = need.getJudgeMap().entrySet().stream().filter(e -> e.getValue() <= 0)
+                        .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
+            }
+            else return;
 
             Set<String> fields = new TreeSet<String>();
             fields.add(field);
@@ -98,7 +103,7 @@ public class QueryPerTFTool extends CmdLineTool {
 
 
                 try (IndexReader reader = DirectoryReader.open(FSDirectory.open(path))) {
-                    termFreq4MultipleDocs(tokens, field, reader, relevantDocs,orderFactor);
+                    termFreq4MultipleDocs(tokens, field, reader, docs);
                    // System.out.println("NONRELEVANTS");
                    // termFreq4MultipleDocs(tokens,field, reader, nonRelevantDocs);
                 }
@@ -109,9 +114,9 @@ public class QueryPerTFTool extends CmdLineTool {
 
     }
 
-    private static void termFreq4MultipleDocs(List<String> queryTokens, String field,IndexReader reader,Set<String> relevantDocIds,String orderFactor) throws IOException {
+    private static void termFreq4MultipleDocs(List<String> queryTokens, String field,IndexReader reader,Set<String> docIds) throws IOException {
         HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs = new HashMap<>(); //DocId and Term stats
-        for(String s:relevantDocIds) termStats4RelevantDocs.put(s,new ArrayList<>());
+        for(String s:docIds) termStats4RelevantDocs.put(s,new ArrayList<>());
 
         for(String token:queryTokens) {
             Term term = new Term(field, token);
@@ -131,18 +136,18 @@ public class QueryPerTFTool extends CmdLineTool {
 
                 String docID = doc.get(FIELD_ID);
 
-                if (relevantDocIds.contains(docID)){
+                if (docIds.contains(docID)){
                     //Relevant doc is detected
                     ArrayList<TermTFStats> entry = termStats4RelevantDocs.get(docID);
                     entry.add(new TermTFStats(term.text(),reader.totalTermFreq(term),freq,queryTokens.indexOf(token),reader.docFreq(term)));
                 }
             }
         }
-        printResults(termStats4RelevantDocs,orderFactor);
+        printResults(termStats4RelevantDocs);
 
     }
 
-    private static void printResults(HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs,String orderFactor) {
+    private static void printResults(HashMap<String,ArrayList<TermTFStats>> termStats4RelevantDocs) {
         boolean first2second=true;
         double orderVal1=0;
         double orderVal2=0;
@@ -274,13 +279,11 @@ public class QueryPerTFTool extends CmdLineTool {
 
         private final long termFreq;
         private final int termPositionInQuery;
-        private final long documentFreq;
 
         public TermTFStats(String term, long totalTermFreq, long termFreq, int termPositionInQuery,long documentFreq) {
             super(new BytesRef(term), documentFreq, totalTermFreq);
             this.termFreq = termFreq;
             this.termPositionInQuery = termPositionInQuery;
-            this.documentFreq=documentFreq;
         }
         public final long termFreq() {
             return termFreq;
