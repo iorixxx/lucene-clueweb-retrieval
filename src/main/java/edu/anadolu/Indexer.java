@@ -3,6 +3,7 @@ package edu.anadolu;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.datasets.DataSet;
 import edu.anadolu.field.MetaTag;
 import edu.anadolu.field.SemanticElements;
 import edu.anadolu.similarities.MetaTerm;
@@ -57,6 +58,12 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public final class Indexer {
+
+    private final int[] radix = {0, 0, 0};
+
+    public int[] radix() {
+        return this.radix;
+    }
 
     /**
      * artificial field and token: every document should have this
@@ -167,8 +174,23 @@ public final class Indexer {
                 return 1;
             } else if (config.semantic) {
                 Document document = SemanticElements.warc2LuceneDocument(warcRecord);
-                if (document != null)
-                    writer.addDocument(document);
+                if (document == null)
+                    return 1;
+
+                writer.addDocument(document);
+
+                String tags = document.get("tags");
+                if (tags == null) return 1;
+
+                String docId = document.get("id");
+                int j = dataset.judge(docId);
+
+                if (j == -5)
+                    radix[2]++;
+                else if (j > 0)
+                    radix[1]++;
+                else
+                    radix[0]++;
 
                 return 1;
             }
@@ -315,10 +337,12 @@ public final class Indexer {
     private final SolrClient solr;
 
     private final Tag tag;
+    private final DataSet dataset;
 
-    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, Tag tag, IndexerConfig config) throws IOException {
+    public Indexer(DataSet dataset, String docsDir, String indexPath, HttpSolrClient solr, Tag tag, IndexerConfig config) throws IOException {
 
-        this.collection = collection;
+        this.dataset = dataset;
+        this.collection = dataset.collection();
         this.config = config;
         boolean anchor = config.field || config.anchor;
 

@@ -17,12 +17,13 @@ import java.util.Arrays;
 public class SemanticElements {
 
     private static final String[] elements = new String[]{"article", "aside", "details", "figcaption", "figure", "footer", "header", "main", "mark", "nav", "section", "summary", "time",
-            "abbr",
-            "acronym",
-            "em",
-            "strong",
-            "cite",
-            "dfn"};
+            //"abbr",
+            // "acronym",
+            // "em",
+            //  "strong",
+            //  "cite",
+            //  "dfn"
+    };
 
     static {
         Arrays.sort(elements);

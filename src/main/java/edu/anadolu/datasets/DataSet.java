@@ -5,10 +5,7 @@ import org.clueweb09.tracks.Track;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Entity to represent a collection and its query set(s). e.g. MQ09 and ClueWeb09B
@@ -25,18 +22,27 @@ public abstract class DataSet {
 
     private final List<InfoNeed> needs;
 
+    private final Map<String, Integer> judgeMap;
+
     protected DataSet(Collection collection, Track[] tracks, String tfd_home) {
         this.collection = collection;
         this.tracks = tracks;
         this.tfd_home = tfd_home;
         List<InfoNeed> infoNeedList = new ArrayList<>();
+        Map<String, Integer> judgeMap = new HashMap<>();
         for (Track track : tracks()) {
             for (InfoNeed need : track.getTopics()) {
                 need.setDataSet(this);
                 infoNeedList.add(need);
+                judgeMap.putAll(track.getMap().get(need.id()));
             }
         }
         this.needs = Collections.unmodifiableList(infoNeedList);
+        this.judgeMap = Collections.unmodifiableMap(judgeMap);
+    }
+
+    public int judge(String docId) {
+        return judgeMap.getOrDefault(docId, -5);
     }
 
     public Path collectionPath() {
