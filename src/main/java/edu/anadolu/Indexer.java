@@ -3,11 +3,14 @@ package edu.anadolu;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.datasets.DataSet;
 import edu.anadolu.field.MetaTag;
+import edu.anadolu.field.SemanticElements;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -55,6 +58,12 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public final class Indexer {
+
+    private final int[] radix = {0, 0, 0};
+
+    public int[] radix() {
+        return this.radix;
+    }
 
     /**
      * artificial field and token: every document should have this
@@ -161,6 +170,27 @@ public final class Indexer {
                 Document document = warc2LuceneDocument(warcRecord);
                 if (document != null)
                     writer.addDocument(document);
+
+                return 1;
+            } else if (config.semantic) {
+                Document document = SemanticElements.warc2LuceneDocument(warcRecord);
+                if (document == null)
+                    return 1;
+
+                writer.addDocument(document);
+
+                String tags = document.get("tags");
+                if (tags == null) return 1;
+
+                String docId = document.get("id");
+                int j = dataset.judge(docId);
+
+                if (j == -5)
+                    radix[2]++;
+                else if (j > 0)
+                    radix[1]++;
+                else
+                    radix[0]++;
 
                 return 1;
             }
@@ -307,10 +337,12 @@ public final class Indexer {
     private final SolrClient solr;
 
     private final Tag tag;
+    private final DataSet dataset;
 
-    public Indexer(Collection collection, String docsDir, String indexPath, HttpSolrClient solr, Tag tag, IndexerConfig config) throws IOException {
+    public Indexer(DataSet dataset, String docsDir, String indexPath, HttpSolrClient solr, Tag tag, IndexerConfig config) throws IOException {
 
-        this.collection = collection;
+        this.dataset = dataset;
+        this.collection = dataset.collection();
         this.config = config;
         boolean anchor = config.field || config.anchor;
 
@@ -325,6 +357,8 @@ public final class Indexer {
 
         if (this.config.field)
             this.indexPath = Paths.get(indexPath, tag + "Field");
+        else if (this.config.semantic)
+            this.indexPath = Paths.get(indexPath, "Semantic");
         else
             this.indexPath = Paths.get(indexPath, tag + (anchor ? "Anchor" : ""));
         if (!Files.exists(this.indexPath))
@@ -505,6 +539,8 @@ public final class Indexer {
             analyzerPerField.put("meta", MetaTag.whitespaceAnalyzer());
             analyzerPerField.put("host", MetaTag.whitespaceAnalyzer());
             return new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
+        } else if (config.semantic) {
+            return new WhitespaceAnalyzer();
         } else
             return Analyzers.analyzer(tag);
     }
@@ -669,6 +705,7 @@ public final class Indexer {
         boolean anchor = false;
         boolean field = false;
         boolean artificial = false;
+        boolean semantic = false;
 
         public IndexerConfig useAnchorText(boolean anchor) {
             this.anchor = anchor;
@@ -685,5 +722,9 @@ public final class Indexer {
             return this;
         }
 
+        public IndexerConfig useSemanticElements(boolean semantic) {
+            this.semantic = semantic;
+            return this;
+        }
     }
 }

@@ -34,6 +34,9 @@ public final class TFDistributionTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
 
+    @Option(name = "-tag", required = false, usage = "If you want to use specific tag, e.g. KStemField")
+    private String tag = null;
+
     @Override
     public String getShortDescription() {
         return "Term Frequency Distribution Analysis Tool";
@@ -93,6 +96,10 @@ public final class TFDistributionTool extends CmdLineTool {
             try (final IndexReader reader = DirectoryReader.open(FSDirectory.open(indexPath))) {
                 System.out.println("Term Freq. Dist opened index directory : " + indexPath + " has " + reader.numDocs() + " numDocs and has " + reader.maxDoc() + " maxDocs");
                 final String indexTag = indexPath.getFileName().toString();
+
+                // search for a specific tag, skip the rest
+                if (this.tag != null && !indexTag.equals(this.tag)) continue;
+
                 Tag tag = Tag.tag(indexTag);
                 System.out.println("analyzer tag " + tag);
                 Analyzer analyzer = Analyzers.analyzer(tag);
@@ -100,7 +107,9 @@ public final class TFDistributionTool extends CmdLineTool {
                 for (String field : fields) {
 
                     final TFD distribution;
-                    if ("zero".equals(task)) {
+                    if ("diri".equals(task)) {
+                        distribution = new DirichletDistribution(reader, binningStrategy, field, analyzer);
+                    } else if ("zero".equals(task)) {
                         distribution = new ZeroDistribution(reader, binningStrategy, field, analyzer);
                     } else if ("phi".equals(task)) {
                         distribution = new Phi(reader, binningStrategy, field, analyzer);

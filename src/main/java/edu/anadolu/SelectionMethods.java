@@ -1,24 +1,7 @@
 package edu.anadolu;
 
-
-import edu.anadolu.analysis.Analyzers;
-import edu.anadolu.analysis.Tag;
 import edu.anadolu.stats.TermStats;
 import org.apache.commons.math3.stat.correlation.KendallsCorrelation;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermContext;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermStatistics;
-import org.apache.lucene.search.similarities.Similarity;
-import org.clueweb09.InfoNeed;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.*;
 
 

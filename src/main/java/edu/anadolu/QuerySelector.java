@@ -376,6 +376,7 @@ public class QuerySelector {
 
             String[] parts = whiteSpaceSplitter.split(line);
 
+            //TODO add meaningful statistics for non-existing terms. e.g., docFreq = totalTermFreq = 0
             if (parts.length != 4) {
                 System.out.println(collectionPath.toString()+" "+tag+": While enriching termstatmap, parts is not equal to 4 for line: "+line);
                 continue;

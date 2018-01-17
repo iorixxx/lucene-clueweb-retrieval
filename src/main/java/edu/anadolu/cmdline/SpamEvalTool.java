@@ -59,7 +59,7 @@ public final class SpamEvalTool extends EvaluatorTool {
                 }
             }
 
-            list.sort((o1, o2) -> o1.model.compareTo(o2.model));
+            list.sort(Comparator.comparing(ModelScore::model));
             list.forEach(modelScore -> System.out.print(modelScore.score + "\t"));
 
             if (t == 0)
@@ -74,7 +74,7 @@ public final class SpamEvalTool extends EvaluatorTool {
         models.forEach(System.out::println);
 
         for (String model : scores.keySet()) {
-            String s = String.format("%s \t %.1f", Evaluator.prettyModel(model), Presentation.var4(scores.get(model).stream().mapToDouble(d -> d).toArray()));
+            String s = String.format("%s \t %.2f", Evaluator.prettyModel(model), Presentation.var4(scores.get(model).stream().mapToDouble(d -> d).toArray()));
             System.out.println(s);
         }
 

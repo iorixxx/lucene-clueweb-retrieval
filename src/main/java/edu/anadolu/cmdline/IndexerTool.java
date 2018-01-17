@@ -3,12 +3,15 @@ package edu.anadolu.cmdline;
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.datasets.CollectionFactory;
+import edu.anadolu.datasets.DataSet;
 import edu.anadolu.exp.ROB04;
 import edu.anadolu.mc.MCIndexer;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Option;
 
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Properties;
 
 import static edu.anadolu.analysis.Tag.KStem;
@@ -29,6 +32,9 @@ public final class IndexerTool extends CmdLineTool {
 
     @Option(name = "-artificial", usage = "Boolean switch to index artificial field and token")
     private boolean artificial = false;
+
+    @Option(name = "-semantic", usage = "Boolean switch to index HTML5 semantic elements")
+    private boolean semantic = false;
 
     @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU|NoStemTurkish|Zemberek]", required = false, usage = "Analyzer Tag")
     private Tag tag = KStem;
@@ -104,13 +110,16 @@ public final class IndexerTool extends CmdLineTool {
             solr = null;
         }
 
+        DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
         Indexer.IndexerConfig config = new Indexer.IndexerConfig()
                 .useAnchorText(anchor)
                 .useMetaFields(field)
-                .useArtificialField(artificial);
-        Indexer indexer = new Indexer(collection, docsPath, indexPath, solr, tag, config);
+                .useArtificialField(artificial)
+                .useSemanticElements(semantic);
+        Indexer indexer = new Indexer(dataset, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
+        System.out.println(Arrays.toString(indexer.radix()));
     }
 }

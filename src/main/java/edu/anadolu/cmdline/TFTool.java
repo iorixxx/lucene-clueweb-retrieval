@@ -30,8 +30,8 @@ public class TFTool extends CmdLineTool {
         return "Generates data for TFGraph";
     }
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzer";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = "KStem";
 
     @Option(name = "-model", metaVar = "[DPH|DFRee|DLH13]", required = false, usage = "TW Model")
     protected String model = "DPH";
@@ -40,7 +40,7 @@ public class TFTool extends CmdLineTool {
     protected String task;
 
     @Option(name = "-term", metaVar = "[term]", required = false, usage = "word")
-    protected String term;
+    protected String term = "tenderloin";
 
     private Workbook workbook;
 

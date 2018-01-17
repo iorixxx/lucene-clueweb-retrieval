@@ -9,14 +9,15 @@ import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static edu.anadolu.cmdline.CmdLineTool.execution;
 
 public class ZeroDistribution extends Phi {
 
     private final int[] allDocIDs;
-    private static final String ARTIFICIAL_FIELD = "all";
-    private static final Term ARTIFICIAL_TERM = new Term(ARTIFICIAL_FIELD, ARTIFICIAL_FIELD);
+    static final String ARTIFICIAL_FIELD = "all";
+    static final Term ARTIFICIAL_TERM = new Term(ARTIFICIAL_FIELD, ARTIFICIAL_FIELD);
 
     public ZeroDistribution(IndexReader reader, BinningStrategy binningStrategy, String field, Analyzer analyzer) throws IOException {
 
@@ -41,9 +42,9 @@ public class ZeroDistribution extends Phi {
             allDocIDs[i++] = postingsEnum.docID();
         }
 
-        System.out.println("All " + Integer.toString(i) + " docIDs are obtained in " + execution(start));
-
         Arrays.sort(allDocIDs);
+        System.out.println("All " + Integer.toString(i) + " docIDs are obtained in " + execution(start));
+        System.out.println(allDocIDs[0] + " " + allDocIDs[reader.numDocs() - 1]);
     }
 
     @Override
@@ -85,29 +86,40 @@ public class ZeroDistribution extends Phi {
         builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.FILTER)
                 .add(new TermQuery(term), BooleanClause.Occur.MUST_NOT);
 
-        ScoreDoc[] hits = searcher.search(builder.build(), Integer.MAX_VALUE).scoreDocs;
+        final AtomicInteger cnt = new AtomicInteger(0);
+        final AtomicInteger mx = new AtomicInteger(max);
+        searcher.search(builder.build(), new SimpleCollector() {
+            @Override
+            public void collect(int doc) throws IOException {
 
-        if ((counter1 + hits.length) != reader.numDocs()) {
-            System.out.println("term enum : " + counter1 + " filter clause : " + hits.length);
-            System.out.println("docCount : " + collectionStatistics.docCount() + " sum : " + Integer.toString(counter1 + hits.length));
+                final long numTerms = norms.get(doc) + 1;
+                final double relativeFrequency = 1.0d / (double) numTerms;
+
+                if (!(relativeFrequency > 0 && relativeFrequency <= 1))
+                    throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
+
+                final int value = binningStrategy.calculateBinValue(relativeFrequency);
+
+                array[value]++;
+                if (value > mx.intValue())
+                    mx.set(value);
+
+                cnt.incrementAndGet();
+            }
+
+            @Override
+            public boolean needsScores() {
+                return false;
+            }
+        });
+
+
+        if ((counter1 + cnt.intValue()) != reader.numDocs()) {
+            System.out.println("term enum : " + counter1 + " filter clause : " + cnt.intValue());
+            System.out.println("docCount : " + collectionStatistics.docCount() + " sum : " + Integer.toString(counter1 + cnt.intValue()));
         }
 
-        for (ScoreDoc scoreDoc : hits) {
-            int docId = scoreDoc.doc;
-            final long numTerms = norms.get(docId) + 1;
-            final double relativeFrequency = 1.0d / (double) numTerms;
-
-            if (!(relativeFrequency > 0 && relativeFrequency <= 1))
-                throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
-
-            final int value = binningStrategy.calculateBinValue(relativeFrequency);
-
-            array[value]++;
-            if (value > max)
-                max = value;
-        }
-
-        return rollCountArray(max, array);
+        return rollCountArray(mx.intValue(), array);
     }
 
     @Override
@@ -124,20 +136,24 @@ public class ZeroDistribution extends Phi {
         if (postingsEnum != null)
             while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
-                final int freq = postingsEnum.freq() + 1;
-                final long numTerms = norms.get(postingsEnum.docID()) + 1;
-                final double relativeFrequency = (double) freq / (double) numTerms;
+                final int freq = postingsEnum.freq();
+                final long docLen = norms.get(postingsEnum.docID());
+
+                if (freq < 1 || docLen < 1) throw new RuntimeException("tf or docLen is less than one!");
+
+                final double relativeFrequency = (double) (freq + 1) / (double) (docLen + 1L);
 
                 if (!(relativeFrequency > 0 && relativeFrequency <= 1))
                     throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
 
                 final int value = binningStrategy.calculateBinValue(relativeFrequency);
 
+                counter++;
                 array[value]++;
                 if (value > max)
                     max = value;
 
-                counter++;
+
             }
 
         PostingsEnum first = MultiFields.getTermDocsEnum(reader, ARTIFICIAL_FIELD, ARTIFICIAL_TERM.bytes());
@@ -161,29 +177,30 @@ public class ZeroDistribution extends Phi {
 
             if (firstDocId < secondDocId) {
 
-                counter++;
-
                 if (first.freq() != 1)
                     throw new RuntimeException("artificial term frequency should be 1! " + first.freq());
 
                 final int docId = first.docID();
+                final long docLen = norms.get(docId);
 
-                final long numTerms;
-                try {
-                    numTerms = norms.get(docId) + 1;
-                } catch (Exception e) {
-                    System.out.println("exception occurred for " + word + " " + e.toString());
+                // handle documents that have zero terms in it. docLen=0 Difference reader.numDocs() - collectionStatistics.docCount()
+                if (docLen == 0L) {
+                    //System.out.println("document length zero");
                     firstDocId = first.nextDoc();
                     continue;
                 }
-                //  if (numTerms == 1L) System.out.println("document length zero");
-                final double relativeFrequency = 1.0d / (double) numTerms;
+
+                if (docLen < 1) throw new RuntimeException("docLen is less than one!");
+
+
+                final double relativeFrequency = 1.0d / (double) (docLen + 1);
 
                 if (!(relativeFrequency > 0 && relativeFrequency <= 1))
                     throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
 
                 final int value = binningStrategy.calculateBinValue(relativeFrequency);
 
+                counter++;
                 array[value]++;
                 if (value > max)
                     max = value;
@@ -204,19 +221,28 @@ public class ZeroDistribution extends Phi {
 
         while (firstDocId != PostingsEnum.NO_MORE_DOCS) {
 
-            counter++;
 
             if (first.freq() != 1) throw new RuntimeException("artificial term frequency should be 1! " + first.freq());
             final int docId = first.docID();
 
-            final long numTerms = norms.get(docId) + 1;
-            final double relativeFrequency = 1.0d / (double) numTerms;
+            final long docLen = norms.get(docId);
+
+            // handle documents that have zero terms in it. docLen=0 Difference reader.numDocs() - collectionStatistics.docCount()
+            if (docLen == 0L) {
+                firstDocId = first.nextDoc();
+                continue;
+            }
+
+            if (docLen < 1) throw new RuntimeException("docLen is less than one!");
+
+            final double relativeFrequency = 1.0d / (double) (docLen + 1);
 
             if (!(relativeFrequency > 0 && relativeFrequency <= 1))
                 throw new RuntimeException("percentage is out of range exception, percentage = " + relativeFrequency);
 
             final int value = binningStrategy.calculateBinValue(relativeFrequency);
 
+            counter++;
             array[value]++;
             if (value > max)
                 max = value;
@@ -225,9 +251,8 @@ public class ZeroDistribution extends Phi {
         }
 
 
-        if (counter != reader.numDocs()) {
-            System.out.println("term enum : " + counter + " filter clause : " + reader.numDocs());
-            System.out.println("docCount : " + collectionStatistics.docCount());
+        if (counter != collectionStatistics.docCount()) {
+            System.out.println("counter : " + counter + " docCount : " + collectionStatistics.docCount() + " reader.numDocs : " + reader.numDocs());
         }
 
         return rollCountArray(max, array);
