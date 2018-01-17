@@ -5,12 +5,106 @@ import org.jsoup.nodes.Document;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
+
 /**
  * Test for HTML5 Semantic Elements
  */
 public class TestSemanticElements {
 
     @Test
+    public void testSemanticElementsWithAttr() {
+        final String html = "<abbr title=\"Internationalization\">I18N</abbr> \n"+
+                "The <abbr title=\"World Health Organization\">WHO</abbr> was founded in 1948.\n"+
+                "<p>\n" +
+                "         <abbr title = \"Private\">pvt.</abbr>\n" +
+                "         <br />\n" +
+                "         \n" +
+                "         <abbr title = \"International Cricket Council\">ICC.</abbr> \n" +
+                "            promotes the global game.\n" +
+                "         <br />\n" +
+                "      </p>"+
+                "Can I get this <acronym title=\"as soon as possible\">ASAP</acronym>?"+
+                "<p>The <acronym title=\"World Wide Web\">WWW</acronym> is only a component of the Internet.</p>"+
+                "<p><dfn title=\"HyperText Markup Language\">HTML</dfn> is the standard markup language for creating web pages.</p>"+
+                "<p><dfn><abbr title=\"Anadolu University\">AU</abbr></dfn> is the university.</p>"+
+                "<p><dfn>TV</dfn> is the television</p>"+
+                "<p><cite>The Scream</cite> by Edward Munch. Painted in 1893.</p>"+
+                "<p>More information can be found in <cite>[ISO-0000]</cite>.</p>"+
+                "<p>Do not forget to buy <mark>milk</mark> today.</p>";
+
+
+        Document jDoc = Jsoup.parse(html);
+        List<SemanticTag> elements = SemanticElements.semanticElementsWithAttr(jDoc);
+
+        Assert.assertEquals(13, elements.size());
+        for (SemanticTag st:elements) {
+            if(st.getTag().toString().equals(SemanticTag.HTMLTag.abbr.toString())){
+                if(st.getText().equals("I18N")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("Internationalization",st.getAttrList().get(0).getRight());
+                }
+                else if(st.getText().equals("WHO")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("World Health Organization",st.getAttrList().get(0).getRight());
+                }
+                else if(st.getText().equals("pvt.")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("Private",st.getAttrList().get(0).getRight());
+                }else if(st.getText().equals("ICC.")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("International Cricket Council",st.getAttrList().get(0).getRight());
+                }else if(st.getText().equals("AU")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("Anadolu University",st.getAttrList().get(0).getRight());
+                }
+
+                else Assert.fail(st.getText()+" abbr not found!");
+            }
+            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.acronym.toString())){
+                if(st.getText().equals("ASAP")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("as soon as possible",st.getAttrList().get(0).getRight());
+                }
+                else if(st.getText().equals("WWW")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("World Wide Web",st.getAttrList().get(0).getRight());
+                }
+                else Assert.fail(st.getText()+" acronym not found!");
+            }
+            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.dfn.toString())){
+                if(st.getText().equals("HTML")){
+                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
+                    Assert.assertEquals("HyperText Markup Language",st.getAttrList().get(0).getRight());
+                }
+                else if(st.getText().equals("AU")){
+                    Assert.assertEquals(0,st.getAttrList().size());
+                }
+                else if(st.getText().equals("TV")){
+                    Assert.assertEquals(0,st.getAttrList().size());
+                }
+                else Assert.fail(st.getText()+" dfn not found!");
+            }
+            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.cite.toString())){
+                if(st.getText().equals("The Scream")){
+                    Assert.assertEquals(0,st.getAttrList().size());
+                }
+                else if(st.getText().equals("[ISO-0000]")){
+                    Assert.assertEquals(0,st.getAttrList().size());
+                }
+                else Assert.fail(st.getText()+" cite not found!");
+            }
+            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.mark.toString())){
+                if(st.getText().equals("milk")){
+                    Assert.assertEquals(0,st.getAttrList().size());
+                }
+                else Assert.fail(st.getText()+" mark not found!");
+            }
+            else  Assert.fail(st.getTag()+" tag not found!");
+        }
+    }
+
+        @Test
     public void testArticleHeader() {
 
         final String html

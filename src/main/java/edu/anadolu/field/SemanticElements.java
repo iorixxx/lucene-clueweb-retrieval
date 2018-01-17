@@ -1,14 +1,19 @@
 package edu.anadolu.field;
 
 import edu.anadolu.Indexer;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Attribute;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Helper class to extract HTML5 Semantic Elements
@@ -24,6 +29,12 @@ public class SemanticElements {
             //  "cite",
             //  "dfn"
     };
+
+    /**
+     * NOTE: This can be loaded from a file.
+     */
+    private static SemanticTag.HTMLTag[] selectedHTMLTag= new SemanticTag.HTMLTag[]{SemanticTag.HTMLTag.abbr,
+            SemanticTag.HTMLTag.acronym, SemanticTag.HTMLTag.dfn,SemanticTag.HTMLTag.cite,SemanticTag.HTMLTag.mark};
 
     static {
         Arrays.sort(elements);
@@ -53,6 +64,7 @@ public class SemanticElements {
         return document;
     }
 
+    @Deprecated
     static String semanticElements(org.jsoup.nodes.Document jDoc) {
 
         StringBuilder tags = new StringBuilder();
@@ -66,5 +78,27 @@ public class SemanticElements {
         }
 
         return tags.toString().trim();
+    }
+
+    /**
+     * Return list of tags with their text value <tag,text>
+     * @param jDoc
+     * @return
+     */
+    static List<SemanticTag> semanticElementsWithAttr(org.jsoup.nodes.Document jDoc) {
+        List<SemanticTag> semanticTags = new LinkedList<>();
+        for (SemanticTag.HTMLTag tag : selectedHTMLTag) {
+
+            Elements elements = jDoc.getElementsByTag(tag.toString());
+
+            for (Element e:elements){
+                SemanticTag st = new SemanticTag(tag,e.text());
+                for (Attribute attr:e.attributes()){
+                    st.addAttr(new ImmutablePair(attr.getKey(),attr.getValue()));
+                }
+                semanticTags.add(st);
+            }
+        }
+        return semanticTags;
     }
 }
