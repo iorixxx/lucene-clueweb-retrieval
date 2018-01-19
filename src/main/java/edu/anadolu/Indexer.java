@@ -540,7 +540,7 @@ public final class Indexer {
             analyzerPerField.put("host", MetaTag.whitespaceAnalyzer());
             return new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
         } else if (config.semantic) {
-            return new WhitespaceAnalyzer();
+            return  MetaTag.whitespaceAnalyzer();
         } else
             return Analyzers.analyzer(tag);
     }

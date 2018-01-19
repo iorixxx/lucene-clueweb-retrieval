@@ -12,27 +12,62 @@ import java.util.List;
  */
 public class TestSemanticElements {
 
+    final String html = "<abbr title=\"Internationalization\">I18N</abbr> \n"+
+            "The <abbr title=\"World Health Organization\">WHO</abbr> was founded in 1948.\n"+
+            "<p>\n" +
+            "         <abbr title = \"Private\">pvt.</abbr>\n" +
+            "         <br />\n" +
+            "         \n" +
+            "         <abbr title = \"International Cricket Council\">ICC.</abbr> \n" +
+            "            promotes the global game.\n" +
+            "         <br />\n" +
+            "      </p>"+
+            "Can I get this <acronym title=\"as soon as possible\">ASAP</acronym>?"+
+            "<p>The <acronym title=\"World Wide Web\">WWW</acronym> is only a component of the Internet.</p>"+
+            "<p><dfn title=\"HyperText Markup Language\">HTML</dfn> is the standard markup language for creating web pages.</p>"+
+            "<p><dfn><abbr title=\"Anadolu University\">AU</abbr></dfn> is the university.</p>"+
+            "<p><dfn>TV</dfn> is the television</p>"+
+            "<p><cite>The Scream</cite> by Edward Munch. Painted in 1893.</p>"+
+            "<p>More information can be found in <cite>[ISO-0000]</cite>.</p>"+
+            "<p>Do not forget to buy <mark>daily milk</mark> today.</p>";
+
+    @Test
+    public void testAcronymSemantic(){
+        Document jDoc = Jsoup.parse(html);
+        String elements = SemanticElements.acronymSemantic(jDoc);
+        Assert.assertEquals("ASAP WWW", elements);
+    }
+
+    @Test
+    public void testAbbrSemantic(){
+        Document jDoc = Jsoup.parse(html);
+        String elements = SemanticElements.abbrSemantic(jDoc);
+        Assert.assertEquals("I18N WHO pvt. ICC. AU", elements);
+    }
+
+    @Test
+    public void testMarkSemantic(){
+        Document jDoc = Jsoup.parse(html);
+        String elements = SemanticElements.markSemantic(jDoc);
+        Assert.assertEquals("daily_milk", elements);
+    }
+
+    @Test
+    public void testCiteSemantic(){
+        Document jDoc = Jsoup.parse(html);
+        String elements = SemanticElements.citeSemantic(jDoc);
+        Assert.assertEquals("The_Scream [ISO-0000]", elements);
+    }
+
+    @Test
+    public void testDfnSemantic(){
+        Document jDoc = Jsoup.parse(html);
+        String elements = SemanticElements.dfnSemantic(jDoc);
+        Assert.assertEquals("HTML AU TV", elements);
+    }
+
     @Test
     public void testSemanticElementsWithAttr() {
-        final String html = "<abbr title=\"Internationalization\">I18N</abbr> \n"+
-                "The <abbr title=\"World Health Organization\">WHO</abbr> was founded in 1948.\n"+
-                "<p>\n" +
-                "         <abbr title = \"Private\">pvt.</abbr>\n" +
-                "         <br />\n" +
-                "         \n" +
-                "         <abbr title = \"International Cricket Council\">ICC.</abbr> \n" +
-                "            promotes the global game.\n" +
-                "         <br />\n" +
-                "      </p>"+
-                "Can I get this <acronym title=\"as soon as possible\">ASAP</acronym>?"+
-                "<p>The <acronym title=\"World Wide Web\">WWW</acronym> is only a component of the Internet.</p>"+
-                "<p><dfn title=\"HyperText Markup Language\">HTML</dfn> is the standard markup language for creating web pages.</p>"+
-                "<p><dfn><abbr title=\"Anadolu University\">AU</abbr></dfn> is the university.</p>"+
-                "<p><dfn>TV</dfn> is the television</p>"+
-                "<p><cite>The Scream</cite> by Edward Munch. Painted in 1893.</p>"+
-                "<p>More information can be found in <cite>[ISO-0000]</cite>.</p>"+
-                "<p>Do not forget to buy <mark>milk</mark> today.</p>";
-
 
         Document jDoc = Jsoup.parse(html);
         List<SemanticTag> elements = SemanticElements.semanticElementsWithAttr(jDoc);
@@ -95,7 +130,7 @@ public class TestSemanticElements {
                 else Assert.fail(st.getText()+" cite not found!");
             }
             else if(st.getTag().toString().equals(SemanticTag.HTMLTag.mark.toString())){
-                if(st.getText().equals("milk")){
+                if(st.getText().equals("daily milk")){
                     Assert.assertEquals(0,st.getAttrList().size());
                 }
                 else Assert.fail(st.getText()+" mark not found!");

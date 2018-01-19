@@ -60,8 +60,63 @@ public class SemanticElements {
         Document document = new Document();
         document.add(new StringField("id", wDoc.id(), Field.Store.YES));
         document.add(new Indexer.NoPositionsTextField("tags", semanticElements(jDoc)));
+        document.add(new Indexer.NoPositionsTextField("abbr", abbrSemantic(jDoc)));
+        document.add(new Indexer.NoPositionsTextField("acronym", acronymSemantic(jDoc)));
+        document.add(new Indexer.NoPositionsTextField("cite", citeSemantic(jDoc)));
+        document.add(new Indexer.NoPositionsTextField("dfn", dfnSemantic(jDoc)));
+        document.add(new Indexer.NoPositionsTextField("mark", markSemantic(jDoc)));
 
         return document;
+    }
+    static String dfnSemantic(org.jsoup.nodes.Document jDoc){
+        StringBuilder dfns = new StringBuilder();
+        List<SemanticTag> selectedTags = semanticElementsWithAttr(jDoc);
+        for(SemanticTag tag:selectedTags){
+            if(tag.getTag().compareTo(SemanticTag.HTMLTag.dfn)!=0) continue;
+            dfns.append(tag.getText().replaceAll("\\s+","_")).append(' ');
+        }
+        return dfns.toString().trim();
+    }
+
+    static String markSemantic(org.jsoup.nodes.Document jDoc){
+        StringBuilder marks = new StringBuilder();
+        List<SemanticTag> selectedTags = semanticElementsWithAttr(jDoc);
+        for(SemanticTag tag:selectedTags){
+            if(tag.getTag().compareTo(SemanticTag.HTMLTag.mark)!=0) continue;
+            marks.append(tag.getText().replaceAll("\\s+","_")).append(' ');
+        }
+        return marks.toString().trim();
+    }
+
+    static String citeSemantic(org.jsoup.nodes.Document jDoc){
+        StringBuilder cites = new StringBuilder();
+        List<SemanticTag> selectedTags = semanticElementsWithAttr(jDoc);
+        for(SemanticTag tag:selectedTags){
+            if(tag.getTag().compareTo(SemanticTag.HTMLTag.cite)!=0) continue;
+            cites.append(tag.getText().replaceAll("\\s+","_")).append(' ');
+        }
+        return cites.toString().trim();
+    }
+
+    static String acronymSemantic(org.jsoup.nodes.Document jDoc){
+        StringBuilder acronyms = new StringBuilder();
+        List<SemanticTag> selectedTags = semanticElementsWithAttr(jDoc);
+        for(SemanticTag tag:selectedTags){
+            if(tag.getTag().compareTo(SemanticTag.HTMLTag.acronym)!=0) continue;
+            acronyms.append(tag.getText().replaceAll("\\s+","_")).append(' ');
+        }
+        return acronyms.toString().trim();
+    }
+
+    static String abbrSemantic(org.jsoup.nodes.Document jDoc){
+        StringBuilder abbrs = new StringBuilder();
+        List<SemanticTag> selectedTags = semanticElementsWithAttr(jDoc);
+        for(SemanticTag tag:selectedTags){
+            if(tag.getTag().compareTo(SemanticTag.HTMLTag.abbr)!=0) continue;
+            abbrs.append(tag.getText().replaceAll("\\s+", "_")).append(' ');
+        }
+        return abbrs.toString().trim();
+
     }
 
     @Deprecated
