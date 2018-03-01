@@ -6,6 +6,7 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.exp.ROB04;
+import edu.anadolu.field.SemanticStats;
 import edu.anadolu.mc.MCIndexer;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Option;
@@ -119,6 +120,7 @@ public final class IndexerTool extends CmdLineTool {
                 .useSemanticElements(semantic);
         Indexer indexer = new Indexer(dataset, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
+        if(semantic) SemanticStats.getSemanticObject().printSemanticStats();
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
         System.out.println(Arrays.toString(indexer.radix()));
     }

@@ -1,29 +1,63 @@
 package edu.anadolu.field;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.DocumentType;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 
 /**
  * Test for HTML5 Semantic Elements
  */
 public class TestSemanticElements {
 
+    final String doctypeHTML5 ="<!DOCTYPE html>\n";
+
+    final String doctypeHTML401Transitional ="<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\n";
+
+    final String doctypeHTML401Frameset ="<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\">\n";
+
+    final String doctypeXHTML10Strict ="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
+
+    final String doctypeXHTML10Transitional ="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
+
+    final String doctypeXHTML10Frameset ="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\">\n";
+
+    final String doctypeXHTML11 ="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n";
+
+    final String doctypeMathML20DTD ="<!DOCTYPE math PUBLIC \"-//W3C//DTD MathML 2.0//EN\"\t\n" +
+            "\t\"http://www.w3.org/Math/DTD/mathml2/mathml2.dtd\">\n";
+
+    final String doctypeXHTMLMathMLSVGDTD ="<!DOCTYPE html PUBLIC\n" +
+            "    \"-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN\"\n" +
+            "    \"http://www.w3.org/2002/04/xhtml-math-svg/xhtml-math-svg.dtd\">\n";
+
+    final String MathML101DTD ="<!DOCTYPE math SYSTEM \n" +
+            "\t\"http://www.w3.org/Math/DTD/mathml1/mathml.dtd\">\n";
+
     final String html = "<abbr title=\"Internationalization\">I18N</abbr> \n"+
             "The <abbr title=\"World Health Organization\">WHO</abbr> was founded in 1948.\n"+
             "<p>\n" +
-            "         <abbr title = \"Private\">pvt.</abbr>\n" +
+            "         <abbr title = \"Pr\">pvt.</abbr>\n" +
             "         <br />\n" +
             "         \n" +
-            "         <abbr title = \"International Cricket Council\">ICC.</abbr> \n" +
+            "         <abbr >ICC.</abbr> \n" +
             "            promotes the global game.\n" +
             "         <br />\n" +
             "      </p>"+
             "Can I get this <acronym title=\"as soon as possible\">ASAP</acronym>?"+
-            "<p>The <acronym title=\"World Wide Web\">WWW</acronym> is only a component of the Internet.</p>"+
+            "<p>The <acronym >WWW</acronym> is only a component of the Internet.</p>"+
             "<p><dfn title=\"HyperText Markup Language\">HTML</dfn> is the standard markup language for creating web pages.</p>"+
             "<p><dfn><abbr title=\"Anadolu University\">AU</abbr></dfn> is the university.</p>"+
             "<p><dfn>TV</dfn> is the television</p>"+
@@ -32,17 +66,28 @@ public class TestSemanticElements {
             "<p>Do not forget to buy <mark>daily milk</mark> today.</p>";
 
     @Test
+    public void testSemanticStats(){
+        Document jDoc = Jsoup.parse(html);
+        String elements1 = SemanticElements.acronymSemantic(jDoc);
+        String elements2 = SemanticElements.abbrSemantic(jDoc);
+        String elements3 = SemanticElements.markSemantic(jDoc);
+        String elements4 = SemanticElements.citeSemantic(jDoc);
+        String elements5 = SemanticElements.dfnSemantic(jDoc);
+        SemanticStats.getSemanticObject().printSemanticStats();
+    }
+
+    @Test
     public void testAcronymSemantic(){
         Document jDoc = Jsoup.parse(html);
         String elements = SemanticElements.acronymSemantic(jDoc);
-        Assert.assertEquals("ASAP WWW", elements);
+        Assert.assertEquals("ASAP", elements);
     }
 
     @Test
     public void testAbbrSemantic(){
         Document jDoc = Jsoup.parse(html);
         String elements = SemanticElements.abbrSemantic(jDoc);
-        Assert.assertEquals("I18N WHO pvt. ICC. AU", elements);
+        Assert.assertEquals("I18N WHO AU", elements);
     }
 
     @Test
@@ -63,81 +108,40 @@ public class TestSemanticElements {
     public void testDfnSemantic(){
         Document jDoc = Jsoup.parse(html);
         String elements = SemanticElements.dfnSemantic(jDoc);
-        Assert.assertEquals("HTML AU TV", elements);
+        Assert.assertEquals("HTML", elements);
     }
 
     @Test
-    public void testSemanticElementsWithAttr() {
+    public void testDocType() {
+        String type = "";
+        Document jDoc = Jsoup.parse(doctypeXHTMLMathMLSVGDTD);
+        Node typeNode = jDoc.childNode(0);
+        String name = typeNode.attr("name");
+        String publicId = typeNode.attr("publicId");
+        String systemId = typeNode.attr("systemId");
+        String[] tokens = publicId.split("//");
 
-        Document jDoc = Jsoup.parse(html);
-        List<SemanticTag> elements = SemanticElements.semanticElementsWithAttr(jDoc);
-
-        Assert.assertEquals(13, elements.size());
-        for (SemanticTag st:elements) {
-            if(st.getTag().toString().equals(SemanticTag.HTMLTag.abbr.toString())){
-                if(st.getText().equals("I18N")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("Internationalization",st.getAttrList().get(0).getRight());
-                }
-                else if(st.getText().equals("WHO")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("World Health Organization",st.getAttrList().get(0).getRight());
-                }
-                else if(st.getText().equals("pvt.")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("Private",st.getAttrList().get(0).getRight());
-                }else if(st.getText().equals("ICC.")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("International Cricket Council",st.getAttrList().get(0).getRight());
-                }else if(st.getText().equals("AU")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("Anadolu University",st.getAttrList().get(0).getRight());
-                }
-
-                else Assert.fail(st.getText()+" abbr not found!");
-            }
-            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.acronym.toString())){
-                if(st.getText().equals("ASAP")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("as soon as possible",st.getAttrList().get(0).getRight());
-                }
-                else if(st.getText().equals("WWW")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("World Wide Web",st.getAttrList().get(0).getRight());
-                }
-                else Assert.fail(st.getText()+" acronym not found!");
-            }
-            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.dfn.toString())){
-                if(st.getText().equals("HTML")){
-                    Assert.assertEquals("title",st.getAttrList().get(0).getLeft());
-                    Assert.assertEquals("HyperText Markup Language",st.getAttrList().get(0).getRight());
-                }
-                else if(st.getText().equals("AU")){
-                    Assert.assertEquals(0,st.getAttrList().size());
-                }
-                else if(st.getText().equals("TV")){
-                    Assert.assertEquals(0,st.getAttrList().size());
-                }
-                else Assert.fail(st.getText()+" dfn not found!");
-            }
-            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.cite.toString())){
-                if(st.getText().equals("The Scream")){
-                    Assert.assertEquals(0,st.getAttrList().size());
-                }
-                else if(st.getText().equals("[ISO-0000]")){
-                    Assert.assertEquals(0,st.getAttrList().size());
-                }
-                else Assert.fail(st.getText()+" cite not found!");
-            }
-            else if(st.getTag().toString().equals(SemanticTag.HTMLTag.mark.toString())){
-                if(st.getText().equals("daily milk")){
-                    Assert.assertEquals(0,st.getAttrList().size());
-                }
-                else Assert.fail(st.getText()+" mark not found!");
-            }
-            else  Assert.fail(st.getTag()+" tag not found!");
+        if(publicId=="" && systemId.endsWith("mathml.dtd") && name.equalsIgnoreCase("math")) {
+            type="MathML 1.01 - DTD";
+            System.out.println(type);
+            return;
         }
+
+        if(publicId=="" && systemId=="" && name.equalsIgnoreCase("html")) {
+            type="html5";
+            System.out.println(type);
+            return;
+        }
+        for (String token : tokens) {
+            if (token.startsWith("DTD")){
+                type=token;
+                break;
+            }
+        }
+        System.out.println(type);
+
     }
+
 
         @Test
     public void testArticleHeader() {
@@ -242,4 +246,48 @@ public class TestSemanticElements {
         Assert.assertEquals("article article article article", elements);
     }
 
+    @Test
+    public void testComparable1() throws Exception {
+        final Pair<String, String> pair1 = Pair.of("A", "D");
+        final Pair<String, String> pair2 = Pair.of("B", "C");
+        final Pair<String, String> pair3 = Pair.of("A", "E");
+        final Pair<String, String> pair4 = Pair.of("F", "C");
+
+        TreeSet<Pair> pairSet = new TreeSet<>();
+        pairSet.add(pair1);
+        pairSet.add(pair2);
+        pairSet.add(pair3);
+        pairSet.add(pair4);
+
+        Assert.assertFalse(pairSet.contains(Pair.of("A", "X")));
+        Assert.assertFalse(pairSet.contains(Pair.of("X", "C")));
+        Assert.assertTrue(pairSet.contains(Pair.of("A", "E")));
+        Assert.assertFalse(pairSet.contains(Pair.of("a", "e")));
+
+    }
+
+    @Test
+    public void testNormalize() throws Exception {
+        Analyzer analyzer = MetaTag.whitespaceAnalyzer();
+        TokenStream stream = analyzer.tokenStream(null, "Abc CDE  \t  Ads23. www dd-22-sD");
+        stream.reset();
+        while (stream.incrementToken()) {
+            System.out.println(stream.getAttribute(CharTermAttribute.class).toString());
+        }
+    }
+    @Test
+    public void testTreeSet(){
+        StringBuilder builder = new StringBuilder();
+        TreeSet<Pair> textTitleMapper = new TreeSet<>();
+        textTitleMapper.add(Pair.of("Hello","World"));
+        textTitleMapper.add(Pair.of("Hello3","World3"));
+        textTitleMapper.add(Pair.of("Hello2","World2"));
+
+        for(Pair<String,String> p: textTitleMapper){
+            builder.append(p.getLeft()+": "+p.getRight()+System.lineSeparator());
+        }
+        System.out.println(builder.toString());
+
+
+    }
 }

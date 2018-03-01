@@ -1,6 +1,7 @@
 package edu.anadolu.field;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -22,7 +23,7 @@ public class SemanticTag {
 
     private HTMLTag tag;
     private String text;
-    private List<ImmutablePair<String,String>> attrList;
+    private List<Pair<String,String>> attrList;
 
 
     public SemanticTag(HTMLTag tag, String text) {
@@ -35,7 +36,7 @@ public class SemanticTag {
         return text;
     }
 
-    public void addAttr(ImmutablePair pair){
+    public void addAttr(Pair<String,String> pair){
         attrList.add(pair);
     }
 
@@ -43,11 +44,17 @@ public class SemanticTag {
         return tag;
     }
 
-    public List<ImmutablePair<String, String>> getAttrList() {
+    public List<Pair<String, String>> getAttrList() {
         return attrList;
     }
 
-    public void setAttrList(List<ImmutablePair<String, String>> attrList) {
+    public Pair<String, String> findAttr(String key){
+        for(Pair<String, String> pair : attrList)
+            if(pair.getLeft().equals(key)) return pair;
+        return new ImmutablePair<>(key,"");
+    }
+
+    public void setAttrList(List<Pair<String, String>> attrList) {
         this.attrList = attrList;
     }
 
