@@ -10,7 +10,6 @@ import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilter;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
-import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -58,12 +57,6 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public final class Indexer {
-
-    private final int[] radix = {0, 0, 0};
-
-    public int[] radix() {
-        return this.radix;
-    }
 
     /**
      * artificial field and token: every document should have this
@@ -178,19 +171,6 @@ public final class Indexer {
                     return 1;
 
                 writer.addDocument(document);
-
-                String tags = document.get("tags");
-                if (tags == null) return 1;
-
-                String docId = document.get("id");
-                int j = dataset.judge(docId);
-
-                if (j == -5)
-                    radix[2]++;
-                else if (j > 0)
-                    radix[1]++;
-                else
-                    radix[0]++;
 
                 return 1;
             }
@@ -540,7 +520,7 @@ public final class Indexer {
             analyzerPerField.put("host", MetaTag.whitespaceAnalyzer());
             return new PerFieldAnalyzerWrapper(Analyzers.analyzer(tag), analyzerPerField);
         } else if (config.semantic) {
-            return  MetaTag.whitespaceAnalyzer();
+            return MetaTag.whitespaceAnalyzer();
         } else
             return Analyzers.analyzer(tag);
     }

@@ -122,6 +122,5 @@ public final class IndexerTool extends CmdLineTool {
         int numIndexed = indexer.indexWithThreads(numThreads);
         if(semantic) SemanticStats.getSemanticObject().printSemanticStats();
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
-        System.out.println(Arrays.toString(indexer.radix()));
     }
 }

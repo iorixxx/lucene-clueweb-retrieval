@@ -130,6 +130,8 @@ public final class CLI {
 
         tools.add(new JudgeTool());
 
+        tools.add(new SampleTool());
+
         tools.add(new SelectiveStemmingTool());
 
         tools.add(new QueryPerTFTool());
