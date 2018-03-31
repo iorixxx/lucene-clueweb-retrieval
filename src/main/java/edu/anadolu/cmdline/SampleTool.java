@@ -88,6 +88,7 @@ public class SampleTool extends CmdLineTool {
             final Deque<Path> files = Indexer.discoverWarcFiles(path, ".features");
 
             for (Path in : files) {
+                if (in.getFileName().startsWith("X.")) continue;
                 System.out.println("Processing " + in.toString());
                 addPageRank(in, path.resolve("X." + in.getFileName().toString()), dupDOCNOlist);
             }
@@ -201,6 +202,8 @@ public class SampleTool extends CmdLineTool {
         final HttpSolrClient spamSolr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam09A").build();
 
 
+        int featureNum = -1;
+        boolean first = true;
         try (BufferedReader reader = Files.newBufferedReader(in, StandardCharsets.US_ASCII);
              PrintWriter writer = new PrintWriter(Files.newBufferedWriter(out, StandardCharsets.US_ASCII))) {
 
@@ -209,8 +212,28 @@ public class SampleTool extends CmdLineTool {
                 if (line == null)
                     break;
 
-                if (line.startsWith("#"))
+                //#18:SimplifiedClarityScore
+                //#19:PMIFeature
+                //#20:AvgSCQ
+                if (line.startsWith("#")) {
+                    try {
+                        featureNum = Integer.parseInt(line.substring(1, line.indexOf(":")));
+                    } catch (NumberFormatException nfe) {
+                        //NO-OP
+                    }
+                    writer.println(line);
                     continue;
+                } else {
+
+                    if (first) {
+
+                        //#21:SpamScore
+                        writer.println("#" + (featureNum + 1) + ":SpamScore");
+                        //#22:PageRank
+                        writer.println("#" + (featureNum + 2) + ":PageRank");
+                        first = false;
+                    }
+                }
 
                 // 0 qid:1 1:81.0 2:86.0 3:122.0 4:122.0 5:50.0 6:86.0 7:86.0 8:3.0 9:3.0 10:81.0 11:81.0 12:18.444643 13:247.42574 14:3.0 15:827.0 16:3.4250813 17:2.9271529 18:7.4784217 19:-2.817856 20:17.85046 # clueweb09-en0010-79-02218
                 int i = line.indexOf("#");
@@ -226,7 +249,7 @@ public class SampleTool extends CmdLineTool {
                 int spam = SpamTool.percentile(spamSolr, docId);
                 double rank = pageRank(rankSolr, docId, dupDOCNOlist);
 
-                writer.println(p1 + " 21:" + spam + " 22:" + rank + " # " + docId);
+                writer.println(p1 + " " + Integer.toString(featureNum + 1) + ":" + spam + " " + Integer.toString(featureNum + 2) + ":" + rank + " # " + docId);
 
             }
         }
@@ -270,7 +293,9 @@ public class SampleTool extends CmdLineTool {
             }
 
             System.out.println("There are a small number of DOCNOs that are not in the pagerank data and are not included in the duplicate record list: " + docID);
-            return -1.0;
+            return 0.1914; // Average PageRank value : 96176607.1109954 / 502511675 from http://www.lemurproject.org/clueweb09/pageRank.php
+
+
         }
 
         if (resp.size() != 1) {
