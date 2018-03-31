@@ -62,6 +62,9 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 ./tt.sh
 ./rob.sh
 
+./run.sh Searcher -collection CW09A -task spam
+./run.sh Searcher -collection CW09B -task spam
+
 ./run.sh Spam -collection CW09A
 ./run.sh Spam -collection CW09B
 ./run.sh Spam -collection MQ09

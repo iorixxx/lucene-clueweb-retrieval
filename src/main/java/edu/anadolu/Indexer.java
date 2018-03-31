@@ -473,7 +473,7 @@ public final class Indexer {
     }
 
 
-    static Deque<Path> discoverWarcFiles(Path p, final String suffix) {
+    public static Deque<Path> discoverWarcFiles(Path p, final String suffix) {
 
         final Deque<Path> stack = new ArrayDeque<>();
 

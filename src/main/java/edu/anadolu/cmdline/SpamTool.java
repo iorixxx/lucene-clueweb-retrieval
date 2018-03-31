@@ -211,9 +211,9 @@ public final class SpamTool extends CmdLineTool {
 
 
     /**
-     * Filter documents from a TREC submission file
+     * Retrieve spam score of a given document id
      */
-    private static int percentile(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
+    static int percentile(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
 
         SolrQuery query = new SolrQuery(docID).setFields("percentile");
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
