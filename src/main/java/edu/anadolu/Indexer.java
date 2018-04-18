@@ -608,9 +608,9 @@ public final class Indexer {
             writer.commit();
         } finally {
             writer.close();
+            dir.close();
         }
 
-        dir.close();
         return numIndexed;
     }
 
@@ -652,9 +652,9 @@ public final class Indexer {
             writer.commit();
         } finally {
             writer.close();
+            dir.close();
         }
 
-        dir.close();
         return numIndexed;
     }
 

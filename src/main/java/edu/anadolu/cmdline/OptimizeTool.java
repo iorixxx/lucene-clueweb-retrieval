@@ -68,9 +68,9 @@ final class OptimizeTool extends CmdLineTool {
         try (IndexWriter writer = new IndexWriter(dir, iwc)) {
             // This can be a terribly costly operation, so generally it's only worth it when your index is static.
             writer.forceMerge(1);
+        } finally {
+            dir.close();
         }
-
-        dir.close();
 
         System.out.println("Optimization completed in " + execution(start));
     }

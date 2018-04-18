@@ -13,6 +13,8 @@ public class ScriptTest {
 
         printScriptRuns(text.toCharArray());
 
+        System.out.println("======");
+
         /** linear fast-path for basic latin case */
         final int basicLatin[] = new int[128];
 
@@ -22,9 +24,11 @@ public class ScriptTest {
 
         System.out.println(Arrays.toString(basicLatin));
 
-        for (int i = 0; i < basicLatin.length; i++)
+        for (int i = 0; i < basicLatin.length; i++) {
             System.out.println(UScript.getName(basicLatin[i]));
 
+        }
+        System.out.println("======");
     }
 
     static void printScriptRuns(char[] text) {
