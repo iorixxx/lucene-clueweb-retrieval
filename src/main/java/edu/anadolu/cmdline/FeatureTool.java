@@ -73,8 +73,11 @@ public final class FeatureTool extends CmdLineTool {
         if ("labels".equals(task)) {
             Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", evalDirectory(dataset), "OR");
             List<InfoNeed> needs = evaluator.getNeeds();
+
+            // Print header
+            System.out.println("QueryID\tWinner\t" + measure + "\tLoser\t" + measure);
             for (InfoNeed need : needs) {
-                System.out.println("qid:" + need.id() + "\t" + evaluator.bestModel(need) + "\t" + evaluator.bestModelScore(need));
+                System.out.println("qid:" + need.id() + "\t" + evaluator.bestModel(need, false) + "\t" + evaluator.bestModelScore(need, false) + "\t" + evaluator.bestModel(need, true) + "\t" + evaluator.bestModelScore(need, true));
             }
             return;
         }
@@ -85,6 +88,8 @@ public final class FeatureTool extends CmdLineTool {
         QuerySelector querySelector = new QuerySelector(dataset, tag);
         boolean term = "term".equals(task);
 
+        // Print header
+        System.out.println("QueryID\tWordCount\tGamma\tOmega\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt");
         for (InfoNeed need : querySelector.allQueries) {
 
             Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");

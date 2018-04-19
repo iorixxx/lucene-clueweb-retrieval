@@ -1574,17 +1574,21 @@ public class Evaluator {
     /**
      * Method for labels that will be used in classification
      *
-     * @param need information need, query topic
+     * @param need    information need, query, topic
+     * @param reverse if true loser model score is returned
      * @return The most effective term-weighting model(s)
      */
-    public String bestModelScore(InfoNeed need) {
+    public String bestModelScore(InfoNeed need, boolean reverse) {
         List<ModelScore> list = performanceMap.get(need);
         Collections.sort(list);
+
+        if (reverse)
+            Collections.reverse(list);
 
         ModelScore best = list.get(0);
         String bestModel = Double.toString(best.score);
 
-        if (best.score == 0.0)
+        if (best.score == 0.0 && list.get(list.size() - 1).score == 0.0)
             return "ALL_ZERO";
         else {
             boolean allSameFlag = true;
@@ -1616,17 +1620,20 @@ public class Evaluator {
     /**
      * Method for labels that will be used in classification
      *
-     * @param need information need, query topic
+     * @param need    information need, query topic
+     * @param reverse if true loser model is returned
      * @return The most effective term-weighting model(s)
      */
-    public String bestModel(InfoNeed need) {
+    public String bestModel(InfoNeed need, boolean reverse) {
         List<ModelScore> list = performanceMap.get(need);
         Collections.sort(list);
+        if (reverse)
+            Collections.reverse(list);
 
         ModelScore best = list.get(0);
         String bestModel = prettyModel(best.model);
 
-        if (best.score == 0.0)
+        if (best.score == 0.0 && list.get(list.size() - 1).score == 0.0)
             return "ALL_ZERO";
         else {
             boolean allSameFlag = true;
