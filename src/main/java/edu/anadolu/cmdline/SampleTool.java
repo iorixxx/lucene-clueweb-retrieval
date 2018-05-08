@@ -34,6 +34,7 @@ import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
  * Tool for Sampling phase of learning to rank.
  * Saves sample list of 8 models decorated with relevance labels.
  * 0 is used for un-judged documents.
+ * 0 is used for spam documents, RankLib cannot handle label of -2.
  */
 public class SampleTool extends CmdLineTool {
 
@@ -159,7 +160,7 @@ public class SampleTool extends CmdLineTool {
                                 continue;
                             }
                             final int judge = needs.get(i).getJudgeMap().getOrDefault(docId, 0);
-                            out.println(qID + " 0 " + docId + " " + Integer.toString(judge));
+                            out.println(qID + " 0 " + docId + " " + Integer.toString(judge == -2 ? 0 : judge));
 
                         }
                     }
@@ -172,6 +173,7 @@ public class SampleTool extends CmdLineTool {
         }
 
 
+        if (dataSet.tracks().length == 1) return;
         for (String model : models) {
 
             Path unifiedPath = samplePath.resolve(dataSet.collection().toString() + "." + Evaluator.prettyModel(model) + ".txt");

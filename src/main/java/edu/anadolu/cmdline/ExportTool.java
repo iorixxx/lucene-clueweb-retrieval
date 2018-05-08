@@ -63,7 +63,7 @@ final class ExportTool extends CmdLineTool {
 
 
         for (String tag : tags) {
-            if ("KStemAnalyzerAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
+            if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
                 continue;
 
 
@@ -118,9 +118,9 @@ final class ExportTool extends CmdLineTool {
 
             write(new Decorator(dataset, tag, Freq.Rel, 1000), true);
 
-            Exporter exporter = new Exporter(dataset, tag);
-            Sheet qRel = workbook.createSheet("qRel");
-            exporter.saveDistOverQRels(selector.allQueries, qRel);
+          //  Exporter exporter = new Exporter(dataset, tag);
+          //  Sheet qRel = workbook.createSheet("qRel");
+          //  exporter.saveDistOverQRels(selector.allQueries, qRel);
 
             workbook.write(Files.newOutputStream(excelFile));
             workbook.close();
