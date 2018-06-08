@@ -73,7 +73,13 @@ public final class QueryFreqDistribution extends TermFreqDistribution {
 
             for (ScoreDoc scoreDoc : hits) {
                 int docId = scoreDoc.doc;
-                long docLen = norms.get(docId);
+                final long docLen;
+
+                if (norms.advanceExact(docId)) {
+                    docLen = norms.longValue();
+                } else {
+                    docLen = 0;
+                }
 
                 double relativeFrequency = scoreDoc.score;
 

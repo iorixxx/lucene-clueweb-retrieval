@@ -1,5 +1,6 @@
 package edu.anadolu.similarities;
 
+import org.apache.lucene.search.similarities.BasicStats;
 import org.apache.lucene.search.similarities.ModelBase;
 
 /**

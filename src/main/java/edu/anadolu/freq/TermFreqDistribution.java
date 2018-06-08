@@ -51,7 +51,15 @@ public class TermFreqDistribution implements TFD {
         while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
             final int freq = postingsEnum.freq();
-            final long numTerms = norms.get(postingsEnum.docID());
+
+            final long numTerms;
+
+            if (norms.advanceExact(postingsEnum.docID())) {
+                numTerms = norms.longValue();
+            } else {
+                numTerms = 0;
+            }
+
             final double relativeFrequency = (double) freq / (double) numTerms;
 
             if (!(relativeFrequency > 0 && relativeFrequency <= 1))
@@ -124,7 +132,13 @@ public class TermFreqDistribution implements TFD {
 
             final int freq = postingsEnum.freq();
 
-            final long numTerms = norms.get(postingsEnum.docID());
+            final long numTerms;
+
+            if (norms.advanceExact(postingsEnum.docID())) {
+                numTerms = norms.longValue();
+            } else {
+                numTerms = 0;
+            }
 
             writerMap.get(judge).println(docID + "=" + freq + "/" + numTerms);
         }

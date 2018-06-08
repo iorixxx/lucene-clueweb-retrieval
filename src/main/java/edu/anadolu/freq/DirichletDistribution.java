@@ -46,7 +46,14 @@ public class DirichletDistribution extends ZeroDistribution {
             while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
                 final int tf = postingsEnum.freq();
-                final long docLen = norms.get(postingsEnum.docID());
+
+                final long docLen;
+
+                if (norms.advanceExact(postingsEnum.docID())) {
+                    docLen = norms.longValue();
+                } else {
+                    docLen = 0;
+                }
 
                 if (tf < 1 || docLen < 1) throw new RuntimeException("tf or docLen is less than one!");
 
@@ -148,7 +155,13 @@ public class DirichletDistribution extends ZeroDistribution {
             throw new RuntimeException("artificial term frequency should be 1! " + allDocsEnum.freq());
 
         final int docId = allDocsEnum.docID();
-        final long docLen = norms.get(docId);
+        final long docLen;
+
+        if (norms.advanceExact(docId)) {
+            docLen = norms.longValue();
+        } else {
+            docLen = 0;
+        }
 
         // handle documents that have zero terms in it. docLen=0 Difference reader.numDocs() - collectionStatistics.docCount()
         if (docLen == 0L) {

@@ -257,7 +257,8 @@ public class Searcher implements Closeable {
         for (InfoNeed need : track.getTopics()) {
 
 
-            BooleanQuery.Builder bq = new BooleanQuery.Builder().setDisableCoord(true);
+            // .setDisableCoord(true);
+            BooleanQuery.Builder bq = new BooleanQuery.Builder();
 
             for (String word : Analyzers.getAnalyzedTokens(need.query(), Analyzers.analyzer(analyzerTag))) {
 

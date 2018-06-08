@@ -4,7 +4,6 @@ import org.apache.lucene.index.*;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * contribution of a term <em>t</em> to the total inertia
@@ -19,7 +18,11 @@ public class CTI extends Base {
     }
 
     private long getDocLengthFromNorms(int docID) throws IOException {
-        return norms.get(docID);
+        if (norms.advanceExact(docID)) {
+            return norms.longValue();
+        } else {
+            return 0;
+        }
     }
 
     @Override

@@ -1,6 +1,7 @@
 package edu.anadolu.similarities;
 
 import edu.anadolu.freq.TFNormalization;
+import org.apache.lucene.search.similarities.BasicStats;
 import org.apache.lucene.search.similarities.ModelBase;
 
 /**

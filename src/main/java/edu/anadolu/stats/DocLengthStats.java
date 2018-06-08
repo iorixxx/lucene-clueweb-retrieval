@@ -61,7 +61,14 @@ public final class DocLengthStats implements Closeable {
         long counter = 0;
 
         while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
-            final long docLen = norms.get(postingsEnum.docID());
+            final long docLen;
+
+            if (norms.advanceExact(postingsEnum.docID())) {
+                docLen = norms.longValue();
+            } else {
+                docLen = 0;
+            }
+
             docLenAcc += docLen;
             docLenSquareAcc += (docLen * docLen);
             counter++;

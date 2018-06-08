@@ -1,6 +1,7 @@
 package edu.anadolu.similarities;
 
 
+import org.apache.lucene.search.similarities.BasicStats;
 import org.apache.lucene.search.similarities.ModelBase;
 import org.apache.lucene.search.similarities.NormalizationH2;
 
@@ -18,7 +19,6 @@ public final class MATF extends ModelBase {
         this.maxOverlap = maxOverlap;
     }
 
-    @Override
     public float coord(int overlap, int maxOverlap) {
         // System.out.println("maxOverlap = " + maxOverlap);
         // this.maxOverlap = maxOverlap;
@@ -66,7 +66,7 @@ public final class MATF extends ModelBase {
         private Stats(BasicStats stats, double tf, long docLength, long uniqueTerms, int queryLength) {
 
             /** The average length of documents in the collection.*/
-            this.averageDocumentLength = stats.averageDocumentLength;
+            this.averageDocumentLength = stats.getAvgFieldLength();
 
             /** The term frequency in the query.*/
             this.keyFrequency = 1;

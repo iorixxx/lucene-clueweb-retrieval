@@ -66,7 +66,17 @@ public class ZeroDistribution extends Phi {
             while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
                 final int freq = postingsEnum.freq() + 1;
-                final long numTerms = norms.get(postingsEnum.docID()) + 1;
+
+
+                final long numTerms;
+
+                if (norms.advanceExact(postingsEnum.docID())) {
+                    numTerms = norms.longValue() + 1;
+                } else {
+                    numTerms = 1;
+                }
+
+
                 final double relativeFrequency = (double) freq / (double) numTerms;
 
                 if (!(relativeFrequency > 0 && relativeFrequency <= 1))
@@ -92,7 +102,14 @@ public class ZeroDistribution extends Phi {
             @Override
             public void collect(int doc) throws IOException {
 
-                final long numTerms = norms.get(doc) + 1;
+                final long numTerms;
+
+                if (norms.advanceExact(postingsEnum.docID())) {
+                    numTerms = norms.longValue() + 1;
+                } else {
+                    numTerms = 1;
+                }
+
                 final double relativeFrequency = 1.0d / (double) numTerms;
 
                 if (!(relativeFrequency > 0 && relativeFrequency <= 1))
@@ -137,7 +154,13 @@ public class ZeroDistribution extends Phi {
             while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
                 final int freq = postingsEnum.freq();
-                final long docLen = norms.get(postingsEnum.docID());
+                final long docLen;
+
+                if (norms.advanceExact(postingsEnum.docID())) {
+                    docLen = norms.longValue();
+                } else {
+                    docLen = 0;
+                }
 
                 if (freq < 1 || docLen < 1) throw new RuntimeException("tf or docLen is less than one!");
 
@@ -181,7 +204,13 @@ public class ZeroDistribution extends Phi {
                     throw new RuntimeException("artificial term frequency should be 1! " + first.freq());
 
                 final int docId = first.docID();
-                final long docLen = norms.get(docId);
+                final long docLen;
+
+                if (norms.advanceExact(docId)) {
+                    docLen = norms.longValue();
+                } else {
+                    docLen = 0;
+                }
 
                 // handle documents that have zero terms in it. docLen=0 Difference reader.numDocs() - collectionStatistics.docCount()
                 if (docLen == 0L) {
@@ -225,7 +254,13 @@ public class ZeroDistribution extends Phi {
             if (first.freq() != 1) throw new RuntimeException("artificial term frequency should be 1! " + first.freq());
             final int docId = first.docID();
 
-            final long docLen = norms.get(docId);
+            final long docLen;
+
+            if (norms.advanceExact(docId)) {
+                docLen = norms.longValue();
+            } else {
+                docLen = 0;
+            }
 
             // handle documents that have zero terms in it. docLen=0 Difference reader.numDocs() - collectionStatistics.docCount()
             if (docLen == 0L) {

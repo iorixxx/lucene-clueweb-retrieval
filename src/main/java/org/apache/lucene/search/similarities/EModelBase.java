@@ -120,10 +120,10 @@ public abstract class EModelBase extends Similarity implements Closeable {
     }
 
     @Override
-    public SimWeight computeWeight(CollectionStatistics collectionStats, TermStatistics... termStats) {
+    public SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
         EStats stats[] = new EStats[termStats.length];
         for (int i = 0; i < termStats.length; i++) {
-            stats[i] = new EStats(collectionStats.field(), termStats[i].term().utf8ToString());
+            stats[i] = new EStats(collectionStats.field(), boost, termStats[i].term().utf8ToString());
             fillBasicStats(stats[i], collectionStats, termStats[i]);
             //System.out.println(analyzer.toString() + "{" + termStats[i].term().utf8ToString() + "}");
         }
@@ -248,22 +248,24 @@ public abstract class EModelBase extends Similarity implements Closeable {
     }
 
     @Override
-    public SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
+    public final SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
+        int indexCreatedVersionMajor = context.reader().getMetaData().getCreatedVersionMajor();
         if (stats instanceof MultiSimilarity.MultiStats) {
             // a multi term query (e.g. phrase). return the summation,
             // scoring almost as if it were boolean query
             SimWeight subStats[] = ((MultiSimilarity.MultiStats) stats).subStats;
             SimScorer subScorers[] = new SimScorer[subStats.length];
             for (int i = 0; i < subScorers.length; i++) {
-                EStats eStats = (EStats) subStats[i];
-                subScorers[i] = new BasicSimScorer(eStats, context.reader().getNormValues(eStats.field));
+                EStats basicstats = (EStats) subStats[i];
+                subScorers[i] = new EModelBase.BasicSimScorer(basicstats, indexCreatedVersionMajor, context.reader().getNormValues(basicstats.field));
             }
             return new MultiSimilarity.MultiSimScorer(subScorers);
         } else {
             EStats basicstats = (EStats) stats;
-            return new BasicSimScorer(basicstats, context.reader().getNormValues(basicstats.field));
+            return new EModelBase.BasicSimScorer(basicstats, indexCreatedVersionMajor, context.reader().getNormValues(basicstats.field));
         }
     }
+
 
     /**
      * Subclasses must override this method to return the name of the Similarity
@@ -292,34 +294,37 @@ public abstract class EModelBase extends Similarity implements Closeable {
     }
 
     // --------------------------------- Classes ---------------------------------
-
-    /**
-     * Delegates the {@link #score(int, float)} and
-     * {@link #explain(int, Explanation)} methods to
-     * {@link SimilarityBase#score(BasicStats, float, float)} and
-     * {@link SimilarityBase#explain(BasicStats, int, Explanation, float)},
-     * respectively.
-     */
-    private class BasicSimScorer extends SimScorer {
+    final class BasicSimScorer extends SimScorer {
         private final EStats stats;
         private final NumericDocValues norms;
 
-        BasicSimScorer(EStats stats, NumericDocValues norms) throws IOException {
+
+        BasicSimScorer(EStats stats, int indexCreatedVersionMajor, NumericDocValues norms) {
             this.stats = stats;
             this.norms = norms;
+
+        }
+
+        long getLengthValue(int doc) throws IOException {
+            if (norms == null) {
+                return 1L;
+            }
+            if (norms.advanceExact(doc)) {
+                return norms.longValue();
+            } else {
+                return 0;
+            }
         }
 
         @Override
-        public float score(int doc, float freq) {
+        public float score(int doc, float freq) throws IOException {
             // We have to supply something in case norms are omitted
-            return EModelBase.this.score(stats, freq,
-                    norms == null ? 1L : norms.get(doc));
+            return EModelBase.this.score(stats, freq, getLengthValue(doc));
         }
 
         @Override
-        public Explanation explain(int doc, Explanation freq) {
-            return EModelBase.this.explain(stats, doc, freq,
-                    norms == null ? 1L : norms.get(doc));
+        public Explanation explain(int doc, Explanation freq) throws IOException {
+            return EModelBase.this.explain(stats, doc, freq, getLengthValue(doc));
         }
 
         @Override
@@ -339,8 +344,8 @@ public abstract class EModelBase extends Similarity implements Closeable {
         double averageDocumentLength;
 
 
-        public EStats(String field, String term) {
-            super(field);
+        public EStats(String field, float boost, String term) {
+            super(field, boost);
             this.term = term;
         }
     }

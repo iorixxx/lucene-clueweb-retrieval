@@ -47,12 +47,11 @@ public abstract class ModelBase extends Similarity {
     }
 
     @Override
-    public final SimWeight computeWeight(CollectionStatistics collectionStats, TermStatistics... termStats) {
+    public final SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
         BasicStats stats[] = new BasicStats[termStats.length];
         for (int i = 0; i < termStats.length; i++) {
-            stats[i] = newStats(collectionStats.field());
+            stats[i] = newStats(collectionStats.field(), boost);
             fillBasicStats(stats[i], collectionStats, termStats[i]);
-            //stats[i].term = termStats[i].term().utf8ToString();
         }
         return stats.length == 1 ? stats[0] : new MultiSimilarity.MultiStats(stats);
     }
@@ -60,47 +59,47 @@ public abstract class ModelBase extends Similarity {
     /**
      * Factory method to return a custom stats object
      */
-    protected BasicStats newStats(String field) {
-        return new BasicStats(field);
+    protected BasicStats newStats(String field, float boost) {
+        return new BasicStats(field, boost);
     }
 
-    /**
-     * Fills all member fields defined in {@code BasicStats} in {@code stats}.
-     * Subclasses can override this method to fill additional stats.
-     */
+    /** Fills all member fields defined in {@code BasicStats} in {@code stats}.
+     *  Subclasses can override this method to fill additional stats. */
     protected void fillBasicStats(BasicStats stats, CollectionStatistics collectionStats, TermStatistics termStats) {
         // #positions(field) must be >= #positions(term)
         assert collectionStats.sumTotalTermFreq() == -1 || collectionStats.sumTotalTermFreq() >= termStats.totalTermFreq();
-        long numberOfDocuments = collectionStats.docCount();
+        long numberOfDocuments = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
 
         long docFreq = termStats.docFreq();
         long totalTermFreq = termStats.totalTermFreq();
 
-        // codec does not supply totalTermFreq: substitute docFreq
+        // frequencies are omitted, all postings have tf=1, so totalTermFreq = docFreq
         if (totalTermFreq == -1) {
             totalTermFreq = docFreq;
         }
 
         final long numberOfFieldTokens;
-        final double avgFieldLength;
+        final float avgFieldLength;
 
-        long sumTotalTermFreq = collectionStats.sumTotalTermFreq();
-
-        if (sumTotalTermFreq <= 0) {
-            // field does not exist;
-            // We have to provide something if codec doesnt supply these measures,
-            // or if someone omitted frequencies for the field... negative values cause
-            // NaN/Inf for some scorers.
-            numberOfFieldTokens = docFreq;
-            avgFieldLength = 1;
+        if (collectionStats.sumTotalTermFreq() == -1) {
+            // frequencies are omitted, so sumTotalTermFreq = # postings
+            if (collectionStats.sumDocFreq() == -1) {
+                // theoretical case only: remove!
+                numberOfFieldTokens = docFreq;
+                avgFieldLength = 1f;
+            } else {
+                numberOfFieldTokens = collectionStats.sumDocFreq();
+                avgFieldLength = (float) (collectionStats.sumDocFreq() / (double)numberOfDocuments);
+            }
         } else {
-            numberOfFieldTokens = sumTotalTermFreq;
-            avgFieldLength = (double) numberOfFieldTokens / numberOfDocuments;
+            numberOfFieldTokens = collectionStats.sumTotalTermFreq();
+            avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double)numberOfDocuments);
         }
 
+        // TODO: add sumDocFreq for field (numberOfFieldPostings)
         stats.setNumberOfDocuments(numberOfDocuments);
         stats.setNumberOfFieldTokens(numberOfFieldTokens);
-        stats.averageDocumentLength = avgFieldLength;
+        stats.setAvgFieldLength(avgFieldLength);
         stats.setDocFreq(docFreq);
         stats.setTotalTermFreq(totalTermFreq);
     }
@@ -117,7 +116,7 @@ public abstract class ModelBase extends Similarity {
     protected float score(BasicStats stats, float freq, long docLen) {
 
         /** The average length of documents in the collection.*/
-        double averageDocumentLength = stats.averageDocumentLength;
+        double averageDocumentLength = stats.getAvgFieldLength();
 
         /** The term frequency in the query.*/
         double keyFrequency = 1;
@@ -209,7 +208,8 @@ public abstract class ModelBase extends Similarity {
     }
 
     @Override
-    public SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
+    public final SimScorer simScorer(SimWeight stats, LeafReaderContext context) throws IOException {
+
         if (stats instanceof MultiSimilarity.MultiStats) {
             // a multi term query (e.g. phrase). return the summation,
             // scoring almost as if it were boolean query
@@ -270,26 +270,36 @@ public abstract class ModelBase extends Similarity {
     // --------------------------------- Classes ---------------------------------
 
 
-    private class BasicSimScorer extends SimScorer {
+    final class BasicSimScorer extends SimScorer {
         private final BasicStats stats;
         private final NumericDocValues norms;
 
-        BasicSimScorer(BasicStats stats, NumericDocValues norms) throws IOException {
+
+        BasicSimScorer(BasicStats stats, NumericDocValues norms) {
             this.stats = stats;
             this.norms = norms;
         }
 
-        @Override
-        public float score(int doc, float freq) {
-            // We have to supply something in case norms are omitted
-            return ModelBase.this.score(stats, freq,
-                    norms == null ? 1L : norms.get(doc));
+        long getLengthValue(int doc) throws IOException {
+            if (norms == null) {
+                return 1L;
+            }
+            if (norms.advanceExact(doc)) {
+                return norms.longValue();
+            } else {
+                return 0;
+            }
         }
 
         @Override
-        public Explanation explain(int doc, Explanation freq) {
-            return ModelBase.this.explain(stats, doc, freq,
-                    norms == null ? 1L : norms.get(doc));
+        public float score(int doc, float freq) throws IOException {
+            // We have to supply something in case norms are omitted
+            return ModelBase.this.score(stats, freq, getLengthValue(doc));
+        }
+
+        @Override
+        public Explanation explain(int doc, Explanation freq) throws IOException {
+            return ModelBase.this.explain(stats, doc, freq, getLengthValue(doc));
         }
 
         @Override
@@ -300,26 +310,6 @@ public abstract class ModelBase extends Similarity {
         @Override
         public float computePayloadFactor(int doc, int start, int end, BytesRef payload) {
             return 1f;
-        }
-    }
-
-    public class BasicStats extends org.apache.lucene.search.similarities.BasicStats {
-
-        public double averageDocumentLength;
-
-        //public String term;
-
-        public BasicStats(String field) {
-            super(field);
-        }
-
-        @Override
-        public String toString() {
-
-            return "averageDocumentLength: " + averageDocumentLength + "\n" +
-                    "documentFrequency: " + docFreq + "\n" +
-                    "totalTermFreq: " + totalTermFreq + "\n";
-
         }
     }
 }

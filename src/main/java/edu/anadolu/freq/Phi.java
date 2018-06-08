@@ -61,7 +61,14 @@ public class Phi extends TermFreqDistribution {
         while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
             final double tf = postingsEnum.freq();
-            final long numTerms = norms.get(postingsEnum.docID());
+            final long numTerms;
+
+            if (norms.advanceExact(postingsEnum.docID())) {
+                numTerms = norms.longValue();
+            } else {
+                numTerms = 0;
+            }
+
 
             final double e_ij = ((double) (TF * numTerms)) / ((double) sumTotalTermFreq);
 

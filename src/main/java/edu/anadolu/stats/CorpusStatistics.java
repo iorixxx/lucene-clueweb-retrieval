@@ -72,9 +72,15 @@ public final class CorpusStatistics implements Closeable {
 
                     final int tf = postingsEnum.freq();
 
-                    final long docLength = norms.get(postingsEnum.docID());
+                    final long docLen;
 
-                    final double e_ij = (double) (termFrequency * docLength) / (double) sumTotalTermFreq;
+                    if (norms.advanceExact(postingsEnum.docID())) {
+                        docLen = norms.longValue();
+                    } else {
+                        docLen = 0;
+                    }
+
+                    final double e_ij = (double) (termFrequency * docLen) / (double) sumTotalTermFreq;
 
                     cti += Math.pow((tf - e_ij), 2) / e_ij;
 
