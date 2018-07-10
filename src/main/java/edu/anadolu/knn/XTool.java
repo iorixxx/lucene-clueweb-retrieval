@@ -588,9 +588,9 @@ public class XTool extends CmdLineTool {
             int rankMean = ranksMean.indexOf(i);
             String line;
             if (sigma0)
-                line = String.format("%s & %.2f & %d & %.5f & %d & %.5f & %d \\\\", LatexTool.latexModel(s.key, false), s.sigma0, rankSigma1, s.mean, rankMean, s.geoRisk, i);
+                line = String.format("%s & %.2f & %d & %.4f & %d & %.4f & %d \\\\", LatexTool.latexModel(s.key, false), s.sigma0, rankSigma1, s.mean, rankMean, s.geoRisk, i);
             else
-                line = String.format("%s & %.2f & %.2f & %d & %.5f & %d & %.5f & %d \\\\", LatexTool.latexModel(s.key), s.sigma0, s.sigma1, rankSigma1, s.mean, rankMean, s.geoRisk, i);
+                line = String.format("%s & %.2f & %.2f & %d & %.4f & %d & %.4f & %d \\\\", LatexTool.latexModel(s.key), s.sigma0, s.sigma1, rankSigma1, s.mean, rankMean, s.geoRisk, i);
 
             if (isSameT(sel, s) || sel.key.equals(s.key))
                 line = "$^\\dagger$" + line;
