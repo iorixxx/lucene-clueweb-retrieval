@@ -49,8 +49,8 @@ public final class ParamTool extends CmdLineTool {
     protected String models = "LGDc*";
 
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    private String tag = "KStemAnalyzer";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    private String tag = "KStem";
 
     @Option(name = "-metric", required = false, usage = "Effectiveness measure")
     Measure measure = Measure.NDCG100;

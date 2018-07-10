@@ -4,7 +4,7 @@ if [ -z "$TFD_HOME" ]; then
  TFD_HOME=~/TFD_HOME
 fi
 
-for tag in KStemAnalyzer KStemAnalyzerAnchor; do
+for tag in KStem KStemAnchor; do
 for test in MQ09 CW09A CW09B CW12B; do
 
     for train in MQ09 CW09A CW09B CW12B; do

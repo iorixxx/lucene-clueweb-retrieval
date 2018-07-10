@@ -26,7 +26,7 @@ When `./run.sh` is invoked, simple usage information is displayed. Following arg
 ## Standard Directory Layout
 
 The next section documents the directory layout expected/used by this project.
-In general, each folder contains two outermost folders : KStemAnalyzer and KStemAnalyzerAnchor.
+In general, each folder contains two outermost folders : KStem and KStemAnchor.
 These represent KStemming and AnchorText respectively.
 In folder naming convention, WT stands for Web Track, TT stands for Terabyte Track, etc.
 

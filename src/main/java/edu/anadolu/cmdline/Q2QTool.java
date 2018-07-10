@@ -60,7 +60,7 @@ class Q2QTool extends CmdLineTool {
 
 
         for (String tag : tags) {
-            if ("KStemAnalyzerAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
+            if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
                 continue;
 
             final String evalDirectory;

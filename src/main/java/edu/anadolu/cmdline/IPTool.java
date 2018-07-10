@@ -330,9 +330,9 @@ class IPTool extends CmdLineTool {
         System.out.println(" \\\\");
 
 
-        for (String tag : new String[]{"KStemAnalyzerAnchor", "KStemAnalyzer"}) {
+        for (String tag : new String[]{"KStemAnchor", "KStem"}) {
 
-            String anchor = "KStemAnalyzerAnchor".equals(tag) ? "Anchor" : "NoAnchor";
+            String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
             System.out.println("\\multirow{2}{*}{" + anchor + "}");
 

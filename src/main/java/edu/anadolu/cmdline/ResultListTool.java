@@ -34,7 +34,7 @@ public final class ResultListTool extends CmdLineTool {
     @Option(name = "-models", required = false, usage = "term-weighting models")
     protected String models = "DPH_LGDL2_DFIC";
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     protected String tag = "KStem";
 
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")

@@ -26,8 +26,8 @@ class ExampleTool extends CmdLineTool {
         return "Example Utility";
     }
 
-    @Option(name = "-tag", metaVar = "[KStemAnalyzer|KStemAnalyzerAnchor]", required = false, usage = "Index Tag")
-    protected String tag = "KStemAnalyzer";
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = "KStem";
 
     private Workbook workbook;
 

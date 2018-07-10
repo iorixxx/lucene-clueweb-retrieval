@@ -22,7 +22,7 @@ done
 # ClueWeb (CW) collections
 for set in CW09A CW09B CW12B;
 do
-    for tag in KStemAnalyzer KStemAnalyzerAnchor;
+    for tag in KStem KStemAnchor;
     do
         for op in OR;
         do

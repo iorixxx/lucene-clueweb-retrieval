@@ -329,9 +329,9 @@ public final class LatexTool extends EvaluatorTool {
                         measure.metric().toString(),
                         measure.k(),
                         measure.metric().toString(),
-                        inner("KStemAnalyzer"),
+                        inner("KStem"),
                         measure.metric().toString(),
-                        inner("KStemAnalyzerAnchor")
+                        inner("KStemAnchor")
                 ));
 
     }

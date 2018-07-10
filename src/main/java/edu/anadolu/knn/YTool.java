@@ -305,7 +305,7 @@ public class YTool extends XTool {
         } else
             dataset = Arrays.toString(collections);
 
-        String anchor = "KStemAnalyzerAnchor".equals(tag) ? "Anchor" : "NoAnchor";
+        String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
         String tableName = dataset + optimize.toString() + anchor;
 

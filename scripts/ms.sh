@@ -8,7 +8,7 @@ fi
 
 echo 'Model,k,Set,Measure,Accuracy,Anchor'> ms.csv
 
-for tag in KStemAnalyzerAnchor KStemAnalyzer; do
+for tag in KStemAnchor KStem; do
 for set in MQ09 CW09A CW09B CW12B; do
     echo "starting MS with set = $set and tag = $tag ..."
     ./run.sh MS -tag "$tag" -collection "$set" -metric NDCG100  2>> ms.csv &

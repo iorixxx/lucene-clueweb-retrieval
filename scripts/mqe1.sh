@@ -23,7 +23,7 @@ echo "starting MQE1 evaluator with RUNS = $RUNS and EVALS = $EVALS ..."
 for E in 1 2; do
 set="MQE${E}"
 
-for tag in KStemAnalyzer KStemAnalyzerAnchor; do
+for tag in KStem KStemAnchor; do
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
 
 

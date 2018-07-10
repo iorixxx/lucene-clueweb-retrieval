@@ -44,9 +44,9 @@ public class FullFactorial {
         }
 
         public String tag() {
-            if ("Anchor".equals(tag)) return "KStemAnalyzerAnchor";
+            if ("Anchor".equals(tag)) return "KStemAnchor";
 
-            if ("NoAnchor".equals(tag)) return "KStemAnalyzer";
+            if ("NoAnchor".equals(tag)) return "KStem";
 
             throw new RuntimeException("unrecognized tag : " + tag);
         }
