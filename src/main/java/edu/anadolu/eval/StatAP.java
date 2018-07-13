@@ -14,6 +14,8 @@ import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 /**
  * handles output of statAP_MQ_eval_v4.pl
+ * Modified to report nDCG@20 instead of nDCG@30 on 13.07.2018
+ *
  * <p>
  * topic=44  UMASS
  * </p>
@@ -43,7 +45,7 @@ public final class StatAP implements EvalTool {
     private class Element {
         int topic;
         private String nDCG_10;
-        private String nDCG_30;
+        private String nDCG_20;
         private String nDCG_50;
         private String nDCG_100;
         String ap;
@@ -63,7 +65,7 @@ public final class StatAP implements EvalTool {
                 //TODO Read http://maroo.cs.umass.edu/getpdf.php?id=800 and understand UMASS and related statAP flags
                 if (parts.length == 2 && "UMASS".equals(parts[1]) && parts[0].startsWith("topic=")) {
                     topic = Integer.parseInt(parts[0].substring(6));
-                    nDCG_30 = nDCG_100 = ap = p30 = "0.00000";
+                    nDCG_20 = nDCG_100 = ap = p30 = "0.00000";
                     return;
                 }
                 throw new IllegalArgumentException("paragraph does not have 17 nor 18 entries : " + paragraph);
@@ -79,20 +81,20 @@ public final class StatAP implements EvalTool {
                     throw new IllegalArgumentException("unexpected formatted entry : " + entry);
 
                 if ("topic".equals(subParts[0])) topic = Integer.parseInt(subParts[1]);
-                if ("nDCG_30".equals(subParts[0])) nDCG_30 = subParts[1];
+                if ("nDCG_20".equals(subParts[0])) nDCG_20 = subParts[1];
                 if ("nDCG_100".equals(subParts[0])) nDCG_100 = subParts[1];
                 if ("AP".equals(subParts[0])) ap = subParts[1];
                 if ("Prec_at_30".equals(subParts[0])) p30 = subParts[1];
             }
 
-            if ("0".equals(nDCG_30)) nDCG_30 = "0.00000";
+            if ("0".equals(nDCG_20)) nDCG_20 = "0.00000";
             if ("0".equals(nDCG_100)) nDCG_100 = "0.00000";
         }
 
         @Override
         public String toString() {
             return "topic=" + topic + System.getProperty("line.separator") +
-                    "nDCG_30=" + nDCG_30 + System.getProperty("line.separator") +
+                    "nDCG_20=" + nDCG_20 + System.getProperty("line.separator") +
                     "AP" + ap + System.getProperty("line.separator") +
                     "Prec_at_30" + p30;
         }
@@ -101,7 +103,7 @@ public final class StatAP implements EvalTool {
 
     private final int k;
 
-    public StatAP(Path path, int k) throws IOException {
+    StatAP(Path path, int k) throws IOException {
 
         this.k = k;
         List<String> lines = Files.readAllLines(path, StandardCharsets.US_ASCII);
@@ -150,7 +152,7 @@ public final class StatAP implements EvalTool {
 
 
         if ((Metric.NDCG.equals(metric) || Metric.ERR.equals(metric)) && k == 20)
-            return element.nDCG_30;
+            return element.nDCG_20;
 
         if ((Metric.NDCG.equals(metric) || Metric.ERR.equals(metric)) && (k == 100 || k == 1000))
             return element.nDCG_100;
