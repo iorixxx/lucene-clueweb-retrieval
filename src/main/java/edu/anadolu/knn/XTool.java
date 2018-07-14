@@ -317,7 +317,7 @@ public class XTool extends CmdLineTool {
 
 
         final Evaluator trainEvaluator = new Evaluator(trainDataSet, tag, optimize, models, evalDirectory(trainDataSet, optimize), op);
-        final Evaluator testEvaluator = new Evaluator(testDataSet, tag, report, trainEvaluator.models(), evalDirectory(testDataSet, report), op);
+        final Evaluator testEvaluator = new Evaluator(testDataSet, tag, report, models, evalDirectory(testDataSet, report), op);
 
 
         modelSet = trainEvaluator.getModelSet();
@@ -366,7 +366,7 @@ public class XTool extends CmdLineTool {
         }
 
 
-        Solution SGL = testEvaluator.modelAsSolution(singleHitModelFromTraining, residualNeeds);
+        Solution SGL = testEvaluator.modelAsSolution(testEvaluator.prettify(singleHitModelFromTraining), residualNeeds);
 
         SGL.model = "SGL";
         SGL.key = "SGL";
@@ -937,7 +937,7 @@ public class XTool extends CmdLineTool {
 
                     if (null == predictedModel) throw new RuntimeException("predictedModel is null!");
 
-                    final double predictedScore = testEvaluator.score(testQuery, predictedModel);
+                    final double predictedScore = testEvaluator.score(testQuery, testEvaluator.prettify(predictedModel));
 
                     final Prediction predicted = new Prediction(testQuery, predictedModel, predictedScore);
 
