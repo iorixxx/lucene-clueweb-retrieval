@@ -249,6 +249,7 @@ public class XTool extends CmdLineTool {
 
             final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, measure, op);
             System.out.println("best spam threshold " + bestSpamThreshold);
+            this.spam = bestSpamThreshold;
             return bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
         }
     }
@@ -569,7 +570,7 @@ public class XTool extends CmdLineTool {
 
         String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
-        String tableName = test.toString() + report.toString() + train.toString() + optimize.toString() + anchor;
+        String tableName = test.toString() + report.toString() + train.toString() + optimize.toString() + anchor + "spam" + spam;
         String header = header();
         return String.format(header, prettyDataSet(test.toString()), anchor, residualNeedsSize, report.toString(), tableName, report.toString());
     }

@@ -44,8 +44,12 @@ public class YTool extends XTool {
     private int msK = 7;
 
     public void appendLatexTables(String text) throws IOException {
-        Path path = Paths.get(tfd_home).resolve("excels").resolve("tables.tex");
-        Files.write(path, text.getBytes(StandardCharsets.US_ASCII), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        Path path = Paths.get(tfd_home).resolve("excels");
+
+        if (!Files.exists(path))
+            Files.createDirectories(path);
+
+        Files.write(path.resolve("tables.tex"), text.getBytes(StandardCharsets.US_ASCII), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     @Override
@@ -61,7 +65,9 @@ public class YTool extends XTool {
         if (!Files.exists(excelPath))
             Files.createDirectories(excelPath);
 
-        StringBuilder file = new StringBuilder("Y");
+        StringBuilder file = new StringBuilder();
+
+        file.append(Integer.toString(spam)).append("_Y");
         for (int i = 0; i < collections.length; i++) {
             file.append(collections[i].toString());
             if (i < collections.length - 1)
@@ -89,7 +95,7 @@ public class YTool extends XTool {
         return decorated;
     }
 
-    private List<TFDAwareNeed> residualTFDAwareNeeds(List<InfoNeed> needs, Map<DataSet, Decorator> decorators) throws IOException {
+    private List<TFDAwareNeed> residualTFDAwareNeeds(List<InfoNeed> needs, Map<DataSet, Decorator> decorators) {
 
         List<TFDAwareNeed> tfdAwareNeeds = new ArrayList<>(needs.size());
 
@@ -293,7 +299,7 @@ public class YTool extends XTool {
         if (!Files.exists(excelPath))
             Files.createDirectories(excelPath);
 
-        return excelPath.resolve("MS" + collections[0] + optimize.toString() + tag + op.toUpperCase(Locale.ENGLISH) + ".xlsx");
+        return excelPath.resolve(spam + "_MS" + collections[0] + optimize.toString() + tag + op.toUpperCase(Locale.ENGLISH) + ".xlsx");
     }
 
 
@@ -309,7 +315,7 @@ public class YTool extends XTool {
 
         String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
-        String tableName = dataset + optimize.toString() + anchor;
+        String tableName = dataset + optimize.toString() + anchor + "spam" + spam;
 
         String header = header();
         return String.format(header, prettyDataSet(dataset), anchor, residualNeedsSize, optimize.toString(), tableName, optimize.toString());
