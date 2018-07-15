@@ -37,7 +37,14 @@ final class MSTool extends EvaluatorTool {
         if (Collection.GOV2.equals(dataset.collection()) || Collection.MC.equals(dataset.collection()) || Collection.ROB04.equals(dataset.collection())) {
             return "evals";
         } else {
+
+            if (spam > 0) {
+                System.out.println("manuel supplied spam threshold " + spam);
+                return "spam_" + spam + "_evals";
+            }
+
             final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, measure, op);
+            this.spam = bestSpamThreshold;
             return bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
         }
     }
@@ -45,16 +52,6 @@ final class MSTool extends EvaluatorTool {
     private XSSFWorkbook workbook;
     private Sheet Summary = null;
     private Sheet RxT = null;
-
-    MSTool() {
-        workbook = new XSSFWorkbook();
-        Summary = workbook.createSheet("Summary");
-        RxT = workbook.createSheet("RxTx" + measure.toString());
-
-        Summary.createRow(0).createCell(1, CellType.STRING).setCellValue("sigma0");
-        Summary.getRow(0).createCell(2, CellType.STRING).setCellValue("sigma1");
-        Summary.getRow(0).createCell(3, CellType.STRING).setCellValue(measure.toString());
-    }
 
     private int counter;
 
@@ -126,6 +123,14 @@ final class MSTool extends EvaluatorTool {
             return;
         }
 
+        workbook = new XSSFWorkbook();
+        Summary = workbook.createSheet("Summary");
+        RxT = workbook.createSheet("RxTx" + measure.toString());
+
+        Summary.createRow(0).createCell(1, CellType.STRING).setCellValue("sigma0");
+        Summary.getRow(0).createCell(2, CellType.STRING).setCellValue("sigma1");
+        Summary.getRow(0).createCell(3, CellType.STRING).setCellValue(measure.toString());
+
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         evaluator = new Evaluator(dataset, tag, measure, models, evalDirectory(dataset), op);
@@ -174,6 +179,6 @@ final class MSTool extends EvaluatorTool {
         if (!Files.exists(excelPath))
             Files.createDirectories(excelPath);
 
-        return excelPath.resolve("MS" + collection + measure.toString() + tag + op.toUpperCase(Locale.ENGLISH) + ".xlsx");
+        return excelPath.resolve(spam + "_MS" + collection + measure.toString() + tag + op.toUpperCase(Locale.ENGLISH) + ".xlsx");
     }
 }

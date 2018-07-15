@@ -50,7 +50,7 @@ for WT in 09 10 11 12; do
 
     for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/WT${WT}/*.txt; do
         ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WT#0}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/trec_eval/${f##/*/}" &
-        for k in 20 100 1000; do
+        for k in 20 30 100 1000; do
           mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WT$WT/$k"
           ${TFD_HOME}/scripts/gdeval.pl -k ${k} ${TFD_HOME}/topics-and-qrels/${qrels[${WT#0}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/${k}/${f##/*/}" &
         done
@@ -83,7 +83,7 @@ for WT in 13 14 15 16; do
 
     for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/WT${WT}/*.txt; do
         ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WT}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/trec_eval/${f##/*/}" &
-        for k in 20 100 1000; do
+        for k in 20 30 100 1000; do
           mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WT$WT/$k"
           ${TFD_HOME}/scripts/gdeval.pl -k ${k} ${TFD_HOME}/topics-and-qrels/${qrels[${WT}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WT${WT}/${k}/${f##/*/}" &
         done

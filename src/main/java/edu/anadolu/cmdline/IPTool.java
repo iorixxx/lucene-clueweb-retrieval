@@ -93,7 +93,7 @@ class IPTool extends CmdLineTool {
 
     private String tfd_home;
 
-    private final static Measure[] measures = {NDCG20, NDCG100, ERR20, ERR100, MAP};
+    private final static Measure[] measures = {NDCG20, NDCG100, MAP};
 
     private Path excelFile(FullFactorial.EXP test, FullFactorial.EXP train, Measure optimize, Measure report) {
 

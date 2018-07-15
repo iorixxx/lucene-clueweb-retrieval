@@ -226,7 +226,9 @@ public class YTool extends XTool {
         if (MSExcelPath == null) return null;
         Workbook workbook = WorkbookFactory.create(MSExcelFile().toFile(), null, true);
 
-        Sheet RxT = workbook.getSheet("RxTxNDCG100");
+        Sheet RxT = workbook.getSheet("RxTx" + optimize.toString());
+
+        if (RxT == null) RxT = workbook.getSheet("RxTxNDCG100");
 
         Iterator<Row> iterator = RxT.rowIterator();
 

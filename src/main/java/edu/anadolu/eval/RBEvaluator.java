@@ -254,7 +254,7 @@ public class RBEvaluator extends Evaluator {
         System.out.println("\\label{tbl:" + tableLabel + "}");
         System.out.println("\\centering");
 
-        intermediate(query, e, Measure.ERR20, true);
+
 
         intermediate(query, e, Measure.NDCG20, false);
 

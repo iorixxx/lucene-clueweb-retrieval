@@ -26,8 +26,6 @@ import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,6 +61,10 @@ public class XTool extends CmdLineTool {
 
     @Option(name = "-var", required = false, usage = "filter training queries by variance threshold", metaVar = "0 1 2")
     protected int var = 0;
+
+    @Option(name = "-spam", required = false, usage = "manuel spam threshold manuel", metaVar = "0 1 2")
+    protected int spam = -1;
+
 
     @Override
     public String getShortDescription() {
@@ -239,6 +241,12 @@ public class XTool extends CmdLineTool {
         } else if (catB && (Collection.CW09B.equals(dataset.collection()) || Collection.CW12B.equals(dataset.collection()))) {
             return "catb_evals";
         } else {
+
+            if (spam != -1) {
+                System.out.println("manuel supplied spam threshold " + spam);
+                return "spam_" + spam + "_evals";
+            }
+
             final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, measure, op);
             System.out.println("best spam threshold " + bestSpamThreshold);
             return bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
