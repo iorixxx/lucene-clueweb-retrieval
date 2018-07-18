@@ -73,7 +73,7 @@ public class YTool extends XTool {
             if (i < collections.length - 1)
                 file.append("_");
         }
-        return excelPath.resolve(file.toString() + tag + optimize.toString() + op.toUpperCase(Locale.ENGLISH) + ".xlsx");
+        return excelPath.resolve(file.toString() + tag + optimize.toString() + op.toUpperCase(Locale.ENGLISH) + "_" + numBins + ".xlsx");
     }
 
     private Map<String, Set<TFDAwareNeed>> decorate(Map<String, List<InfoNeed>> map, Map<DataSet, Decorator> decorators) {
