@@ -315,7 +315,7 @@ public class YTool extends XTool {
 
         String anchor = "KStemAnchor".equals(tag) ? "Anchor" : "NoAnchor";
 
-        String tableName = dataset + optimize.toString() + anchor + "spam" + spam;
+        String tableName = dataset + optimize.toString() + anchor + "spam" + spam + "bin" + numBins;
 
         String header = header();
         return String.format(header, prettyDataSet(dataset), anchor, residualNeedsSize, optimize.toString(), tableName, optimize.toString());

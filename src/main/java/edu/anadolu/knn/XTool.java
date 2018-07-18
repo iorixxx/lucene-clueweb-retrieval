@@ -301,7 +301,7 @@ public class XTool extends CmdLineTool {
     private int runCounter = 0;
     Set<String> modelSet = null;
 
-    final List<Solution> solutionList = new ArrayList<>();
+    private final List<Solution> solutionList = new ArrayList<>();
     private final List<Solution> cartesianSolutionList = new ArrayList<>();
 
     Map<String, Set<TFDAwareNeed>> winnerMap = null;
@@ -324,7 +324,7 @@ public class XTool extends CmdLineTool {
         final DataSet testDataSet = CollectionFactory.dataset(test, tfd_home);
         final DataSet trainDataSet = CollectionFactory.dataset(train, tfd_home);
 
-        final Decorator testDecorator = new Decorator(testDataSet, tag, freq, numBins) ;
+        final Decorator testDecorator = new Decorator(testDataSet, tag, freq, numBins);
         final Decorator trainDecorator = new Decorator(trainDataSet, tag, freq, numBins);
 
 

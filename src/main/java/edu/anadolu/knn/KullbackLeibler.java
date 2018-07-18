@@ -5,9 +5,9 @@ import static org.apache.lucene.search.similarities.ModelBase.log2;
 /**
  * the Kullback–Leibler divergence is a measure of the difference between two probability distributions P and Q.
  */
-public class KullbackLeiber extends ChiBase {
+public class KullbackLeibler extends ChiBase {
 
-    public KullbackLeiber(boolean divide) {
+    public KullbackLeibler(boolean divide) {
         super(divide, false);
     }
 

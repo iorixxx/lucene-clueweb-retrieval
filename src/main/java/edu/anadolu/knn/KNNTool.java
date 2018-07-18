@@ -60,7 +60,7 @@ public class KNNTool extends EvaluatorTool {
                  chis.add(new XChi(divide, cdf));
 
                  if (!cdf) {
-                 chis.add(new KullbackLeiber(divide));
+                 chis.add(new KullbackLeibler(divide));
                  chis.add(new JensenShannon(divide));
                  }
                  **/
