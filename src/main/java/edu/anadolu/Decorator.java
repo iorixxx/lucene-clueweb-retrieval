@@ -22,9 +22,7 @@ public final class Decorator extends QuerySelector {
     private final Freq type;
     private final int numBins;
 
-    public Decorator(DataSet dataset, String tag, Freq type) throws IOException {
-        this(dataset, tag, type, 1000);
-    }
+
 
     public Decorator(DataSet dataset, String tag, Freq type, int numBins) throws IOException {
         super(dataset, tag);

@@ -74,7 +74,7 @@ class T2TTool extends CmdLineTool {
 
 
             for (Freq type : types) {
-                Decorator decorator = new Decorator(dataset, tag, type);
+                Decorator decorator = new Decorator(dataset, tag, type, 1000);
                 map = new HashMap<>();
 
                 for (InfoNeed need : decorator.allQueries) {

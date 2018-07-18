@@ -71,7 +71,7 @@ public class AbsoluteTool extends KNNTool {
         bestModelMap.remove("ALL_SAME");
         bestModelMap.remove("ALL_ZERO");
 
-        Decorator decorator = new Decorator(dataset, tag, Freq.Rel);
+        Decorator decorator = new Decorator(dataset, tag, Freq.Rel, 1000);
 
         QuerySimilarity querySimilarity = new CartesianQueryTermSimilarity(new UnEqualDataPoints(false, false), false, CartesianQueryTermSimilarity.Aggregation.Euclid, CartesianQueryTermSimilarity.Way.s);
 

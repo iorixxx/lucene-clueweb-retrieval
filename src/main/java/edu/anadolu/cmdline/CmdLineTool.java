@@ -29,8 +29,6 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class CmdLineTool {
 
-    protected final static TFNormalization[] normalizations = {new L0(), new L1(), new L2()};
-
     public final static String[] parametricModels = {"BM25", "LGD", "PL2", "DirichletLM"};
 
     final static String[] tags = {"KStem", "KStemAnchor"};

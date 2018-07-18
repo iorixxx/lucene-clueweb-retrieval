@@ -525,7 +525,7 @@ public class KNNTool extends EvaluatorTool {
 
         final Map<InfoNeed, Set<String>> singleLabelMap = evaluator.singleLabelMap();
 
-        final Decorator decorator = new Decorator(dataset, tag, Freq.Rel);
+        final Decorator decorator = new Decorator(dataset, tag, Freq.Rel, 1000);
 
 
         Fold[] folds = folds(dataset, residualNeeds);

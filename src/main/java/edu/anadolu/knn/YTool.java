@@ -127,7 +127,7 @@ public class YTool extends XTool {
         for (int i = 0; i < collections.length; i++) {
             dataSets[i] = CollectionFactory.dataset(collections[i], tfd_home);
             evalDirs[i] = evalDirectory(dataSets[i], optimize);
-            decorators.put(dataSets[i], new Decorator(dataSets[i], tag, freq));
+            decorators.put(dataSets[i], new Decorator(dataSets[i], tag, freq, numBins));
         }
 
         System.out.println(Arrays.toString(dataSets));

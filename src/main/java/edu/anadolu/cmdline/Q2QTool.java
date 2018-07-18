@@ -89,7 +89,7 @@ class Q2QTool extends CmdLineTool {
             bestModelMap = evaluator.singleLabelMap();
 
 
-            Decorator decorator = new Decorator(dataset, tag, Freq.Rel);
+            Decorator decorator = new Decorator(dataset, tag, Freq.Rel, 1000);
 
             Workbook workbook = new XSSFWorkbook();
             Path excelFile = excelPath.resolve("Q2Q" + decorator.type() + dataset.collection().toString() + tag + ".xlsx");

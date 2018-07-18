@@ -59,6 +59,9 @@ public class XTool extends CmdLineTool {
     @Option(name = "-freq", required = false, usage = "Frequency implementation")
     protected Freq freq = Freq.Rel;
 
+    @Option(name = "-numBins", required = false, usage = "number of bins")
+    protected int numBins = 1000;
+
     @Option(name = "-var", required = false, usage = "filter training queries by variance threshold", metaVar = "0 1 2")
     protected int var = 0;
 
@@ -321,8 +324,8 @@ public class XTool extends CmdLineTool {
         final DataSet testDataSet = CollectionFactory.dataset(test, tfd_home);
         final DataSet trainDataSet = CollectionFactory.dataset(train, tfd_home);
 
-        final Decorator testDecorator = new Decorator(testDataSet, tag, freq);
-        final Decorator trainDecorator = new Decorator(trainDataSet, tag, freq);
+        final Decorator testDecorator = new Decorator(testDataSet, tag, freq, numBins) ;
+        final Decorator trainDecorator = new Decorator(trainDataSet, tag, freq, numBins);
 
 
         final Evaluator trainEvaluator = new Evaluator(trainDataSet, tag, optimize, models, evalDirectory(trainDataSet, optimize), op);

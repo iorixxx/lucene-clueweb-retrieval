@@ -45,7 +45,7 @@ class ExampleTool extends CmdLineTool {
 
         DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
 
-        Decorator decorator = new Decorator(dataSet, tag, Freq.Rel);
+        Decorator decorator = new Decorator(dataSet, tag, Freq.Rel, 1000);
 
         DiscountCartesianSimilarity similarity = new DiscountCartesianSimilarity(new ChiSquare(false, false), true, CartesianQueryTermSimilarity.Aggregation.Euclid, CartesianQueryTermSimilarity.Way.s);
 
