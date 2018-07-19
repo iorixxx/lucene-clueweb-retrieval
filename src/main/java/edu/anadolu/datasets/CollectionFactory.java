@@ -16,6 +16,9 @@ public class CollectionFactory {
             case CW09B:
                 return new ClueWeb09B(tfd_home);
 
+            case CW12A:
+                return new ClueWeb12A(tfd_home);
+
             case CW12B:
                 return new ClueWeb12B(tfd_home);
 
