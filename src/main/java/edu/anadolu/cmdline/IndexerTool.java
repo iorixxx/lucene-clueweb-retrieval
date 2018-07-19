@@ -12,7 +12,6 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Option;
 
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Properties;
 
 import static edu.anadolu.analysis.Tag.KStem;
@@ -101,7 +100,7 @@ public final class IndexerTool extends CmdLineTool {
         if (anchor) {
             if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {
                 solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
-            } else if (Collection.CW12B.equals(collection))
+            } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
                 solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
             else {
                 System.out.println("anchor text is only available to ClueWeb09 and ClueWeb12 collections!");
@@ -120,7 +119,7 @@ public final class IndexerTool extends CmdLineTool {
                 .useSemanticElements(semantic);
         Indexer indexer = new Indexer(dataset, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
-        if(semantic) SemanticStats.getSemanticObject().printSemanticStats();
+        if (semantic) SemanticStats.getSemanticObject().printSemanticStats();
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
     }
 }

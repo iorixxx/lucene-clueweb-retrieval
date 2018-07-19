@@ -269,7 +269,7 @@ public final class Indexer {
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
                     int addCount = indexClueWeb09WarcFile();
                     //System.out.println("*./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "  " + addCount);
-                } else if (Collection.CW12B.equals(collection)) {
+                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection)) {
                     int addCount = indexClueWeb12WarcFile();
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
                 } else if (Collection.GOV2.equals(collection)) {
