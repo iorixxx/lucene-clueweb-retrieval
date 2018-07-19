@@ -486,7 +486,7 @@ public class XTool extends CmdLineTool {
     private static Solution sel(List<Solution> solutionList) {
 
         for (Solution solution : solutionList)
-            if ("DIV_Cm".equals(solution.key))
+            if ("DIV_Cm_Ch".equals(solution.key))
                 return solution;
 
         throw new RuntimeException("cannot find selective model in the list!");
