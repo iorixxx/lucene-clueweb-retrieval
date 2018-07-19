@@ -78,9 +78,13 @@ public final class LatexTool extends EvaluatorTool {
 
         if (model.startsWith("PL2c")) return printFreeParameters ? "PL2 (" + handleParam(model) + ")" : "PL2";
 
-        if (model.startsWith("DirichletLMc")) return printFreeParameters ? "Dirichlet (" + handleParam(model) + ")" : "Dirichlet";
+        if (model.startsWith("DirichletLMc")) return printFreeParameters ? "Dirichlet (" + handleParam(model) + ")" : "DLM";
 
-        if ("DIV_Cm".equals(model)) return "\\bfseries SEL";
+        if ("DIV_Cm".equals(model)) return "SEL";
+
+        if ("RND".equals(model)) return "\\bfseries RND";
+
+        if ("MLE".equals(model)) return "\\bfseries MLE";
 
         return model;
     }

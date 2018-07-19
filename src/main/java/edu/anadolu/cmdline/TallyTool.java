@@ -60,7 +60,7 @@ public class TallyTool extends XTool {
 
             Set<String> modelSet = evaluator.getModelSet();
 
-            Map<InfoNeed, Set<String>> map = evaluator.multiLabelMap();
+            Map<InfoNeed, Set<String>> map = evaluator.multiLabelMap(1.0);
 
             for (Set<String> set : map.values()) {
 

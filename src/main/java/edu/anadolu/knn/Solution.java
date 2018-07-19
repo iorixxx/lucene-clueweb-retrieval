@@ -15,6 +15,10 @@ public final class Solution implements Comparable<Solution>, Cloneable {
     public double sigma1;
     public double sigma0;
 
+    public int hits2;
+    public int hits1;
+    public int hits0;
+
     final double[] scores;
 
     public double geoRisk;

@@ -98,7 +98,7 @@ public class XTool extends CmdLineTool {
 
     //  Solution oracleMin = null;
     Solution oracleMax = null;
-    Solution RMLE = null;
+    Solution MLE = null;
     Solution RND = null;
 
     Solution SEL = null;
@@ -124,8 +124,8 @@ public class XTool extends CmdLineTool {
             RND = evaluator.randomAsSolution(residualNeeds);
             System.arraycopy(RND.scores, 0, rndAcc, 0, residualNeeds.size());
 
-            RMLE = evaluator.randomMLE(residualNeeds, randomMLEMap);
-            System.arraycopy(RMLE.scores, 0, accumulator, 0, residualNeeds.size());
+            MLE = evaluator.randomMLE(residualNeeds, randomMLEMap);
+            System.arraycopy(MLE.scores, 0, accumulator, 0, residualNeeds.size());
 
         } else {
 
@@ -161,7 +161,7 @@ public class XTool extends CmdLineTool {
             for (int i = 0; i < rndIterNum; i++) {
 
                 Solution RMLE = evaluator.randomMLE(residualNeeds, randomMLEMap);
-                //   System.out.println(RMLE.toString());
+                //   System.out.println(MLE.toString());
 
                 acc += RMLE.sigma1;
                 sAcc += RMLE.sigma0;
@@ -176,12 +176,12 @@ public class XTool extends CmdLineTool {
                 predictionList.add(new Prediction(residualNeeds.get(j), null, accumulator[j]));
             }
 
-            RMLE = new Solution(predictionList, -1);
-            RMLE.setKey("RMLE");
-            RMLE.model = "RMLE";
-            RMLE.sigma1 = acc / rndIterNum;
-            RMLE.sigma0 = sAcc / rndIterNum;
-            // System.out.println(RMLE);
+            MLE = new Solution(predictionList, -1);
+            MLE.setKey("MLE");
+            MLE.model = "MLE";
+            MLE.sigma1 = acc / rndIterNum;
+            MLE.sigma0 = sAcc / rndIterNum;
+            // System.out.println(MLE);
 
         }
 
@@ -208,7 +208,7 @@ public class XTool extends CmdLineTool {
         // RxT.createRow(++counter).createCell(1).setCellValue("OracleMin");
         RxT.createRow(++counter).createCell(1).setCellValue("Oracle");
         RxT.createRow(++counter).createCell(1).setCellValue("RND");
-        RxT.createRow(++counter).createCell(1).setCellValue("RMLE");
+        RxT.createRow(++counter).createCell(1).setCellValue("MLE");
 
 
         int c = 1;
@@ -414,12 +414,12 @@ public class XTool extends CmdLineTool {
         writeSolution2SummarySheet(SGL);
         writeSolution2SummarySheet(oracleMax);
         writeSolution2SummarySheet(RND);
-        writeSolution2SummarySheet(RMLE);
+        writeSolution2SummarySheet(MLE);
 
 
         accuracyList.add(oracleMax);
         accuracyList.add(RND);
-        accuracyList.add(RMLE);
+        accuracyList.add(MLE);
         accuracyList.add(SEL);
 
         accuracyList.forEach(solution -> {
@@ -431,8 +431,8 @@ public class XTool extends CmdLineTool {
         dumpRankInfo();
 
 
-        RMLE.predict = Predict.DIV;
-        // solutionList.add(RMLE);
+        MLE.predict = Predict.DIV;
+        // solutionList.add(MLE);
         // solutionList.add(SGL);
         persistSolutionsLists();
 
@@ -470,6 +470,15 @@ public class XTool extends CmdLineTool {
         List<Integer> ranks = ranks(solutionList.size());
 
         ranks.sort((o1, o2) -> Double.compare(solutionList.get(o2).mean, solutionList.get(o1).mean));
+
+        return ranks;
+    }
+
+    private static List<Integer> ranksRisk(final List<Solution> solutionList) {
+
+        List<Integer> ranks = ranks(solutionList.size());
+
+        ranks.sort((o1, o2) -> Double.compare(solutionList.get(o2).geoRisk, solutionList.get(o1).geoRisk));
 
         return ranks;
     }
@@ -585,9 +594,9 @@ public class XTool extends CmdLineTool {
 
         rankInfo = new RankInfo();
 
-        solutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.geoRisk, o1.geoRisk));
+        solutionList.sort((Solution o1, Solution o2) -> Double.compare(o2.mean, o1.mean));
 
-        List<Integer> ranksMean = ranksMean(solutionList);
+        List<Integer> ranksRisk = ranksRisk(solutionList);
         List<Integer> ranksSigma1 = sigma0 ? ranksSigma0(solutionList) : ranksSigma1(solutionList);
 
         Solution sel = sel(solutionList);
@@ -597,12 +606,12 @@ public class XTool extends CmdLineTool {
             Solution s = solutionList.get(i);
 
             int rankSigma1 = ranksSigma1.indexOf(i);
-            int rankMean = ranksMean.indexOf(i);
+            int rankRisk = ranksRisk.indexOf(i);
             String line;
             if (sigma0)
-                line = String.format("%s & %.2f & %d & %.4f & %d & %.4f & %d \\\\", LatexTool.latexModel(s.key, false), s.sigma0, rankSigma1, s.mean, rankMean, s.geoRisk, i);
+                line = String.format("%s & %.2f & %d & %.4f & %d & %.4f & %d \\\\", LatexTool.latexModel(s.key, false), s.sigma0, rankSigma1, s.mean, i, s.geoRisk, rankRisk);
             else
-                line = String.format("%s & %.2f & %.2f & %d & %.4f & %d & %.4f & %d \\\\", LatexTool.latexModel(s.key), s.sigma0, s.sigma1, rankSigma1, s.mean, rankMean, s.geoRisk, i);
+                line = String.format("%s & %.2f & %.2f & %d & %.4f & %d & %.4f & %d \\\\", LatexTool.latexModel(s.key), s.sigma0, s.sigma1, rankSigma1, s.mean, i, s.geoRisk, rankRisk);
 
             if (isSameT(sel, s) || sel.key.equals(s.key))
                 line = "$^\\dagger$" + line;
@@ -612,8 +621,8 @@ public class XTool extends CmdLineTool {
 
             if (sel.key.equals(s.key)) {
                 rankInfo.accuracy = rankSigma1;
-                rankInfo.effectiveness = rankMean;
-                rankInfo.robustness = i;
+                rankInfo.effectiveness = i;
+                rankInfo.robustness = rankRisk;
             }
 
             if (!sel.key.equals(s.key)) {
@@ -632,6 +641,8 @@ public class XTool extends CmdLineTool {
             }
 
             builder.append(line).append("\n");
+
+            System.err.println(String.format(" \\multicolumn{1}{l|}{%s} &  %.4f &  %d & %.4f &  %d  &  %d &  %d & %d \\\\", LatexTool.latexModel(s.key, false), s.mean, i, s.geoRisk, rankRisk, s.hits0, s.hits1, s.hits2));
         }
 
         builder.append("\\hline\n" +
@@ -961,10 +972,10 @@ public class XTool extends CmdLineTool {
 
                     predictionList.add(predicted);
 
-                    if (testEvaluator.multiLabelMap().get(testQuery).contains(predictedModel)) {
+                    if (testEvaluator.multiLabelMap(1.0).get(testQuery).contains(predictedModel)) {
                         incrementAffairs(affairs, predictedModel + "_" + predictedModel);
                     } else {
-                        for (String actualModel : testEvaluator.multiLabelMap().get(testQuery)) {
+                        for (String actualModel : testEvaluator.multiLabelMap(1.0).get(testQuery)) {
                             incrementAffairs(affairs, predictedModel + "_" + actualModel);
                         }
                     }

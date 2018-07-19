@@ -555,12 +555,17 @@ public class Evaluator {
     }
 
     public void calculateAccuracy(Solution solution) {
-        solution.sigma1 = calculateAccuracy(solution, multiLabelMap());
-        solution.sigma0 = calculateAccuracy(solution, singleLabelMap());
+        solution.hits2 = hits(solution, multiLabelMap(2.0));
+        solution.hits1 = hits(solution, multiLabelMap(1.0));
+        solution.hits0 = hits(solution, singleLabelMap());
+
+        solution.sigma1 = (double) solution.hits1 / solution.list.size() * 100.0;
+        solution.sigma0 = (double) solution.hits0 / solution.list.size() * 100.0;
     }
 
 
-    private double calculateAccuracy(Solution solution, final Map<InfoNeed, Set<String>> labelMap) {
+    private int hits(Solution solution, final Map<InfoNeed, Set<String>> labelMap) {
+
         int correct = 0;
         for (Prediction prediction : solution.list) {
 
@@ -586,7 +591,9 @@ public class Evaluator {
                     correct++;
             }
         }
-        return (double) correct / solution.list.size() * 100.0;
+
+        return correct;
+
     }
 
     public Solution randomMLE(List<InfoNeed> needs) {
@@ -639,8 +646,8 @@ public class Evaluator {
         Solution solution = new Solution(list, -1);
         calculateAccuracy(solution);
 
-        solution.setKey("RMLE");
-        solution.model = "RMLE";
+        solution.setKey("MLE");
+        solution.model = "MLE";
 
         return solution;
 
@@ -809,7 +816,7 @@ public class Evaluator {
 
             String predictedModel = null;
 
-            for (String model : multiLabelWinners(testQuery)) {
+            for (String model : multiLabelWinners(testQuery, 1.0)) {
                 double score = score(testQuery, model);
                 if (score < min) {
                     min = score;
@@ -837,7 +844,7 @@ public class Evaluator {
 
             double min = Double.POSITIVE_INFINITY;
 
-            for (String model : multiLabelWinners(need)) {
+            for (String model : multiLabelWinners(need, 1.0)) {
                 double score = score(need, model);
                 if (score < min)
                     min = score;
@@ -1005,11 +1012,11 @@ public class Evaluator {
      * @param need information needs
      * @return best models
      */
-    private LinkedHashSet<String> multiLabelWinners(InfoNeed need) {
+    private LinkedHashSet<String> multiLabelWinners(InfoNeed need, double se) {
         List<ModelScore> list = performanceMap.get(need);
         Collections.sort(list);
         double standardError = Math.sqrt(varianceMap.get(need) / list.size());
-        return sigmaLabels(list, standardError);
+        return sigmaLabels(list, standardError * se);
     }
 
     private LinkedHashSet<String> multiLabelLosers(InfoNeed need) {
@@ -1377,7 +1384,7 @@ public class Evaluator {
 
             if (allZero.contains(need) || allSame.contains(need)) continue;
 
-            Set<String> winners = multiLabelWinners(need);
+            Set<String> winners = multiLabelWinners(need, 1.0);
 
             if (winners.size() > 1) continue;
 
@@ -1431,7 +1438,22 @@ public class Evaluator {
 
     private Map<InfoNeed, Set<String>> multiLabelMap = null;
 
-    public Map<InfoNeed, Set<String>> multiLabelMap() {
+    public Map<InfoNeed, Set<String>> multiLabelMap(double se) {
+
+        // SE x 2
+        if (se == 2.0) {
+            LinkedHashMap<InfoNeed, Set<String>> multiLabelMap = new LinkedHashMap<>();
+
+            for (InfoNeed need : needs) {
+
+                if (allZero.contains(need) || allSame.contains(need)) continue;
+
+                LinkedHashSet<String> winners = multiLabelWinners(need, se);
+                multiLabelMap.put(need, winners);
+            }
+            return multiLabelMap;
+        }
+
 
         if (multiLabelMap != null) return multiLabelMap;
 
@@ -1441,7 +1463,7 @@ public class Evaluator {
 
             if (allZero.contains(need) || allSame.contains(need)) continue;
 
-            LinkedHashSet<String> winners = multiLabelWinners(need);
+            LinkedHashSet<String> winners = multiLabelWinners(need, se);
             multiLabelMap.put(need, winners);
         }
         return multiLabelMap;
@@ -1523,26 +1545,6 @@ public class Evaluator {
 //        output.close();
 //    }
 
-    public Map<String, List<InfoNeed>> multiBestModelMap() {
-
-        Map<String, List<InfoNeed>> map = new TreeMap<>();
-
-        for (InfoNeed need : needs) {
-
-            if (allZero.contains(need) || allSame.contains(need)) continue;
-
-            Set<String> winners = multiLabelWinners(need);
-
-            for (String bestSim : winners) {
-                addSingleItem2Map(map, bestSim, need);
-            }
-        }
-
-        map.put("ALL_SAME", bestModelMap.get("ALL_SAME"));
-        map.put("ALL_ZERO", bestModelMap.get("ALL_ZERO"));
-
-        return map;
-    }
 
     public Map<String, List<InfoNeed>> bestModelMap() {
         return bestModelMap;

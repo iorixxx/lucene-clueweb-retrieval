@@ -202,12 +202,12 @@ public class YTool extends XTool {
 
         writeSolution2SummarySheet(oracleMax);
         writeSolution2SummarySheet(RND);
-        writeSolution2SummarySheet(RMLE);
+        writeSolution2SummarySheet(MLE);
 
 
         accuracyList.add(oracleMax);
         accuracyList.add(RND);
-        accuracyList.add(RMLE);
+        accuracyList.add(MLE);
         accuracyList.add(SEL);
         if (MS != null)
             accuracyList.add(MS);
@@ -220,8 +220,8 @@ public class YTool extends XTool {
         appendLatexTables(latex(accuracyList));
         dumpRankInfo();
 
-        RMLE.predict = Predict.DIV;
-        // solutionList.add(RMLE);
+        MLE.predict = Predict.DIV;
+        // solutionList.add(MLE);
         // solutionList.add(SGL);
         persistSolutionsLists();
     }
