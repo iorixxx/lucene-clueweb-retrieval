@@ -3,7 +3,6 @@ package edu.anadolu.knn;
 import org.apache.commons.math3.stat.StatUtils;
 import org.paukov.combinatorics3.Generator;
 
-
 import java.util.*;
 
 
@@ -240,6 +239,6 @@ public class CartesianQueryTermSimilarity extends QuerySimilarityBase {
 
     @Override
     public String name() {
-        return "C" + aggregation();
+        return "C" + aggregation() + "_" + chi.name();
     }
 }

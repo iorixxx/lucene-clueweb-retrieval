@@ -997,14 +997,14 @@ public class XTool extends CmdLineTool {
                 solution.model = querySimilarity.name();
                 solution.predict = predict;
 
-                if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && "Cm".equals(querySimilarity.name())) {
+                if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && "Cm_Ch".equals(querySimilarity.name())) {
                     SEL = solution.clone();
                 }
 
                 writeSolution2SummarySheet(solution);
 
                 if (querySimilarity instanceof CartesianQueryTermSimilarity) {
-                    if ("Cm".equals(solution.model))
+                    if ("Cm_Ch".equals(solution.model))
                         solutionList.add(solution);
                 } else
                     solutionList.add(solution);

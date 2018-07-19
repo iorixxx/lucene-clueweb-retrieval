@@ -17,7 +17,15 @@ public class KullbackLeibler extends ChiBase {
     }
 
     @Override
+    /**
+     * KL(R,S) + KL(S,R) or min{KL(R,S) , KL(S,R)}  are two possible symmetrizations of the Kullback-Leibler divergence.
+     */
     public <T extends Number> double chiPDF(T[] R, T[] S) {
+        return kl(R, S) + kl(S, R);
+    }
+
+
+    private <T extends Number> double kl(T[] R, T[] S) {
 
         double kl = 0.0;
 

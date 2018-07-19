@@ -24,6 +24,13 @@ public class JensenShannon extends ChiBase {
 
     @Override
     public <T extends Number> double chiPDF(T[] R, T[] S) {
+        return js(R, S) + js(S, R);
+    }
+
+    /**
+     * The Jensen–Shannon divergence (JSD) is a symmetrized and smoothed version of the Kullback–Leibler divergence
+     */
+    private <T extends Number> double js(T[] R, T[] S) {
 
         double js = 0.0;
 

@@ -56,14 +56,14 @@ public class KNNTool extends EvaluatorTool {
 
                 // Does not consider zero: number of documents that does not contain the term (idf)
 
-                /**
-                 chis.add(new XChi(divide, cdf));
 
-                 if (!cdf) {
-                 chis.add(new KullbackLeibler(divide));
-                 chis.add(new JensenShannon(divide));
-                 }
-                 **/
+                //chis.add(new XChi(divide, cdf));
+
+                if (!cdf) {
+                    chis.add(new KullbackLeibler(divide));
+                    chis.add(new JensenShannon(divide));
+                }
+
 
             }
 

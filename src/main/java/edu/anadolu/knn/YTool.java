@@ -196,6 +196,8 @@ public class YTool extends XTool {
 
         Map<String, Double> geoRiskMap = addGeoRisk2Sheet(RxT);
 
+        System.out.println(geoRiskMap.keySet());
+
         accuracyList.sort(Comparator.comparing(o -> o.key));
 
         accuracyList.forEach(this::writeSolution2SummarySheet);
@@ -213,7 +215,11 @@ public class YTool extends XTool {
             accuracyList.add(MS);
 
         accuracyList.forEach(solution -> {
-            solution.geoRisk = geoRiskMap.get(solution.key);
+
+            if (geoRiskMap.containsKey(solution.key))
+                solution.geoRisk = geoRiskMap.get(solution.key);
+            else
+                System.out.println(solution.key + " does not exists in geoRiskMap " + geoRiskMap.keySet());
         });
 
 
