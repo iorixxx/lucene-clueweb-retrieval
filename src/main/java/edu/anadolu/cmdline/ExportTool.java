@@ -1,7 +1,6 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Decorator;
-import edu.anadolu.Exporter;
 import edu.anadolu.QuerySelector;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.Collection;
@@ -31,6 +30,9 @@ final class ExportTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     private Collection collection;
+
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    private String tag = "KStemAnchor";
 
     @Override
     public String getShortDescription() {
@@ -62,71 +64,68 @@ final class ExportTool extends CmdLineTool {
             Files.createDirectories(excelPath);
 
 
-        for (String tag : tags) {
-            if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
-                continue;
+        if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
+            return;
 
 
-            QuerySelector selector = new QuerySelector(dataset, tag);
+        QuerySelector selector = new QuerySelector(dataset, tag);
 
-            Path excelFile = excelPath.resolve(dataset.collection().toString() + "TermFreqDist" + tag + ".xlsx");
+        Path excelFile = excelPath.resolve(dataset.collection().toString() + "TermFreqDist" + tag + ".xlsx");
 
-            workbook = new XSSFWorkbook();
-
-
-            Sheet statSheet = workbook.createSheet("TermStats");
-
-            Row r0 = statSheet.createRow(0);
-
-            r0.createCell(0).setCellValue("qID");
-            r0.createCell(1).setCellValue("term");
-            r0.createCell(2).setCellValue("TF");
-            r0.createCell(3).setCellValue("DF");
-            r0.createCell(4).setCellValue("CTI");
-            r0.createCell(5).setCellValue("AVDL");
-            r0.createCell(6).setCellValue("VARDL");
-            r0.createCell(7).setCellValue("docCount");
-            r0.createCell(8).setCellValue("termCount");
-
-            int row = 1;
-            for (InfoNeed need : selector.allQueries) {
-
-                List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), selector.analyzer());
-
-                for (String word : analyzedTokens) {
+        workbook = new XSSFWorkbook();
 
 
-                    TermStats termStats = selector.termStatisticsMap.get(word);
+        Sheet statSheet = workbook.createSheet("TermStats");
 
-                    Row r = statSheet.createRow(row);
+        Row r0 = statSheet.createRow(0);
 
-                    r.createCell(0).setCellValue(need.id());
-                    r.createCell(1).setCellValue(word);
-                    r.createCell(2).setCellValue(termStats.totalTermFreq());
-                    r.createCell(3).setCellValue(termStats.docFreq());
-                    r.createCell(4).setCellValue(termStats.cti());
-                    r.createCell(5).setCellValue(termStats.avdl());
-                    r.createCell(6).setCellValue(termStats.vardl());
-                    r.createCell(7).setCellValue(selector.numberOfDocuments);
-                    r.createCell(8).setCellValue(selector.numberOfTokens);
+        r0.createCell(0).setCellValue("qID");
+        r0.createCell(1).setCellValue("term");
+        r0.createCell(2).setCellValue("TF");
+        r0.createCell(3).setCellValue("DF");
+        r0.createCell(4).setCellValue("CTI");
+        r0.createCell(5).setCellValue("AVDL");
+        r0.createCell(6).setCellValue("VARDL");
+        r0.createCell(7).setCellValue("docCount");
+        r0.createCell(8).setCellValue("termCount");
 
-                    row++;
-                }
+        int row = 1;
+        for (InfoNeed need : selector.allQueries) {
 
+            List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), selector.analyzer());
+
+            for (String word : analyzedTokens) {
+
+
+                TermStats termStats = selector.termStatisticsMap.get(word);
+
+                Row r = statSheet.createRow(row);
+
+                r.createCell(0).setCellValue(need.id());
+                r.createCell(1).setCellValue(word);
+                r.createCell(2).setCellValue(termStats.totalTermFreq());
+                r.createCell(3).setCellValue(termStats.docFreq());
+                r.createCell(4).setCellValue(termStats.cti());
+                r.createCell(5).setCellValue(termStats.avdl());
+                r.createCell(6).setCellValue(termStats.vardl());
+                r.createCell(7).setCellValue(selector.numberOfDocuments);
+                r.createCell(8).setCellValue(selector.numberOfTokens);
+
+                row++;
             }
 
-
-            write(new Decorator(dataset, tag, Freq.Rel, 1000), true);
-
-          //  Exporter exporter = new Exporter(dataset, tag);
-          //  Sheet qRel = workbook.createSheet("qRel");
-          //  exporter.saveDistOverQRels(selector.allQueries, qRel);
-
-            workbook.write(Files.newOutputStream(excelFile));
-            workbook.close();
-
-
         }
+
+
+        write(new Decorator(dataset, tag, Freq.Rel, 1000), true);
+
+        //  Exporter exporter = new Exporter(dataset, tag);
+        //  Sheet qRel = workbook.createSheet("qRel");
+        //  exporter.saveDistOverQRels(selector.allQueries, qRel);
+
+        workbook.write(Files.newOutputStream(excelFile));
+        workbook.close();
+
 
     }
 

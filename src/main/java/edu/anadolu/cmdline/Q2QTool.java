@@ -26,7 +26,13 @@ import java.util.*;
 class Q2QTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    protected edu.anadolu.datasets.Collection collection;
+    private edu.anadolu.datasets.Collection collection;
+
+    @Option(name = "-metric", required = false, usage = "Effectiveness measure")
+    private Measure measure = Measure.NDCG100;
+
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    private String tag = "KStemAnchor";
 
     @Override
     public String getShortDescription() {
@@ -59,67 +65,65 @@ class Q2QTool extends CmdLineTool {
             Files.createDirectories(excelPath);
 
 
-        for (String tag : tags) {
-            if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
-                continue;
+        if ("KStemAnchor".equals(tag) && (Collection.GOV2.equals(collection) || Collection.ROB04.equals(collection)))
+            return;
 
-            final String evalDirectory;
+        final String evalDirectory;
 
-            if (Collection.GOV2.equals(collection) || Collection.MC.equals(collection) || Collection.ROB04.equals(collection)) {
-                evalDirectory = "evals";
-            } else {
-                final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, Measure.NDCG100, "OR");
-                evalDirectory = bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
-            }
-
-            System.out.println("Instantiating Evaluator with evaluation directory of " + evalDirectory);
-
-            Evaluator evaluator = new Evaluator(dataset, tag, Measure.NDCG100, "all", evalDirectory, "OR");
-
-            final Set<InfoNeed> allZero = evaluator.getAllZero();
-            final Set<InfoNeed> allSame = evaluator.getAllSame();
-
-            List<InfoNeed> infoNeedList = dataset.getTopics();
-
-            List<InfoNeed> residualNeeds = new ArrayList<>(infoNeedList);
-            residualNeeds.removeAll(allSame);
-            residualNeeds.removeAll(allZero);
-
-
-            bestModelMap = evaluator.singleLabelMap();
-
-
-            Decorator decorator = new Decorator(dataset, tag, Freq.Rel, 1000);
-
-            Workbook workbook = new XSSFWorkbook();
-            Path excelFile = excelPath.resolve("Q2Q" + decorator.type() + dataset.collection().toString() + tag + ".xlsx");
-
-
-            java.util.Collection<TFDAwareNeed> TFDAwareNeeds = decorator.residualTFDAwareNeeds(residualNeeds);
-
-            addColors(workbook.createSheet("colors"), TFDAwareNeeds);
-
-            for (final QuerySimilarity querySimilarity : KNNTool.querySimilarities()) {
-
-                String key = querySimilarity.toString();
-                Sheet sheet;
-                try {
-                    sheet = workbook.createSheet(key);
-                } catch (java.lang.IllegalArgumentException e) {
-                    sheet = workbook.createSheet(key + "1");
-                }
-
-
-                addTopicHeaders(sheet, TFDAwareNeeds);
-                fillSheetWithChiSquare(sheet, TFDAwareNeeds, querySimilarity, Freq.Rel);
-
-
-            }
-
-
-            workbook.write(Files.newOutputStream(excelFile));
-            workbook.close();
+        if (Collection.GOV2.equals(collection) || Collection.MC.equals(collection) || Collection.ROB04.equals(collection)) {
+            evalDirectory = "evals";
+        } else {
+            final int bestSpamThreshold = SpamEvalTool.bestSpamThreshold(dataset, tag, measure, "OR");
+            evalDirectory = bestSpamThreshold == 0 ? "evals" : "spam_" + bestSpamThreshold + "_evals";
         }
+
+        System.out.println("Instantiating Evaluator with evaluation directory of " + evalDirectory);
+
+        Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", evalDirectory, "OR");
+
+        final Set<InfoNeed> allZero = evaluator.getAllZero();
+        final Set<InfoNeed> allSame = evaluator.getAllSame();
+
+        List<InfoNeed> infoNeedList = dataset.getTopics();
+
+        List<InfoNeed> residualNeeds = new ArrayList<>(infoNeedList);
+        residualNeeds.removeAll(allSame);
+        residualNeeds.removeAll(allZero);
+
+
+        bestModelMap = evaluator.singleLabelMap();
+
+
+        Decorator decorator = new Decorator(dataset, tag, Freq.Rel, 1000);
+
+        Workbook workbook = new XSSFWorkbook();
+        Path excelFile = excelPath.resolve("Q2Q" + decorator.type() + dataset.collection().toString() + tag + ".xlsx");
+
+
+        java.util.Collection<TFDAwareNeed> TFDAwareNeeds = decorator.residualTFDAwareNeeds(residualNeeds);
+
+        addColors(workbook.createSheet("colors"), TFDAwareNeeds);
+
+        for (final QuerySimilarity querySimilarity : KNNTool.querySimilarities()) {
+
+            String key = querySimilarity.toString();
+            Sheet sheet;
+            try {
+                sheet = workbook.createSheet(key);
+            } catch (java.lang.IllegalArgumentException e) {
+                sheet = workbook.createSheet(key + "1");
+            }
+
+
+            addTopicHeaders(sheet, TFDAwareNeeds);
+            fillSheetWithChiSquare(sheet, TFDAwareNeeds, querySimilarity, Freq.Rel);
+
+
+        }
+
+
+        workbook.write(Files.newOutputStream(excelFile));
+        workbook.close();
     }
 
 
