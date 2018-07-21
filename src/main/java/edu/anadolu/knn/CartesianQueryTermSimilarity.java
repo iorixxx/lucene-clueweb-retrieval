@@ -3,7 +3,10 @@ package edu.anadolu.knn;
 import org.apache.commons.math3.stat.StatUtils;
 import org.paukov.combinatorics3.Generator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -11,8 +14,12 @@ import java.util.*;
  */
 public class CartesianQueryTermSimilarity extends QuerySimilarityBase {
 
+    /**
+     * We have examined several aggregation methods that could serve the purpose, including
+     * arithmetic mean, median, geometric mean, Euclidean distance, minimum value, maximum value, ratio of the minimum to maximum, log-ratio, log-odds, etc. The aggregation method that serves well with respect to both average effectiveness and robustness is the Normalized Euclidean Distance, as given by:
+     */
     public enum Aggregation {
-        Euclid
+        Euclid, Ari, Geo
     }
 
     public enum Way {
@@ -24,7 +31,7 @@ public class CartesianQueryTermSimilarity extends QuerySimilarityBase {
     }
 
     public String aggregation() {
-        return /** agg.toString().charAt(0) + **/"" + way.toString().charAt(0);
+        return agg.toString().charAt(0) + "_" + way.toString().charAt(0);
     }
 
     private final Aggregation agg;
@@ -181,18 +188,18 @@ public class CartesianQueryTermSimilarity extends QuerySimilarityBase {
         switch (agg) {
             case Euclid:
                 return Math.sqrt(StatUtils.sumSq(values)) / values.length;
-            /**  case Sum:
-             return StatUtils.sum(values); // * (double) absSizeDiff;
+            case Ari:
+                return StatUtils.mean(values);
 
-             case Geo: {
+            case Geo: {
 
-             for (i = 0; i < values.length; i++)
-             if (values[i] == 0)
-             values[i] = 1.0;
-             return StatUtils.geometricMean(values) * (double) absSizeDiff;
+                for (int i = 0; i < values.length; i++)
+                    if (values[i] == 0)
+                        values[i] = 1.0;
+                return StatUtils.geometricMean(values);
 
-             }
-             **/
+            }
+
             default:
                 throw new AssertionError("unknown aggregation : " + agg);
         }
@@ -228,17 +235,11 @@ public class CartesianQueryTermSimilarity extends QuerySimilarityBase {
 
 
     protected void remove(List<Entry> list, int i, int j) {
-
-        Iterator<Entry> iterator = list.iterator();
-
-        while (iterator.hasNext()) {
-            Entry entry = iterator.next();
-            if (entry.i == i || entry.j == j) iterator.remove();
-        }
+        list.removeIf(entry -> entry.i == i || entry.j == j);
     }
 
     @Override
     public String name() {
-        return "C" + aggregation() + "_" + chi.name();
+        return "C_" + aggregation() + "_" + chi.name();
     }
 }

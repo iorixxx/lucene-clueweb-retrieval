@@ -82,11 +82,7 @@ public class KNNTool extends EvaluatorTool {
             if (!zero)
                 querySimilarities.add(new DFAverageQuerySimilarity(chi, zero));
             for (CartesianQueryTermSimilarity.Aggregation agg : CartesianQueryTermSimilarity.Aggregation.values())
-                for (CartesianQueryTermSimilarity.Way way :
-                        new CartesianQueryTermSimilarity.Way[]
-                                {
-                                        CartesianQueryTermSimilarity.Way.m
-                                }) {
+                for (CartesianQueryTermSimilarity.Way way : CartesianQueryTermSimilarity.Way.values()) {
                     querySimilarities.add(new CartesianQueryTermSimilarity(chi, zero, agg, way));
                     //  querySimilarities.add(new DiscountCartesianSimilarity(chi, zero, agg, way));
                     // querySimilarities.add(new UltimateCartesianSimilarity(chi, zero, agg, way));

@@ -34,12 +34,14 @@ import java.util.*;
 import static edu.anadolu.cmdline.LatexTool.prettyDataSet;
 import static edu.anadolu.eval.Evaluator.prettyModel;
 import static edu.anadolu.knn.CartesianQueryTermSimilarity.array;
-import static edu.anadolu.knn.Predict.*;
+import static edu.anadolu.knn.Predict.DIV;
 
 /**
  * k-NN without k
  */
 public class XTool extends CmdLineTool {
+
+    protected static final String BEST = "C_E_m_Ch";
 
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     protected String tag = "KStemAnchor";
@@ -486,7 +488,7 @@ public class XTool extends CmdLineTool {
     private static Solution sel(List<Solution> solutionList) {
 
         for (Solution solution : solutionList)
-            if ("DIV_Cm_Ch".equals(solution.key))
+            if (("DIV_" + BEST).equals(solution.key))
                 return solution;
 
         throw new RuntimeException("cannot find selective model in the list!");
@@ -761,7 +763,7 @@ public class XTool extends CmdLineTool {
     void doSelectiveTermWeighting(List<TFDAwareNeed> testQueries, Evaluator testEvaluator) {
         for (final QuerySimilarity querySimilarity : KNNTool.querySimilarities()) {
 
-            for (Predict predict : new Predict[]{DIV, LOS, WIN}) {
+            for (Predict predict : new Predict[]{DIV}) {
 
                 Map<String, Integer> affairs = new HashMap<>();
 
@@ -964,8 +966,7 @@ public class XTool extends CmdLineTool {
 
                     final Prediction predicted = new Prediction(testQuery, predictedModel, predictedScore);
 
-                    if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && "Cm".equals(querySimilarity.name())) {
-
+                    if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && BEST.equals(querySimilarity.name())) {
                         RxT.getRow(counter).createCell(column).setCellValue(predicted.predictedScore);
                     }
 
@@ -997,14 +998,14 @@ public class XTool extends CmdLineTool {
                 solution.model = querySimilarity.name();
                 solution.predict = predict;
 
-                if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && "Cm_Ch".equals(querySimilarity.name())) {
+                if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && BEST.equals(querySimilarity.name())) {
                     SEL = solution.clone();
                 }
 
                 writeSolution2SummarySheet(solution);
 
                 if (querySimilarity instanceof CartesianQueryTermSimilarity) {
-                    if ("Cm_Ch".equals(solution.model))
+                    if (BEST.equals(solution.model))
                         solutionList.add(solution);
                 } else
                     solutionList.add(solution);
@@ -1134,10 +1135,7 @@ public class XTool extends CmdLineTool {
             for (String actual : modelSet) {
                 String k = predicted + "_" + actual;
 
-                final int count;
-                if (affairs.containsKey(k))
-                    count = affairs.get(k);
-                else count = 0;
+                final int count = affairs.getOrDefault(k, 0);
 
                 sheet.getRow(i).createCell(j, CellType.NUMERIC).setCellValue(count);
 
