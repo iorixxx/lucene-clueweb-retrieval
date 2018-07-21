@@ -30,6 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 import static edu.anadolu.cmdline.LatexTool.prettyDataSet;
 import static edu.anadolu.eval.Evaluator.prettyModel;
@@ -644,7 +646,7 @@ public class XTool extends CmdLineTool {
 
             builder.append(line).append("\n");
 
-            System.err.println(String.format(" \\multicolumn{1}{l|}{%s} &  %.4f &  %d & %.4f &  %d  &  %d &  %d & %d \\\\", LatexTool.latexModel(s.key, false), s.mean, i, s.geoRisk, rankRisk, s.hits0, s.hits1, s.hits2));
+            System.err.println(String.format(" \\multicolumn{1}{l|}{%s} &  %.4f & %.4f &  %d  &  %d &  %d & %d \\\\", LatexTool.latexModel(s.key, false), s.mean, s.geoRisk, rankRisk, s.hits0, s.hits1, s.hits2));
         }
 
         builder.append("\\hline\n" +
@@ -851,8 +853,6 @@ public class XTool extends CmdLineTool {
 
                                 i++;
                             }
-
-                            //   out.println();
 
                             ModelScore closest = Collections.min(list, (ModelScore o1, ModelScore o2) -> (int) Math.signum(o1.score - o2.score));
                             predictedModel = closest.model;
