@@ -769,7 +769,7 @@ public class XTool extends CmdLineTool {
 
                 final String key = predict.toString() + "_" + querySimilarity.toString();
 
-                if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && "Cm".equals(querySimilarity.name())) {
+                if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && BEST.equals(querySimilarity.name())) {
                     ++counter;
                     RxT.createRow(counter).createCell(1).setCellValue(key);
                 }
@@ -836,10 +836,6 @@ public class XTool extends CmdLineTool {
 
                             List<ModelScore> list = new ArrayList<>();
 
-                            if (querySimilarity instanceof CartesianQueryTermSimilarity && "Cm".equals(querySimilarity.name())) {
-                                // out.print("qid:" + testQuery.id());
-                            }
-
                             int i = 0;
                             for (String model : modelSet) {
 
@@ -853,9 +849,6 @@ public class XTool extends CmdLineTool {
 
                                 list.add(new ModelScore(model, (winS.score) / (losS.score)));
 
-                                if (querySimilarity instanceof CartesianQueryTermSimilarity && "Cm".equals(querySimilarity.name())) {
-                                    //   out.print(String.format("\t%.5f\t%.5f", winS.score, losS.score));
-                                }
                                 i++;
                             }
 
