@@ -56,7 +56,7 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 /**
  * Indexer for ClueWeb{09|12} plus GOV2
  */
-public final class Indexer {
+public class Indexer {
 
     /**
      * artificial field and token: every document should have this
@@ -177,6 +177,8 @@ public final class Indexer {
 
             String id = warcRecord.id();
 
+            if (skip(id)) return 0;
+
             org.jsoup.nodes.Document jDoc;
             try {
                 jDoc = Jsoup.parse(warcRecord.content());
@@ -284,7 +286,11 @@ public final class Indexer {
         }
     }
 
-    private final Path indexPath;
+    protected boolean skip(String docId) {
+        return false;
+    }
+
+    protected Path indexPath;
     private final Path docsPath;
 
     private final IndexerConfig config;
@@ -375,7 +381,7 @@ public final class Indexer {
      * @param wDoc ClueWeb09WarcRecord
      * @return Lucene Document having different fields (keywords, body, title, description)
      */
-    private Document warc2LuceneDocument(WarcRecord wDoc) {
+    protected Document warc2LuceneDocument(WarcRecord wDoc) {
 
         org.jsoup.nodes.Document jDoc;
         try {

@@ -30,8 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Function;
-import java.util.function.ToDoubleFunction;
 
 import static edu.anadolu.cmdline.LatexTool.prettyDataSet;
 import static edu.anadolu.eval.Evaluator.prettyModel;
@@ -69,7 +67,7 @@ public class XTool extends CmdLineTool {
     @Option(name = "-var", required = false, usage = "filter training queries by variance threshold", metaVar = "0 1 2")
     protected int var = 0;
 
-    @Option(name = "-spam", required = false, usage = "manuel spam threshold manuel", metaVar = "0 1 2")
+    @Option(name = "-spam", required = false, usage = "manuel spam threshold", metaVar = "10 20 30 .. 90")
     protected int spam = -1;
 
 

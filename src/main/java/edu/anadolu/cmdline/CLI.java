@@ -132,6 +132,8 @@ public final class CLI {
 
         tools.add(new SampleTool());
 
+        tools.add(new SpamRemoveTool());
+
         tools.add(new SelectiveStemmingTool());
 
         tools.add(new QueryPerTFTool());
