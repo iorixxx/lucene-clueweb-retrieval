@@ -1,7 +1,7 @@
 package edu.anadolu.stats;
 
 import edu.anadolu.datasets.DataSet;
-import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 
@@ -19,7 +19,7 @@ public final class QueryStatistics {
 
     private final DataSet dataset;
 
-    public QueryStatistics(DataSet dataset) throws IOException {
+    public QueryStatistics(DataSet dataset) {
         this.dataset = dataset;
     }
 
@@ -45,8 +45,6 @@ public final class QueryStatistics {
 
     /**
      * Save query statistics to a LaTex file
-     *
-     * @throws IOException
      */
 
     public void saveLaTexStats() throws IOException {
@@ -59,18 +57,15 @@ public final class QueryStatistics {
 
             List<InfoNeed> needs = track.getTopics();
 
-            double[] relevant = new double[needs.size()];
-            double[] nonRelevant = new double[needs.size()];
+            DescriptiveStatistics relevant = new DescriptiveStatistics();
+            DescriptiveStatistics nonRelevant = new DescriptiveStatistics();
 
             int queryLength = 0;
-            int counter = 0;
+
             for (InfoNeed need : needs) {
-
                 queryLength += need.wordCount();
-                nonRelevant[counter] = need.nonRelevant();
-                relevant[counter] = need.relevant();
-                counter++;
-
+                relevant.addValue(need.relevant());
+                nonRelevant.addValue(need.nonRelevant());
             }
 
             out.print(track.toString());
@@ -101,12 +96,13 @@ public final class QueryStatistics {
     }
 
     /**
+     * Always report the mean (average value) along with a measure of variablility (standard deviation(s) or standard error of the mean ).
+     * <p>
      * Display average value along with plus-minus \pm standard deviation inside parenthesis
      *
-     * @param list integer items
      * @return pretty string
      */
-    private String averageAndStandardDeviation(double[] list) {
-        return String.format("%.1f ($\\pm$ %.1f)", StatUtils.mean(list), Math.sqrt(StatUtils.variance(list)));
+    private String averageAndStandardDeviation(DescriptiveStatistics stats) {
+        return String.format("%.1f ($\\pm$ %.1f)", stats.getMean(), stats.getStandardDeviation());
     }
 }
