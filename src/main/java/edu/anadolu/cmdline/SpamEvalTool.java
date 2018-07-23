@@ -40,7 +40,7 @@ public final class SpamEvalTool extends EvaluatorTool {
      *
      * @param map
      */
-    private void display(SortedMap<Integer, List<ModelScore>> map) {
+    static void display(SortedMap<Integer, List<ModelScore>> map) {
 
         List<String> models = new ArrayList<>();
 

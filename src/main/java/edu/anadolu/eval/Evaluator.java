@@ -2001,8 +2001,7 @@ public class Evaluator {
         return max(list);
     }
 
-    public String models() {
-
+    public static String models(Collection<String> modelSet) {
         StringBuilder builder = new StringBuilder();
 
         for (String model : modelSet)
@@ -2011,6 +2010,10 @@ public class Evaluator {
         builder.deleteCharAt(builder.length() - 1);
 
         return builder.toString();
+    }
+
+    public String models() {
+        return models(modelSet);
     }
 
     /**

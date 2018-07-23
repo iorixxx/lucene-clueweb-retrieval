@@ -1,0 +1,19 @@
+DocTypes
+Tag TF Amounts
+acronym: 1
+cite: 2
+abbr: 3
+dfn: 1
+mark: 1
+Tag DF Amounts
+acronym: 1
+cite: 1
+abbr: 1
+dfn: 1
+mark: 1
+Title-Text Pairs
+as soon as possible: asap: count(1)
+world health organization: who: count(1)
+hypertext markup language: html: count(1)
+anadolu university: au: count(1)
+internationalization: i18n: count(1)

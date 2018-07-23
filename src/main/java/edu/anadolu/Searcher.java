@@ -40,7 +40,7 @@ public class Searcher implements Closeable {
 
     protected final IndexReader reader;
 
-    protected final String indexTag;
+    private final String indexTag;
 
     private final class SearcherThread extends Thread {
 
@@ -88,12 +88,13 @@ public class Searcher implements Closeable {
             throw new IllegalArgumentException(indexPath + " does not exist or is not a directory.");
         }
 
-        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
         this.indexTag = indexPath.getFileName().toString();
+        this.analyzerTag = Tag.tag(indexTag);
+
+        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+
         this.dataSet = dataSet;
         this.numHits = numHits;
-
-        this.analyzerTag = Tag.tag(indexTag);
 
         System.out.println("Opened index directory : " + indexPath + " has " + reader.numDocs() + " numDocs and has " + reader.maxDoc() + " maxDocs");
         System.out.println("Analyzer Tag : " + analyzerTag);
