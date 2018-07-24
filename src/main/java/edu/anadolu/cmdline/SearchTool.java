@@ -42,7 +42,7 @@ public final class SearchTool extends CmdLineTool {
 
     private String tag = null;
 
-    final Set<ModelBase> modelBaseList = new HashSet<>();
+    private final Set<ModelBase> modelBaseList = new HashSet<>();
 
     SearchTool() {
         modelBaseList.add(new DFIC());
