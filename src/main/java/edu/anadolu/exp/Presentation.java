@@ -1,8 +1,7 @@
 package edu.anadolu.exp;
 
 import org.apache.commons.math3.stat.StatUtils;
-import org.apache.commons.math3.stat.inference.TTest;
-import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,17 +14,7 @@ import java.util.Map;
  */
 public class Presentation {
 
-    static final WilcoxonSignedRankTest wilcoxonSignedRankTest = new WilcoxonSignedRankTest(/**NaNStrategy.FIXED, TiesStrategy.RANDOM**/);
-
-    static final TTest tTest = new TTest();
-
-    static final String home = "/Users/iorixxx/clueweb09";
-    static final String tag = "KStemAnalyzer";
-    static final String allModels = "DFIC_DLH13_LGDc16.25_BM25k2.425b0.2_DPH_DFRee_PL2c18.5";
-
-    static void sensitivity()
-
-    {
+    private static void sensitivity() {
 
         double[] DLH13 = {0.092309898, 0.103119645, 0.107005381, 0.109185685, 0.109520609, 0.112787919, 0.115063401, 0.118895025, 0.124856853, 0.126059949, 0.128823604, 0.128818376, 0.127152132, 0.126860152, 0.117585533, 0.108160508, 0.100700761, 0.092309594};
         double[] DFRee = {0.110821929, 0.127920964, 0.133579898, 0.134558985, 0.135376751, 0.137884873, 0.140090305, 0.143834162, 0.148743959, 0.148796802, 0.148817766, 0.146763401, 0.144531421, 0.145168325, 0.137029036, 0.126136142, 0.115741523, 0.109560558};
@@ -122,6 +111,24 @@ public class Presentation {
         }
 
         return Math.sqrt(var / array.length);
+    }
+
+    /**
+     * http://www.statisticshowto.com/probability-and-statistics/how-to-find-a-coefficient-of-variation/
+     * The coefficient of variation (CV) is a measure of relative variability.
+     *
+     * @param array data elements
+     * @return coefficient of variation, which is the ratio of the standard deviation to the mean (average).
+     */
+    public static double coefficientOfVariation(double[] array) {
+
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+
+        for (double d : array)
+            stats.addValue(d);
+
+        return stats.getStandardDeviation() / stats.getMean() * 100;
+
     }
 
     /**

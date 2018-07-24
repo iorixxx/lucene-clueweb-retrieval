@@ -72,7 +72,7 @@ public final class SearchTool extends CmdLineTool {
 
         final int numThreads = Integer.parseInt(props.getProperty("numThreads", "2"));
 
-        if (task.equals("search")) {
+        if ("search".equals(task)) {
             if (spam > 0)
                 this.tag = spam + "_KStem";
 
@@ -97,14 +97,15 @@ public final class SearchTool extends CmdLineTool {
             return;
         }
 
-        if (task.equals("eval")) {
+        if ("eval".equals(task)) {
 
             SortedMap<Integer, List<ModelScore>> map = new TreeMap<>();
 
-            System.out.println(Evaluator.models(modelBaseList.stream().map(ModelBase::toString).collect(Collectors.toList())));
+            final String models = Evaluator.models(modelBaseList.stream().map(ModelBase::toString).collect(Collectors.toList()));
+            System.out.println(models);
 
-            Evaluator evaluator = new Evaluator(dataset, "KStem", Measure.NDCG100, "all", "evals", "OR");
-            final String models = evaluator.models();
+            Evaluator evaluator = new Evaluator(dataset, "KStem", Measure.NDCG100, models, "evals", "OR");
+            evaluator.models();
 
             int maxSpam = 0;
             double max = evaluator.averageOfAllModels(SpamEvalTool.AGG.M);
