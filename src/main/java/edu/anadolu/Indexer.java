@@ -189,8 +189,7 @@ public class Indexer {
                 jDoc = f.get(30, TimeUnit.SECONDS);
 
             } catch (final TimeoutException e) {
-                System.err.println("Calculation took to long");
-                System.err.println(id);
+                System.err.println("Calculation took to long " + id);
                 return 1;
             } catch (final Exception e) {
                 System.err.println(id);
