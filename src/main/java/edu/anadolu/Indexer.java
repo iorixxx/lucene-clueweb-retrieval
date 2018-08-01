@@ -92,9 +92,9 @@ public class Indexer {
 
         IndexerThread(IndexWriter writer, Path inputWarcFile) {
             super(inputWarcFile.getFileName().toString());
+            System.out.println(getName() + " -> " + inputWarcFile.getFileName().toString());
             this.writer = writer;
             this.inputWarcFile = inputWarcFile;
-
         }
 
         private int index(String id, String contents) throws IOException {
@@ -203,6 +203,9 @@ public class Indexer {
 
             try {
                 jDoc = Jsoup.parse(warcRecord.content());
+            } catch (java.lang.OutOfMemoryError oom) {
+                System.err.println("jdoc oom " + id);
+                return 1;
             } catch (Exception exception) {
                 System.err.println("jdoc exception " + id);
                 return 1;
@@ -286,6 +289,8 @@ public class Indexer {
         @Override
         public void run() {
             try {
+
+                Thread.currentThread().setName(inputWarcFile.getFileName().toString());
 
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
                     int addCount = indexClueWeb09WarcFile();
