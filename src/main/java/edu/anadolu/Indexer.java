@@ -31,6 +31,7 @@ import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.MyHtmlTreeBuilder;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -202,7 +203,7 @@ public class Indexer {
 //            }
 
             try {
-                jDoc = Jsoup.parse(warcRecord.content());
+                jDoc = MyHtmlTreeBuilder.parse(warcRecord.content());
             } catch (java.lang.OutOfMemoryError oom) {
                 System.err.println("jdoc oom " + id);
                 return 1;
@@ -291,6 +292,7 @@ public class Indexer {
             try {
 
                 Thread.currentThread().setName(inputWarcFile.getFileName().toString());
+                setName(inputWarcFile.getFileName().toString());
 
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
                     int addCount = indexClueWeb09WarcFile();
