@@ -69,8 +69,13 @@ final class OptimizeTool extends CmdLineTool {
              IndexWriter writer = new IndexWriter(dir, iwc)) {
             // This can be a terribly costly operation, so generally it's only worth it when your index is static.
             writer.forceMerge(1);
-        } catch (IndexNotFoundException e) {
 
+            if (writer.maxDoc() == writer.numDocs())
+                System.out.println("Number of documents: " + writer.numDocs());
+            else
+                System.out.println("numDocs: " + writer.maxDoc() + " maxDocs = " + writer.numDocs());
+
+        } catch (IndexNotFoundException e) {
             System.out.println("IndexNotFound in " + indexPath.toAbsolutePath());
         }
 

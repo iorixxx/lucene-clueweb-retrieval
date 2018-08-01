@@ -16,6 +16,9 @@ import java.util.stream.Collectors;
  */
 public final class SpamEvalTool extends EvaluatorTool {
 
+    @Option(name = "-i", required = false, usage = "increments of spam threshold", metaVar = "5 10 20")
+    private int i = 5;
+
 
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
@@ -127,7 +130,7 @@ public final class SpamEvalTool extends EvaluatorTool {
         map.put(0, evaluator.averageForAllModels());
         System.out.println("=======================");
 
-        for (int spamThreshold = 5; spamThreshold <= 95; spamThreshold += 5) {
+        for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
 
             evaluator = new Evaluator(dataset, tag, measure, models, "spam_" + spamThreshold + "_evals", op);
 

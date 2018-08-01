@@ -27,6 +27,9 @@ public final class SearchTool extends CmdLineTool {
     @Option(name = "-spam", required = false, usage = "manuel spam threshold", metaVar = "10 20 30 .. 90")
     private int spam = 0;
 
+    @Option(name = "-i", required = false, usage = "increments of spam threshold", metaVar = "5 10 20")
+    private int i = 20;
+
     @Option(name = "-task", required = false, usage = "task to be executed: search or eval")
     private String task;
 
@@ -115,7 +118,7 @@ public final class SearchTool extends CmdLineTool {
             map.put(0, evaluator.averageForAllModels());
             System.out.println("=======================");
 
-            for (int spamThreshold = 10; spamThreshold <= 90; spamThreshold += 10) {
+            for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
 
                 evaluator = new Evaluator(dataset, spamThreshold + "_KStem", Measure.NDCG100, models, "evals", "OR");
 

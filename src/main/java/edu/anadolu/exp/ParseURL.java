@@ -12,6 +12,11 @@ public class ParseURL {
 
     public static void main(String[] args) throws Exception {
 
+        int i =20;
+        for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
+            System.out.println(spamThreshold);
+        }
+
         URL aURL = new URL("http://example.com:80/docs/books/tutorial"
                 + "/index.html?name=networking&key=value#DOWNLOADING");
 

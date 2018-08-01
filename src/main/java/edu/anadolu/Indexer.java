@@ -42,7 +42,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -178,33 +180,33 @@ public class Indexer {
             if (skip(id)) return 0;
 
             org.jsoup.nodes.Document jDoc;
-
-            final ExecutorService service = Executors.newSingleThreadExecutor();
+//
+//            final ExecutorService service = Executors.newSingleThreadExecutor();
+//
+//            try {
+//                final Future<org.jsoup.nodes.Document> f = service.submit(() -> {
+//                    return Jsoup.parse(warcRecord.content());
+//                });
+//
+//                jDoc = f.get(30, TimeUnit.SECONDS);
+//
+//            } catch (final TimeoutException e) {
+//                System.err.println("Calculation took to long " + id);
+//                return 1;
+//            } catch (final Exception e) {
+//                System.err.println(id);
+//                // System.out.println(warcRecord.content());
+//                return 1;
+//            } finally {
+//                service.shutdown();
+//            }
 
             try {
-                final Future<org.jsoup.nodes.Document> f = service.submit(() -> {
-                    return Jsoup.parse(warcRecord.content());
-                });
-
-                jDoc = f.get(30, TimeUnit.SECONDS);
-
-            } catch (final TimeoutException e) {
-                System.err.println("Calculation took to long " + id);
+                jDoc = Jsoup.parse(warcRecord.content());
+            } catch (Exception exception) {
+                System.err.println("jdoc exception " + id);
                 return 1;
-            } catch (final Exception e) {
-                System.err.println(id);
-                // System.out.println(warcRecord.content());
-                return 1;
-            } finally {
-                service.shutdown();
             }
-
-//            try {
-//                jDoc = Jsoup.parse(warcRecord.content());
-//            } catch (Exception exception) {
-//                System.err.println(id);
-//                return 1;
-//            }
 
             if (config.anchor)
                 return indexJDocWithAnchor(jDoc, id);
