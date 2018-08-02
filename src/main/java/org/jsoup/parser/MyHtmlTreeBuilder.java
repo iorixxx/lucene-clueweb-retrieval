@@ -5,7 +5,7 @@ import org.jsoup.nodes.Document;
 import java.io.StringReader;
 
 /**
- * Custom {@link HtmlTreeBuilder} implementation that avoids an infinitive loop
+ * Custom {@link HtmlTreeBuilder} implementation that avoids an infinite loop
  */
 public class MyHtmlTreeBuilder extends HtmlTreeBuilder {
 
@@ -21,7 +21,7 @@ public class MyHtmlTreeBuilder extends HtmlTreeBuilder {
                 break;
 
             if (i++ == Integer.MAX_VALUE) {
-                System.out.println("infinitive loop");
+                System.out.println("infinite loop");
                 break;
             }
         }
