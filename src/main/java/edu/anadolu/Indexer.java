@@ -93,7 +93,6 @@ public class Indexer {
 
         IndexerThread(IndexWriter writer, Path inputWarcFile) {
             super(inputWarcFile.getFileName().toString());
-            System.out.println(getName() + " -> " + inputWarcFile.getFileName().toString());
             this.writer = writer;
             this.inputWarcFile = inputWarcFile;
         }
