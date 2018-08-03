@@ -20,7 +20,7 @@ public class WarcRecordTest {
 
     public static void main(String[] args) throws IOException {
 
-     //   gov2();
+        //   gov2();
         cw12();
         //cw09();
     }
@@ -79,7 +79,7 @@ public class WarcRecordTest {
 
     public static void cw12() throws IOException {
 
-        Path inputWarcFile = Paths.get("1100wb-15.warc.gz");
+        Path inputWarcFile = Paths.get("/Users/iorixxx/1100wb-15.warc.gz");
 
         int i = 0;
 
@@ -95,6 +95,8 @@ public class WarcRecordTest {
                     i++;
                     String id = wDoc.getDocid();
 
+                    if ("clueweb12-1100wb-15-21381".equals(id) || "clueweb12-1013wb-14-21356".equals(id)) continue;
+
                     String url = wDoc.getURL();
 
                     String c = wDoc.getContent();
@@ -103,7 +105,7 @@ public class WarcRecordTest {
 
 
                     try {
-                            Jsoup.parse(c);
+                        Jsoup.parse(c);
                     } catch (Exception e) {
 
                     }

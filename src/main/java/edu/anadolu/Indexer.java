@@ -31,7 +31,6 @@ import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Element;
-import org.jsoup.parser.MyHtmlTreeBuilder;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -202,7 +201,7 @@ public class Indexer {
 //            }
 
             try {
-                jDoc = MyHtmlTreeBuilder.parse(warcRecord.content());
+                jDoc = Jsoup.parse(warcRecord.content());
             } catch (java.lang.OutOfMemoryError oom) {
                 System.err.println("jdoc oom " + id);
                 return 1;
@@ -311,8 +310,14 @@ public class Indexer {
         }
     }
 
+    /**
+     * Skip certain documents that hang Jsoup.parse method
+     *
+     * @param docId document identifier
+     * @return true if the document should be skipped
+     */
     protected boolean skip(String docId) {
-        return false;
+        return "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId);
     }
 
     protected Path indexPath;
