@@ -64,7 +64,7 @@ done
 done
 done
 
-set=CW12B
+for set in CW12A CW12B; do
 if [ -d "${TFD_HOME}/${set}/${RUNS}" ]; then
 
 for tag in ${TFD_HOME}/${set}/${RUNS}/*; do
@@ -97,4 +97,5 @@ for WT in 13 14 15 16; do
 done
 done
 fi
+done
 wait
