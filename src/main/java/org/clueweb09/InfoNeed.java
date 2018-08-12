@@ -146,9 +146,7 @@ public class InfoNeed {
         this.spam = numSpam;
 
 
-        LinkedHashSet<String> distinctSet = new LinkedHashSet<>();
-        distinctSet.addAll(Arrays.asList(partialQuery));
-
+        LinkedHashSet<String> distinctSet = new LinkedHashSet<>(Arrays.asList(partialQuery));
         this.distinctSet = Collections.unmodifiableSet(distinctSet);
     }
 

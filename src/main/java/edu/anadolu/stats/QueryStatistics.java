@@ -57,6 +57,7 @@ public final class QueryStatistics {
 
             List<InfoNeed> needs = track.getTopics();
 
+            DescriptiveStatistics spam = new DescriptiveStatistics();
             DescriptiveStatistics relevant = new DescriptiveStatistics();
             DescriptiveStatistics nonRelevant = new DescriptiveStatistics();
 
@@ -66,6 +67,7 @@ public final class QueryStatistics {
                 queryLength += need.wordCount();
                 relevant.addValue(need.relevant());
                 nonRelevant.addValue(need.nonRelevant());
+                spam.addValue(need.spam());
             }
 
             out.print(track.toString());
@@ -78,6 +80,9 @@ public final class QueryStatistics {
             out.print(" & ");
 
             out.print(averageAndStandardDeviation(relevant));
+            out.print(" & ");
+
+            out.print(averageAndStandardDeviation(spam));
             out.print(" & ");
 
             out.print(averageAndStandardDeviation(nonRelevant));
