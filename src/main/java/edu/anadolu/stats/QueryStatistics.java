@@ -52,6 +52,7 @@ public final class QueryStatistics {
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(dataset.collectionPath().resolve("stats").resolve("query_stats.tex"), StandardCharsets.US_ASCII));
 
 
+        int r = 0, s = 0;
         for (Track track : dataset.tracks()) {
 
 
@@ -68,6 +69,8 @@ public final class QueryStatistics {
                 relevant.addValue(need.relevant());
                 nonRelevant.addValue(need.nonRelevant());
                 spam.addValue(need.spam());
+                s += need.spam();
+                r += need.relevant();
             }
 
             out.print(track.toString());
@@ -93,10 +96,14 @@ public final class QueryStatistics {
 
             out.print("\\\\");
             out.println();
+
+            System.out.println(track + " s=" + spam.getSum() + " r=" + relevant.getSum());
         }
 
         out.flush();
         out.close();
+
+        System.out.println("s=" + s + " r=" + r);
 
     }
 
