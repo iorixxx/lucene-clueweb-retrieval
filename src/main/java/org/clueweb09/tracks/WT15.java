@@ -102,22 +102,21 @@ public class WT15 extends Track {
 
             judgeLevels.add(judge);
 
-            if (map.containsKey(queryID)) {
-                Map<String, Integer> innerMap = map.get(queryID);
+            Map<String, Integer> innerMap = map.getOrDefault(queryID, new HashMap<>());
 
-                /*
-                 For the task completion, given a query, NIST assessors assigned document multiple relevance grades, each for possible tasks provided in ground truth.
-                 For Adhoc, we derived document relevance by using the maximum relevance label assigned for that document over all possible tasks.
-                 */
-                if (innerMap.containsKey(docID)) {
-
-                    if (judge > innerMap.get(docID))
-                        innerMap.put(docID, judge);
-                } else
+            /*
+            For the task completion, given a query, NIST assessors assigned document multiple relevance grades, each for possible tasks provided in ground truth.
+            For Adhoc, we derived document relevance by using the maximum relevance label assigned for that document over all possible tasks.
+            */
+            if (innerMap.containsKey(docID)) {
+                if (judge > innerMap.get(docID))
                     innerMap.put(docID, judge);
-            } else {
-                map.put(queryID, new HashMap<>());
-            }
+            } else
+                innerMap.put(docID, judge);
+
+            map.put(queryID, innerMap);
+
+
         }
 
         lines.clear();

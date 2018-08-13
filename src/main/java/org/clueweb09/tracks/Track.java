@@ -89,12 +89,11 @@ public abstract class Track implements Comparable<Track> {
 
             judgeLevels.add(triple.judge);
 
-            if (map.containsKey(triple.queryID)) {
-                Map<String, Integer> innerMap = map.get(triple.queryID);
-                innerMap.put(triple.docID, triple.judge);
-            } else {
-                map.put(triple.queryID, new HashMap<>());
-            }
+            Map<String, Integer> innerMap = map.getOrDefault(triple.queryID, new HashMap<>());
+
+            innerMap.put(triple.docID, triple.judge);
+
+            map.put(triple.queryID, innerMap);
         }
 
         lines.clear();
