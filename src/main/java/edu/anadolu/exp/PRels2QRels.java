@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
+
 
 /**
  * Relevance judgements prepared for catA runs are not compatible for catB runs
@@ -53,7 +55,7 @@ final class PRels2QRels {
 
             for (String line : Files.readAllLines(Paths.get("/Users/iorixxx/Downloads", qRel), StandardCharsets.US_ASCII)) {
 
-                String[] parts = line.split("\\s+");
+                String[] parts = whiteSpaceSplitter.split(line);
 
                 for (String part : parts)
                     if (CW09_DOC_ID_LENGTH == part.length() && emptyIds.contains(part))
@@ -79,7 +81,7 @@ final class PRels2QRels {
                     new InputStreamReader(url.openStream()))) {
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
-                    String[] parts = inputLine.split("\\s+");
+                    String[] parts = whiteSpaceSplitter.split(inputLine);
 
                     for (String part : parts)
                         if (CW09_DOC_ID_LENGTH == part.length() && emptyIds.contains(part))
@@ -104,7 +106,7 @@ final class PRels2QRels {
 
         for (String line : Files.readAllLines(prels, StandardCharsets.US_ASCII)) {
 
-            String[] parts = line.split("\\s+");
+            String[] parts = whiteSpaceSplitter.split(line);
 
             String queryID = parts[0];
             String docID = parts[1];

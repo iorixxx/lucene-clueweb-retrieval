@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
+
 /**
  * handles output of <a href="http://trec.nist.gov/trec_eval/trec_eval_latest.tar.gz">trec_eval</a>
  */
@@ -32,7 +34,7 @@ public final class TrecEval implements EvalTool {
 
             for (String line : lines) {
                 if (line.startsWith("map")) {
-                    String[] parts = line.split("\\s+");
+                   String[] parts = whiteSpaceSplitter.split(line);
 
                     if (parts.length != 3) throw new RuntimeException("line does not have 3 parts:  " + line);
                     map = parts[2];
@@ -42,7 +44,7 @@ public final class TrecEval implements EvalTool {
                 }
 
                 if (line.startsWith("P_" + Integer.toString(k))) {
-                    String[] parts = line.split("\\s+");
+                    String[] parts = whiteSpaceSplitter.split(line);
 
                     if (parts.length != 3) throw new RuntimeException("line does not have 3 parts:  " + line);
                     p = parts[2];

@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
+
 /**
  * Tabula rasa
  */
@@ -51,7 +53,7 @@ public class ScorpioExperiment {
         this.termStatsMap = new QuerySelector(dataSet, tag).loadTermStatsMap();
 
         String line = Evaluator.loadCorpusStats(dataSet.collectionPath(), "contents", tag);
-        String[] parts = line.split("\\s+");
+        String[] parts =  whiteSpaceSplitter.split(line);
 
         if (parts.length != 4)
             throw new RuntimeException("line from field_stats.csv does not have four parts " + line);

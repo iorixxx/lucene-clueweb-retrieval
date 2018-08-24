@@ -33,7 +33,7 @@ public class MQ09 extends Track {
             } else
                 sb.append(c);
         }
-        return sb.toString().trim().replaceAll("\\s+", " ");
+        return whiteSpaceSplitter.matcher(sb.toString().trim()).replaceAll(" ");
     }
 
     /**
