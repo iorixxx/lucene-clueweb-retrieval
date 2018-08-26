@@ -116,9 +116,9 @@ public abstract class Track implements Comparable<Track> {
      * Reads topics file in the format of Web Track (WT)
      *
      * @param topicsPath topics file
-     * @throws IOException
+     * @throws IOException exception
      */
-    protected void populateInfoNeedsWT(Path topicsPath) throws IOException {
+    void populateInfoNeedsWT(Path topicsPath) throws IOException {
 
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
 
@@ -173,9 +173,9 @@ public abstract class Track implements Comparable<Track> {
      * Reads topics file in the format of Terabyte Track (TT)
      *
      * @param topicsPath topics file
-     * @throws IOException
+     * @throws IOException exception
      */
-    protected void populateInfoNeedsTT(Path topicsPath) throws IOException {
+    void populateInfoNeedsTT(Path topicsPath) throws IOException {
 
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
 
