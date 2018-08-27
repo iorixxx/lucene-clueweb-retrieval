@@ -957,6 +957,7 @@ public class Evaluator {
 
         for (Path path : pathFactory(need)) {
             String runTag = getRunTag(path);
+            System.out.println(runTag + "\t" + path);
             map.put(runTag, toolFactory(path, need).getMetric(need, metric));
         }
 

@@ -21,7 +21,7 @@ public class MQ09 extends Track {
      * Returns a String where those characters that QueryParser
      * expects to be escaped are replaced by a single whitespace.
      */
-    public static String escape(String s) {
+    static String escape(String s) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -105,6 +105,10 @@ public class MQ09 extends Track {
             if (need.relevant() == 0) {
                 //System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
                 continue;
+            }
+
+            if (need.relevant() == 1) {
+                System.out.println(qID + ":" + query + " has only one relevant document.");
             }
             needs.add(need);
 
