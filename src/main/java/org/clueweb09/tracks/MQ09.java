@@ -107,9 +107,9 @@ public class MQ09 extends Track {
                 continue;
             }
 
-            if (need.relevant() == 1) {
-                System.out.println(qID + ":" + query + " has only one relevant document.");
-            }
+            //if (need.relevant() == 1) {
+                //System.out.println(qID + ":" + query + " has only one relevant document.");
+            //}
             needs.add(need);
 
         }
