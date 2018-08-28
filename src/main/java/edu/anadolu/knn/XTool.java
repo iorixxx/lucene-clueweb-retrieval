@@ -17,10 +17,8 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.stat.inference.WilcoxonSignedRankTest;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
@@ -104,6 +102,79 @@ public class XTool extends CmdLineTool {
     Solution RND = null;
 
     Solution SEL = null;
+
+    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds) throws IOException, InvalidFormatException {
+
+        Path MSExcelPath = MSExcelFile();
+        if (MSExcelPath == null) return null;
+        Workbook workbook = WorkbookFactory.create(MSExcelFile().toFile(), null, true);
+
+        Sheet RxT = workbook.getSheet("RxTx" + optimize.toString());
+
+        if (RxT == null) RxT = workbook.getSheet("RxTxNDCG100");
+
+        Iterator<Row> iterator = RxT.rowIterator();
+
+        Row r0 = iterator.next();
+
+        int n = r0.getLastCellNum();
+
+        for (int i = 2; i < n; i++) {
+            String topic = r0.getCell(i).getStringCellValue();
+            TFDAwareNeed need = testNeeds.get(i - 2);
+
+            if (!topic.equals("T" + need.id()))
+                throw new RuntimeException("excel topic header does not match with the test query");
+        }
+
+
+        while (iterator.hasNext()) {
+
+            Row row = iterator.next();
+
+            String model = row.getCell(1).getStringCellValue();
+
+            if (!("MS" + k).equals(model))
+                continue;
+
+            List<Prediction> predictionList = new ArrayList<>();
+
+            ++counter;
+            this.RxT.createRow(counter).createCell(1).setCellValue("MS" + k);
+
+            for (int i = 2; i < n; i++) {
+                double predictedScore = row.getCell(i).getNumericCellValue();
+                this.RxT.getRow(counter).createCell(i).setCellValue(predictedScore);
+                TFDAwareNeed testQuery = testNeeds.get(i - 2);
+
+                if (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id()))
+                    throw new RuntimeException("excel topic header does not match with the test query");
+
+                Prediction prediction = new Prediction(testQuery, null, predictedScore);
+                predictionList.add(prediction);
+            }
+
+            Solution MS = new Solution(predictionList, k);
+            MS.setKey("MS" + k);
+            workbook.close();
+            return MS;
+        }
+
+        workbook.close();
+        return null;
+    }
+
+
+    protected Path MSExcelFile() throws IOException {
+
+        Path excelPath = Paths.get(tfd_home, train.toString()).resolve("excels");
+
+        if (!Files.exists(excelPath))
+            Files.createDirectories(excelPath);
+
+        return excelPath.resolve(spam + "_MS" + train + optimize.toString() + tag + op.toUpperCase(Locale.ENGLISH) + ".xlsx");
+    }
+
 
     final static NormalDistribution normalDistribution = new NormalDistribution();
 
@@ -329,9 +400,10 @@ public class XTool extends CmdLineTool {
         final Decorator testDecorator = new Decorator(testDataSet, tag, freq, numBins);
         final Decorator trainDecorator = new Decorator(trainDataSet, tag, freq, numBins);
 
+        final String eval_dir = evalDirectory(trainDataSet, optimize);
 
         final Evaluator trainEvaluator = new Evaluator(trainDataSet, tag, optimize, models, evalDirectory(trainDataSet, optimize), op);
-        final Evaluator testEvaluator = new Evaluator(testDataSet, tag, report, models, evalDirectory(testDataSet, report), op);
+        final Evaluator testEvaluator = new Evaluator(testDataSet, tag, report, trainEvaluator.models(), eval_dir, op);
 
 
         modelSet = trainEvaluator.getModelSet();
@@ -407,6 +479,11 @@ public class XTool extends CmdLineTool {
         doSelectiveTermWeighting(testQueries, testEvaluator);
         // out.flush();
         // out.close();
+
+        Solution MS = MSSolution(7, testQueries);
+        if (MS != null)
+            testEvaluator.calculateAccuracy(MS);
+
         Map<String, Double> geoRiskMap = addGeoRisk2Sheet(RxT);
 
         accuracyList.sort(Comparator.comparing(o -> o.key));
@@ -423,6 +500,9 @@ public class XTool extends CmdLineTool {
         accuracyList.add(RND);
         accuracyList.add(MLE);
         accuracyList.add(SEL);
+
+        if (MS != null)
+            accuracyList.add(MS);
 
         accuracyList.forEach(solution -> {
             solution.geoRisk = geoRiskMap.get(solution.key);
