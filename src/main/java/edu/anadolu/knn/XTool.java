@@ -103,7 +103,7 @@ public class XTool extends CmdLineTool {
 
     Solution SEL = null;
 
-    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds) throws IOException, InvalidFormatException {
+    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds, Evaluator evaluator) throws IOException, InvalidFormatException {
 
         Path MSExcelPath = MSExcelFile();
         if (MSExcelPath == null) return null;
@@ -132,7 +132,18 @@ public class XTool extends CmdLineTool {
 
             Row row = iterator.next();
 
+            Set<String> modes = new HashSet<>();
             String model = row.getCell(1).getStringCellValue();
+
+            if (
+                    model.startsWith("BM25") || model.startsWith("Dirichlet") || model.startsWith("PL2") || model.startsWith("LGD")
+                            ||
+                            model.equals("DFIC") || model.equals("DFRee") || model.equals("DPH") || model.equals("DLH13")
+
+
+            ) {
+                modes.add(model);
+            }
 
             if (!("MS" + k).equals(model))
                 continue;
@@ -150,7 +161,17 @@ public class XTool extends CmdLineTool {
                 if (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id()))
                     throw new RuntimeException("excel topic header does not match with the test query");
 
-                Prediction prediction = new Prediction(testQuery, null, predictedScore);
+                String predictedModel = null;
+                for (String m : modes)
+
+                    if (evaluator.score(testQuery, m) == predictedScore) {
+                        predictedModel = model;
+                        break;
+                    }
+
+
+                if (predictedModel == null) System.out.println("pred model is null");
+                Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
                 predictionList.add(prediction);
             }
 
@@ -480,7 +501,7 @@ public class XTool extends CmdLineTool {
         // out.flush();
         // out.close();
 
-        Solution MS = MSSolution(7, testQueries);
+        Solution MS = MSSolution(7, testQueries, trainEvaluator);
         if (MS != null)
             testEvaluator.calculateAccuracy(MS);
 
