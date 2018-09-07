@@ -33,7 +33,8 @@ import static edu.anadolu.cmdline.LatexTool.prettyDataSet;
 import static edu.anadolu.eval.Evaluator.prettyModel;
 import static edu.anadolu.knn.CartesianQueryTermSimilarity.array;
 import static edu.anadolu.knn.Predict.DIV;
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardOpenOption.WRITE;
 
 /**
  * k-NN without k
@@ -822,7 +823,9 @@ public class XTool extends CmdLineTool {
         cartesianSolutionList.forEach(System.out::println);
 
 
-        workbook.write(Files.newOutputStream(excelFile(), TRUNCATE_EXISTING));
+        Path excelFile = excelFile();
+        Files.deleteIfExists(excelFile);
+        workbook.write(Files.newOutputStream(excelFile(), CREATE_NEW, WRITE));
         workbook.close();
     }
 
