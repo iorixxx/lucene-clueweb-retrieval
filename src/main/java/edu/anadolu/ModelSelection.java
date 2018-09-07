@@ -119,7 +119,8 @@ public class ModelSelection {
         List<InfoNeed> residualNeeds = evaluator.residualNeeds();
 
 
-        for (int k = 2; k <= 10; k++) {
+        //  for (int k = 2; k <= 10; k++) {
+        for (int k = 7; k <= 7; k++) {
             List<Prediction> predictionList = new ArrayList<>();
 
             for (InfoNeed testQuery : residualNeeds) {

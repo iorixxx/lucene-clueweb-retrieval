@@ -33,6 +33,7 @@ import static edu.anadolu.cmdline.LatexTool.prettyDataSet;
 import static edu.anadolu.eval.Evaluator.prettyModel;
 import static edu.anadolu.knn.CartesianQueryTermSimilarity.array;
 import static edu.anadolu.knn.Predict.DIV;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 /**
  * k-NN without k
@@ -103,7 +104,7 @@ public class XTool extends CmdLineTool {
 
     Solution SEL = null;
 
-    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds, Evaluator evaluator) throws IOException, InvalidFormatException {
+    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds, Evaluator reporter) throws IOException, InvalidFormatException {
 
         Path MSExcelPath = MSExcelFile();
         if (MSExcelPath == null) return null;
@@ -111,7 +112,7 @@ public class XTool extends CmdLineTool {
 
         Sheet RxT = workbook.getSheet("RxTx" + optimize.toString());
 
-        if (RxT == null) RxT = workbook.getSheet("RxTxNDCG100");
+        if (RxT == null) throw new RuntimeException("RxTx" + optimize.toString() + " sheet is null!");
 
         Iterator<Row> iterator = RxT.rowIterator();
 
@@ -119,66 +120,101 @@ public class XTool extends CmdLineTool {
 
         int n = r0.getLastCellNum();
 
+
+        List<TFDAwareNeed> copy = new ArrayList<>(testNeeds);
+
+        TFDAwareNeed need = copy.remove(0);
+
         for (int i = 2; i < n; i++) {
             String topic = r0.getCell(i).getStringCellValue();
-            TFDAwareNeed need = testNeeds.get(i - 2);
 
-            if (!topic.equals("T" + need.id()))
-                throw new RuntimeException("excel topic header does not match with the test query");
+            if (topic.equals("T" + need.id())) {
+
+                System.out.println("found " + topic);
+
+                try {
+                    need = copy.remove(0);
+                } catch (IndexOutOfBoundsException iobe) {
+                    continue;
+                }
+            }
+
         }
 
+        if (!copy.isEmpty())
+            throw new RuntimeException("copy not empty " + copy.size());
 
+        double scores[] = new double[testNeeds.size()];
         while (iterator.hasNext()) {
 
             Row row = iterator.next();
 
-            Set<String> modes = new HashSet<>();
             String model = row.getCell(1).getStringCellValue();
 
-            if (
-                    model.startsWith("BM25") || model.startsWith("Dirichlet") || model.startsWith("PL2") || model.startsWith("LGD")
-                            ||
-                            model.equals("DFIC") || model.equals("DFRee") || model.equals("DPH") || model.equals("DLH13")
 
+            if (("MS" + k).equals(model)) {
 
-            ) {
-                modes.add(model);
+                copy = new ArrayList<>(testNeeds);
+                TFDAwareNeed testQuery = copy.remove(0);
+
+                int c = 0;
+                for (int i = 2; i < n; i++) {
+
+                    if (r0.getCell(i).getStringCellValue().equals("T" + testQuery.id())) {
+                        scores[c++] = row.getCell(i).getNumericCellValue();
+
+                        try {
+                            testQuery = copy.remove(0);
+                        } catch (IndexOutOfBoundsException ioeb) {
+                            //NO-OP
+                        }
+                    }
+                }
+
+                if (!copy.isEmpty())
+                    throw new RuntimeException("copy not empty " + copy.size());
             }
 
-            if (!("MS" + k).equals(model))
-                continue;
+            if (("MS" + k + "L").equals(model)) {
 
-            List<Prediction> predictionList = new ArrayList<>();
+                List<Prediction> predictionList = new ArrayList<>();
 
-            ++counter;
-            this.RxT.createRow(counter).createCell(1).setCellValue("MS" + k);
+                ++counter;
+                this.RxT.createRow(counter).createCell(1).setCellValue("MS" + k);
 
-            for (int i = 2; i < n; i++) {
-                double predictedScore = row.getCell(i).getNumericCellValue();
-                this.RxT.getRow(counter).createCell(i).setCellValue(predictedScore);
-                TFDAwareNeed testQuery = testNeeds.get(i - 2);
+                copy = new ArrayList<>(testNeeds);
 
-                if (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id()))
-                    throw new RuntimeException("excel topic header does not match with the test query");
 
-                String predictedModel = null;
-                for (String m : modes)
+                int i = 2;
+                while (!copy.isEmpty()) {
 
-                    if (evaluator.score(testQuery, m) == predictedScore) {
-                        predictedModel = model;
-                        break;
+                    TFDAwareNeed testQuery = copy.remove(0);
+
+                    while (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id())) {
+                        System.out.println("excel topic header " + r0.getCell(i).getStringCellValue() + " does not match with the test query " + "T" + testQuery.id());
+                        i++;
                     }
 
+                    String predictedModel = row.getCell(i).getStringCellValue();
 
-                if (predictedModel == null) System.out.println("pred model is null");
-                Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
-                predictionList.add(prediction);
+                    double predictedScore = reporter.score(testQuery, predictedModel);
+
+                    if (report.equals(optimize)) {
+                        if (predictedScore != scores[predictionList.size()])
+                            System.out.println("=========== " + predictedModel + " " + predictedScore + " " + scores[predictionList.size()]);
+                    }
+
+                    Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
+                    predictionList.add(prediction);
+
+                    this.RxT.getRow(counter).createCell(predictionList.size() + 1).setCellValue(predictedScore);
+                }
+
+                Solution MS = new Solution(predictionList, k);
+                MS.setKey("MS" + k);
+                workbook.close();
+                return MS;
             }
-
-            Solution MS = new Solution(predictionList, k);
-            MS.setKey("MS" + k);
-            workbook.close();
-            return MS;
         }
 
         workbook.close();
@@ -186,6 +222,12 @@ public class XTool extends CmdLineTool {
     }
 
 
+    /**
+     * Excel path of Model Selection (MS7) based on train and optimize pairs.
+     *
+     * @return Excel file of MS7
+     * @throws IOException if any
+     */
     protected Path MSExcelFile() throws IOException {
 
         Path excelPath = Paths.get(tfd_home, train.toString()).resolve("excels");
@@ -501,7 +543,7 @@ public class XTool extends CmdLineTool {
         // out.flush();
         // out.close();
 
-        Solution MS = MSSolution(7, testQueries, trainEvaluator);
+        Solution MS = MSSolution(7, testQueries, testEvaluator);
         if (MS != null)
             testEvaluator.calculateAccuracy(MS);
 
@@ -780,7 +822,7 @@ public class XTool extends CmdLineTool {
         cartesianSolutionList.forEach(System.out::println);
 
 
-        workbook.write(Files.newOutputStream(excelFile()));
+        workbook.write(Files.newOutputStream(excelFile(), TRUNCATE_EXISTING));
         workbook.close();
     }
 
@@ -809,7 +851,9 @@ public class XTool extends CmdLineTool {
             for (int j = 2; j < c; j++) {
 
                 if (row.getCell(j) == null) {
-                    throw new RuntimeException("encountered null cell i=" + i + " j=" + j + " during geoZrisk addition");
+                    // throw new RuntimeException("encountered null cell i=" + i + " j=" + j + " during geoZrisk addition");
+                    System.out.println("encountered null cell i=" + i + " j=" + j + " during geoZrisk addition");
+                    continue;
                 }
                 final double cellValue = row.getCell(j).getNumericCellValue();
 
@@ -1054,7 +1098,7 @@ public class XTool extends CmdLineTool {
 
                     if (null == predictedModel) throw new RuntimeException("predictedModel is null!");
 
-                    final double predictedScore = testEvaluator.score(testQuery, testEvaluator.prettify(predictedModel));
+                    final double predictedScore = testEvaluator.score(testQuery, predictedModel);
 
                     final Prediction predicted = new Prediction(testQuery, predictedModel, predictedScore);
 

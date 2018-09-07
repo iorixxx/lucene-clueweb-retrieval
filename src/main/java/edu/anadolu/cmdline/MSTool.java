@@ -5,12 +5,14 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
+import edu.anadolu.knn.Prediction;
 import edu.anadolu.knn.Solution;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -105,6 +107,14 @@ final class MSTool extends EvaluatorTool {
             r.createCell(c).setCellValue(score);
         }
 
+        r = RxT.createRow(++counter);
+        r.createCell(1).setCellValue("MS" + solution.k + "L");
+
+        c = 1;
+        for (Prediction prediction : solution.list) {
+            c++;
+            r.createCell(c).setCellValue(prediction.predictedModel);
+        }
     }
 
     Evaluator evaluator;

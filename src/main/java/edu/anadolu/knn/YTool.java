@@ -40,7 +40,7 @@ public class YTool extends XTool {
 
     private Collection[] collections;
 
-    @Option(name = "-msK", required = false, usage = "k of MS", metaVar = "1 2 3 4 5 6 7 8 9")
+    @Option(name = "-msK", required = false, usage = "k of MS", metaVar = "2 3 4 5 6 7 8 9 10")
     private int msK = 7;
 
     public void appendLatexTables(String text) throws IOException {
@@ -190,7 +190,7 @@ public class YTool extends XTool {
 
         doSelectiveTermWeighting(testNeeds, evaluator);
 
-        Solution MS = MSSolution(msK, testNeeds);
+        Solution MS = MSSolution(msK, testNeeds, evaluator);
         if (MS != null)
             evaluator.calculateAccuracy(MS);
 
@@ -232,7 +232,7 @@ public class YTool extends XTool {
         persistSolutionsLists();
     }
 
-    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds) throws IOException, InvalidFormatException {
+    private Solution MSSolution(int k, List<TFDAwareNeed> testNeeds, Evaluator evaluator) throws IOException, InvalidFormatException {
 
         Path MSExcelPath = MSExcelFile();
         if (MSExcelPath == null) return null;
@@ -257,36 +257,63 @@ public class YTool extends XTool {
         }
 
 
+        double scores[] = new double[testNeeds.size()];
+
+
         while (iterator.hasNext()) {
 
             Row row = iterator.next();
 
             String model = row.getCell(1).getStringCellValue();
 
-            if (!("MS" + k).equals(model))
-                continue;
+            if (("MS" + k).equals(model)) {
 
-            List<Prediction> predictionList = new ArrayList<>();
+                for (int i = 2; i < n; i++) {
 
-            ++counter;
-            this.RxT.createRow(counter).createCell(1).setCellValue("MS" + k);
+                    TFDAwareNeed testQuery = testNeeds.get(i - 2);
 
-            for (int i = 2; i < n; i++) {
-                double predictedScore = row.getCell(i).getNumericCellValue();
-                this.RxT.getRow(counter).createCell(i).setCellValue(predictedScore);
-                TFDAwareNeed testQuery = testNeeds.get(i - 2);
+                    if (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id()))
+                        throw new RuntimeException("excel topic header does not match with the test query");
 
-                if (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id()))
-                    throw new RuntimeException("excel topic header does not match with the test query");
-
-                Prediction prediction = new Prediction(testQuery, null, predictedScore);
-                predictionList.add(prediction);
+                    scores[i - 2] = row.getCell(i).getNumericCellValue();
+                }
             }
 
-            Solution MS = new Solution(predictionList, k);
-            MS.setKey("MS" + k);
-            workbook.close();
-            return MS;
+            if (("MS" + k + "L").equals(model)) {
+
+                List<Prediction> predictionList = new ArrayList<>();
+
+                ++counter;
+                this.RxT.createRow(counter).createCell(1).setCellValue("MS" + k);
+
+                for (int i = 2; i < n; i++) {
+
+                    TFDAwareNeed testQuery = testNeeds.get(i - 2);
+
+                    String predictedModel = row.getCell(i).getStringCellValue();
+
+                    double predictedScore = evaluator.score(testQuery, predictedModel);
+
+
+                    if (predictedScore != scores[i - 2])
+                        System.out.println("=========== " + predictedModel + " " + predictedScore + " " + scores[i - 2]);
+
+
+                    this.RxT.getRow(counter).createCell(i).setCellValue(predictedScore);
+
+
+                    if (!r0.getCell(i).getStringCellValue().equals("T" + testQuery.id()))
+                        throw new RuntimeException("excel topic header does not match with the test query");
+
+                    Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
+                    predictionList.add(prediction);
+                }
+
+                Solution MS = new Solution(predictionList, k);
+                MS.setKey("MS" + k);
+                workbook.close();
+                return MS;
+            }
         }
 
         workbook.close();
