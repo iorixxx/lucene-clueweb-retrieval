@@ -40,7 +40,7 @@ public class Searcher implements Closeable {
 
     protected final IndexReader reader;
 
-    private final String indexTag;
+    protected final String indexTag;
 
     private final class SearcherThread extends Thread {
 
@@ -78,9 +78,9 @@ public class Searcher implements Closeable {
     }
 
     protected final DataSet dataSet;
-    private final int numHits;
+    final int numHits;
 
-    private final Tag analyzerTag;
+    final Tag analyzerTag;
 
     public Searcher(Path indexPath, DataSet dataSet, int numHits) throws IOException {
 
@@ -164,11 +164,7 @@ public class Searcher implements Closeable {
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarity);
 
-
-        // for (int part = 0; part <= topics.getMaxParts(); part++)
-        int part = 0;
-
-        final String runTag = toString(similarity, operator, field, part);
+        final String runTag = toString(similarity, operator, field, 0);
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(runTag + ".txt"), StandardCharsets.US_ASCII));
 
@@ -179,8 +175,7 @@ public class Searcher implements Closeable {
 
         for (InfoNeed need : track.getTopics()) {
 
-            String queryString = need.getPartOfQuery(part);
-            if (queryString == null) continue;
+            String queryString = need.query();
             Query query = queryParser.parse(queryString);
 
 

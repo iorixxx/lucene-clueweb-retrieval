@@ -200,7 +200,7 @@ public class TermFreqDistribution implements TFD {
                 }
                 allOutput.println(need.id() + ":" + word + "\t" + line);
             }
-
+            subParts.clear();
         }
 
         cache.clear();

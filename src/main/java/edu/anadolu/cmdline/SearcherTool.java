@@ -1,5 +1,6 @@
 package edu.anadolu.cmdline;
 
+import edu.anadolu.FeatureSearcher;
 import edu.anadolu.Searcher;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
@@ -215,6 +216,35 @@ public final class SearcherTool extends CmdLineTool {
                 System.out.println("Base search for spam filtering 10,000 documents per query completed in " + execution(start));
                 return;
             }
+        } else if ("feature".equals(task)) {
+
+            final long start = System.nanoTime();
+
+            for (final Path path : discoverIndexes(dataset)) {
+
+                final String tag = path.getFileName().toString();
+
+                // search for a specific tag, skip the rest
+                if (this.tag != null && !tag.equals(this.tag)) continue;
+
+                final Set<ModelBase> modelBaseList = new HashSet<>();
+                if (!field)
+                    for (String parametricModel : parametricModels)
+                        modelBaseList.add(train(parametricModel, dataset, tag, Measure.NDCG1000, "OR"));
+
+                modelBaseList.add(new DFIC());
+                modelBaseList.add(new DPH());
+                modelBaseList.add(new DLH13());
+                modelBaseList.add(new DFRee());
+
+                try (FeatureSearcher searcher = new FeatureSearcher(path, dataset, 1000)) {
+                    searcher.searchF(modelBaseList, "features");
+                }
+                modelBaseList.clear();
+            }
+
+            System.out.println("Feature Search completed in " + execution(start));
+            return;
         }
 
         final long start = System.nanoTime();
