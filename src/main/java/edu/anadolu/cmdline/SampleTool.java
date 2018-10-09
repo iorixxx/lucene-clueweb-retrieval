@@ -1,6 +1,5 @@
 package edu.anadolu.cmdline;
 
-import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
@@ -20,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,12 +86,17 @@ public class SampleTool extends CmdLineTool {
             }
 
             Path path = Paths.get(this.path);
-            final Deque<Path> files = Indexer.discoverWarcFiles(path, ".features");
 
-            for (Path in : files) {
-                if (in.getFileName().startsWith("X.")) continue;
-                System.out.println("Processing " + in.toString());
-                addPageRank(in, path.resolve("X." + in.getFileName().toString()), dupDOCNOlist);
+            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
+                for (Path in : directoryStream) {
+                    if (Files.isDirectory(in)) continue;
+                    if (in.getFileName().toString().startsWith("X.")) continue;
+                    System.out.println(in.getFileName().toString());
+                    if (in.getFileName().toString().endsWith(".features")) {
+                        System.out.println("Processing " + in.toString());
+                        addPageRank(in, path.resolve("X." + in.getFileName().toString()), dupDOCNOlist);
+                    }
+                }
             }
             return;
         }
@@ -229,6 +234,24 @@ public class SampleTool extends CmdLineTool {
 
                     if (first) {
 
+                        if (-1 == featureNum) {
+
+                            int i = line.indexOf("#");
+
+                            if (i != -1) {
+                                String p1 = line.substring(0, i).trim();
+                                String[] parts = whiteSpaceSplitter.split(p1);
+                                String last = parts[parts.length - 1];
+
+                                i = last.indexOf(":");
+
+                                if (i != -1) {
+                                    featureNum = Integer.parseInt(last.substring(0, i).trim());
+                                }
+                            }
+
+                        }
+
                         //#21:SpamScore
                         writer.println("#" + (featureNum + 1) + ":SpamScore");
                         //#22:PageRank
@@ -252,6 +275,7 @@ public class SampleTool extends CmdLineTool {
                 double rank = pageRank(rankSolr, docId, dupDOCNOlist);
 
                 writer.println(p1 + " " + Integer.toString(featureNum + 1) + ":" + spam + " " + Integer.toString(featureNum + 2) + ":" + rank + " # " + docId);
+                writer.flush();
 
             }
         }

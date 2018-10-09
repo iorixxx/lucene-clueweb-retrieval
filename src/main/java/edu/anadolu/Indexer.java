@@ -516,7 +516,7 @@ public class Indexer {
         FileVisitor<Path> fv = new SimpleFileVisitor<Path>() {
 
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
 
                 Path name = file.getFileName();
                 if (name != null && name.toString().endsWith(suffix))

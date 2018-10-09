@@ -2,6 +2,7 @@ package edu.anadolu;
 
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.DataSet;
+import edu.anadolu.eval.Evaluator;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -45,10 +46,7 @@ public class FeatureSearcher extends Searcher {
 
         this.norms = MultiDocValues.getNormValues(reader, field);
 
-        final String runTag = toString(similarity, operator, field, 0);
-
-        PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(runTag + ".features"), StandardCharsets.US_ASCII));
-
+        PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(Evaluator.prettyModel(similarity.toString()) + ".features"), StandardCharsets.US_ASCII));
 
         QueryParser queryParser = new QueryParser(field, Analyzers.analyzer(analyzerTag));
         queryParser.setDefaultOperator(operator);
@@ -71,6 +69,8 @@ public class FeatureSearcher extends Searcher {
 
             ScoreDoc[] hits = searcher.search(query, numHits).scoreDocs;
 
+            float[] scores = new float[hits.length];
+
             if (hits.length == 0) {
                 //out.print(need.id()); out.print(dataSet.getNoDocumentsID());
                 continue;
@@ -78,14 +78,16 @@ public class FeatureSearcher extends Searcher {
 
             LinkedHashMap<Integer, List<DocTermStat>> map = new LinkedHashMap<>(numHits);
 
+            int i = 0;
             for (ScoreDoc hit : hits) {
                 map.put(hit.doc, new ArrayList<>(subParts.size()));
+                scores[i++] = hit.score;
             }
 
             for (String word : subParts)
                 findDoc(map, word, field);
 
-
+            i = 0;
             for (Map.Entry<Integer, List<DocTermStat>> entry : map.entrySet()) {
 
                 Document doc = searcher.doc(entry.getKey());
@@ -138,11 +140,21 @@ public class FeatureSearcher extends Searcher {
                     out.print(String.format("%.5f", score));
                     out.print(" ");
 
-                    //  if (m.toString().equals(similarity.toString())) {
-                    //     System.out.println(String.format("%.5f %.5f", hit.score, score));
-                    // }
+                    if (m.toString().equals(similarity.toString())) {
+                        System.out.println(String.format("%.5f %.5f", scores[i++], score));
+                    }
 
                 }
+
+                if (norms.advanceExact(entry.getKey())) {
+                    out.print(Integer.toString(++f));
+                    out.print(":");
+                    out.print(norms.longValue());
+                    out.print(" ");
+                } else {
+                    throw new RuntimeException("cannot find docId" + entry.getKey());
+                }
+
 
                 out.print("# ");
                 out.print(doc.get(FIELD_ID));
