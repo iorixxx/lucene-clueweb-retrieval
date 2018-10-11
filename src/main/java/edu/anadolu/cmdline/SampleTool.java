@@ -52,7 +52,7 @@ public class SampleTool extends CmdLineTool {
     }
 
     @Option(name = "-metric", required = false, usage = "Effectiveness measure")
-    protected Measure measure = Measure.NDCG100;
+    protected Measure measure = Measure.NDCG1000;
 
     @Option(name = "-tag", metaVar = "[KStem KStemAnchor]", required = false, usage = "Index Tag")
     protected String tag = Tag.KStem.toString();
@@ -264,8 +264,7 @@ public class SampleTool extends CmdLineTool {
                 int i = line.indexOf("#");
 
                 if (i == -1) {
-                    System.out.println(line);
-                    continue;
+                    throw new RuntimeException("cannot find # in " + line);
                 }
 
                 String p1 = line.substring(0, i).trim();

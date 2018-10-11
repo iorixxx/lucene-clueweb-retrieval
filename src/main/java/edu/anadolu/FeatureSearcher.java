@@ -3,6 +3,8 @@ package edu.anadolu;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -13,6 +15,7 @@ import org.apache.lucene.search.similarities.Similarity;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -23,9 +26,10 @@ import java.util.*;
 
 import static edu.anadolu.Indexer.FIELD_CONTENTS;
 import static edu.anadolu.Indexer.FIELD_ID;
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 /**
- * Modified version of Searcher. Iterates over the result list and computes term-weighting scores for learning to rank.
+ * Modified version of Searcher. Iterates over the result list and computes term-weighting scores (type Q-D features) for learning to rank.
  */
 public class FeatureSearcher extends Searcher {
 
@@ -33,7 +37,6 @@ public class FeatureSearcher extends Searcher {
 
     public FeatureSearcher(Path indexPath, DataSet dataSet, int numHits) throws IOException {
         super(indexPath, dataSet, numHits);
-
     }
 
     public void search(Track track, Similarity similarity, QueryParser.Operator operator, String field, Path path, Collection<ModelBase> models) throws IOException, ParseException {
@@ -254,5 +257,200 @@ public class FeatureSearcher extends Searcher {
                     }
             );
         }
+    }
+
+    /**
+     * @param models 8 term-weighting models
+     * @param fields list of fields e.g., title, anchor, body
+     */
+    public void searchF(Collection<ModelBase> models, Collection<String> fields) {
+
+        System.out.println("There are " + models.size() * dataSet.tracks().length * fields.size() + " many tasks to process...");
+
+        for (final Track track : dataSet.tracks())
+            for (final String field : fields) {
+                models.parallelStream().forEach(model -> {
+                            try {
+                                search(track, model, field, Paths.get(dataSet.collectionPath().toString(), "features", indexTag, track.toString()), models);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                );
+            }
+    }
+
+    /**
+     * A version of findDoc where keys of the map are ClueWeb document identifiers.
+     */
+    private void findDoc(LinkedHashMap<String, List<DocTermStat>> map, String word, String field, IndexSearcher searcher) throws IOException {
+
+        Term term = new Term(field, word);
+        PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
+
+        if (postingsEnum == null) {
+            System.out.println("Cannot find the word " + word + " in the field " + field);
+            for (String s : map.keySet())
+                map.get(s).add(new DocTermStat(word, -1, -1));
+            return;
+        }
+
+        while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+
+            String docId = searcher.doc(postingsEnum.docID()).get(FIELD_ID);
+
+            if (map.containsKey(docId)) {
+                if (norms.advanceExact(postingsEnum.docID())) {
+                    map.get(docId).add(new DocTermStat(word, norms.longValue(), postingsEnum.freq()));
+                } else {
+                    throw new RuntimeException("norms.advanceExact() cannot find " + postingsEnum.docID());
+                }
+            }
+        }
+    }
+
+    public void search(Track track, Similarity similarity, String field, Path path, Collection<ModelBase> models) throws IOException {
+
+        IndexSearcher searcher = new IndexSearcher(reader);
+
+        CollectionStatistics collectionStatistics = searcher.collectionStatistics(field);
+        final long docCount = collectionStatistics.docCount();
+        final long sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
+
+        this.norms = MultiDocValues.getNormValues(reader, field);
+
+        LinkedHashMap<Integer, ArrayList<String>> resultList = new LinkedHashMap<>(numHits);
+
+        try (BufferedReader reader = Files.newBufferedReader(path.resolve(Evaluator.prettyModel(similarity.toString()) + ".features"), StandardCharsets.US_ASCII)) {
+
+            for (; ; ) {
+
+                String line = reader.readLine();
+                if (line == null)
+                    break;
+
+                if (line.startsWith("#"))
+                    continue;
+
+                // 0 qid:1 1:81.0 2:86.0 3:122.0 4:122.0 5:50.0 6:86.0 7:86.0 8:3.0 9:3.0 10:81.0 11:81.0 12:18.444643 13:247.42574 14:3.0 15:827.0 16:3.4250813 17:2.9271529 18:7.4784217 19:-2.817856 20:17.85046 # clueweb09-en0010-79-02218
+                int i = line.indexOf("#");
+
+                if (i == -1) {
+                    throw new RuntimeException("cannot find # in " + line);
+                }
+
+                String docId = line.substring(i + 1).trim();
+
+                int qId = Integer.parseInt(whiteSpaceSplitter.split(line)[1].substring(4));
+
+                ArrayList<String> list = resultList.getOrDefault(qId, new ArrayList<>(numHits));
+                list.add(docId);
+                resultList.put(qId, list);
+            }
+        }
+
+        PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(Evaluator.prettyModel(similarity.toString()) + "_" + field + ".features"), StandardCharsets.US_ASCII));
+
+
+        Map<String, TermStatistics> termStatisticsMap = new HashMap<>();
+
+
+        for (InfoNeed need : track.getTopics()) {
+
+            Analyzer analyzer = "url".equals(field) ? new SimpleAnalyzer() : Analyzers.analyzer(analyzerTag);
+
+            List<String> subParts = Analyzers.getAnalyzedTokens(need.query(), analyzer);
+
+            for (String word : subParts) {
+                if (termStatisticsMap.containsKey(word)) continue;
+                Term term = new Term(field, word);
+                TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
+                termStatisticsMap.put(word, termStatistics);
+            }
+
+
+            List<String> docList = resultList.get(need.id());
+
+            if (docList == null || docList.isEmpty()) {
+                //out.print(need.id()); out.print(dataSet.getNoDocumentsID());
+                continue;
+            }
+
+            LinkedHashMap<String, List<DocTermStat>> map = new LinkedHashMap<>(numHits);
+
+
+            for (String doc : docList) {
+                map.put(doc, new ArrayList<>(subParts.size()));
+            }
+
+            for (String word : subParts)
+                findDoc(map, word, field, searcher);
+
+            for (Map.Entry<String, List<DocTermStat>> entry : map.entrySet()) {
+
+                final int judge = need.getJudgeMap().getOrDefault(entry.getKey(), 0);
+
+                out.print(Integer.toString(judge == -2 ? 0 : judge));
+                out.print(" ");
+
+                out.print("qid:");
+                out.print(need.id());
+                out.print(" ");
+
+                out.print("1:");
+                out.print(need.wordCount());
+                out.print(" ");
+
+                out.print("2:");
+                out.print(need.termCount());
+                out.print(" ");
+
+                int sum = 0;
+                for (DocTermStat docTermStat : entry.getValue()) {
+                    if (-1 == docTermStat.tf) continue;
+                    sum += docTermStat.tf;
+                }
+
+                out.print("3:");
+                out.print(sum);
+                out.print(" ");
+
+                int f = 3;
+
+                for (ModelBase m : models) {
+
+                    double score = 0.0;
+
+
+                    for (DocTermStat docTermStat : entry.getValue()) {
+
+                        if (-1 == docTermStat.tf) continue;
+
+                        TermStatistics termStatistics = termStatisticsMap.get(docTermStat.word);
+
+                        score += m.score(docTermStat.tf, docTermStat.dl, (double) sumTotalTermFreq / docCount, 1, termStatistics.docFreq(), termStatistics.totalTermFreq(), docCount, sumTotalTermFreq);
+                    }
+
+                    out.print(Integer.toString(++f));
+                    out.print(":");
+                    out.print(String.format("%.5f", score));
+                    out.print(" ");
+
+                }
+
+                out.print("# ");
+                out.print(entry.getKey());
+                out.println();
+                out.flush();
+            }
+
+            subParts.clear();
+            map.clear();
+        }
+
+        termStatisticsMap.clear();
+        resultList.clear();
+        out.flush();
+        out.close();
     }
 }

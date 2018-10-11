@@ -77,6 +77,8 @@ public final class SearcherTool extends CmdLineTool {
         return models;
     }
 
+    private final Comparator<ModelBase> comparator = Comparator.comparing(ModelBase::toString);
+
     @Override
     public void run(Properties props) throws Exception {
 
@@ -227,10 +229,10 @@ public final class SearcherTool extends CmdLineTool {
                 // search for a specific tag, skip the rest
                 if (this.tag != null && !tag.equals(this.tag)) continue;
 
-                final Set<ModelBase> modelBaseList = new HashSet<>();
-                if (!field)
-                    for (String parametricModel : parametricModels)
-                        modelBaseList.add(train(parametricModel, dataset, tag, Measure.NDCG1000, "OR"));
+                final TreeSet<ModelBase> modelBaseList = new TreeSet<>(Comparator.comparing(ModelBase::toString));
+
+                for (String parametricModel : parametricModels)
+                    modelBaseList.add(train(parametricModel, dataset, tag, Measure.NDCG1000, "OR"));
 
                 modelBaseList.add(new DFIC());
                 modelBaseList.add(new DPH());
@@ -243,7 +245,36 @@ public final class SearcherTool extends CmdLineTool {
                 modelBaseList.clear();
             }
 
-            System.out.println("Feature Search completed in " + execution(start));
+            System.out.println("Feature extraction completed in " + execution(start));
+            return;
+        } else if ("field".equals(task)) {
+
+            final long start = System.nanoTime();
+
+            for (final Path path : discoverIndexes(dataset)) {
+
+                final String tag = path.getFileName().toString();
+
+                // Field based feature extraction is available only KStemField
+                if (!tag.equals("KStemField")) continue;
+
+                final TreeSet<ModelBase> modelBaseList = new TreeSet<>(Comparator.comparing(ModelBase::toString));
+
+                for (String parametricModel : parametricModels)
+                    modelBaseList.add(train(parametricModel, dataset, tag, Measure.NDCG1000, "OR"));
+
+                modelBaseList.add(new DFIC());
+                modelBaseList.add(new DPH());
+                modelBaseList.add(new DLH13());
+                modelBaseList.add(new DFRee());
+
+                try (FeatureSearcher searcher = new FeatureSearcher(path, dataset, 1000)) {
+                    searcher.searchF(modelBaseList, Arrays.asList("anchor", "body", "title", "url"));
+                }
+                modelBaseList.clear();
+            }
+
+            System.out.println("Field based feature extaction completed in " + execution(start));
             return;
         }
 
