@@ -33,8 +33,6 @@ import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
  */
 public class FeatureSearcher extends Searcher {
 
-    private NumericDocValues norms;
-
     public FeatureSearcher(Path indexPath, DataSet dataSet, int numHits) throws IOException {
         super(indexPath, dataSet, numHits);
     }
@@ -47,7 +45,13 @@ public class FeatureSearcher extends Searcher {
         final long docCount = collectionStatistics.docCount();
         final long sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
 
-        this.norms = MultiDocValues.getNormValues(reader, field);
+        final List<LeafReaderContext> leaves = reader.leaves();
+        if (leaves.size() == 1) {
+            System.out.println("leaves size is 1");
+            NumericDocValues norms = leaves.get(0).reader().getNormValues(field);
+        }
+
+        NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(Evaluator.prettyModel(similarity.toString()) + ".features"), StandardCharsets.US_ASCII));
 
@@ -88,7 +92,7 @@ public class FeatureSearcher extends Searcher {
             }
 
             for (String word : subParts)
-                findDoc(map, word, field);
+                findDoc(map, word, field, norms);
 
             i = 0;
             for (Map.Entry<Integer, List<DocTermStat>> entry : map.entrySet()) {
@@ -187,7 +191,7 @@ public class FeatureSearcher extends Searcher {
         }
     }
 
-    private DocTermStat findDoc(int docId, String word, String field) throws IOException {
+    private DocTermStat findDoc(int docId, String word, String field, NumericDocValues norms) throws IOException {
 
         Term term = new Term(field, word);
         PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
@@ -212,7 +216,7 @@ public class FeatureSearcher extends Searcher {
         return new DocTermStat(word, -1, -1);
     }
 
-    private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String field) throws IOException {
+    private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String field, NumericDocValues norms) throws IOException {
 
         Term term = new Term(field, word);
         PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
@@ -269,9 +273,9 @@ public class FeatureSearcher extends Searcher {
 
         for (final Track track : dataSet.tracks())
             for (final String field : fields) {
-                models.parallelStream().forEach(model -> {
+                models.forEach(model -> {
                             try {
-                                search(track, model, field, Paths.get(dataSet.collectionPath().toString(), "features", indexTag, track.toString()), models);
+                                search(track, model, field, Paths.get(dataSet.collectionPath().toString(), "features", "KStem", track.toString()), models);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -293,9 +297,17 @@ public class FeatureSearcher extends Searcher {
             for (String s : map.keySet())
                 map.get(s).add(new DocTermStat(word, -1, -1));
             return;
-        }
+        } else
+            System.out.println("the word " + word + " is found in " + field);
 
-        while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+        NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
+
+        //  while (norms.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
+
+        //System.out.println(norms.docID());
+        // }
+
+        while (postingsEnum.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
 
             String docId = searcher.doc(postingsEnum.docID()).get(FIELD_ID);
 
@@ -317,7 +329,13 @@ public class FeatureSearcher extends Searcher {
         final long docCount = collectionStatistics.docCount();
         final long sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
 
-        this.norms = MultiDocValues.getNormValues(reader, field);
+        final List<LeafReaderContext> leaves = reader.leaves();
+        if (leaves.size() == 1) {
+            System.out.println("leaves size is 1");
+            NumericDocValues norms = leaves.get(0).reader().getNormValues(field);
+        }
+
+        //NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
 
         LinkedHashMap<Integer, ArrayList<String>> resultList = new LinkedHashMap<>(numHits);
 
@@ -367,7 +385,6 @@ public class FeatureSearcher extends Searcher {
                 TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
                 termStatisticsMap.put(word, termStatistics);
             }
-
 
             List<String> docList = resultList.get(need.id());
 

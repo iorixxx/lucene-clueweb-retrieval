@@ -179,26 +179,6 @@ public class Indexer {
             if (skip(id)) return 0;
 
             org.jsoup.nodes.Document jDoc;
-//
-//            final ExecutorService service = Executors.newSingleThreadExecutor();
-//
-//            try {
-//                final Future<org.jsoup.nodes.Document> f = service.submit(() -> {
-//                    return Jsoup.parse(warcRecord.content());
-//                });
-//
-//                jDoc = f.get(30, TimeUnit.SECONDS);
-//
-//            } catch (final TimeoutException e) {
-//                System.err.println("Calculation took to long " + id);
-//                return 1;
-//            } catch (final Exception e) {
-//                System.err.println(id);
-//                // System.out.println(warcRecord.content());
-//                return 1;
-//            } finally {
-//                service.shutdown();
-//            }
 
             try {
                 jDoc = Jsoup.parse(warcRecord.content());
@@ -463,15 +443,15 @@ public class Indexer {
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
 
-        String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
+       // String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
 
-        if (notEmpty.test(metaNames))
-            document.add(new NoPositionsTextField("meta", metaNames));
+        //   if (notEmpty.test(metaNames))
+        //       document.add(new NoPositionsTextField("meta", metaNames));
 
-        document.add(new NoPositionsTextField("bt", body + " " + title));
-        document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
-        document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
-        document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
+        //  document.add(new NoPositionsTextField("bt", body + " " + title));
+        //  document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
+        //  document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
+        //  document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
 
 
         /*

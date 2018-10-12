@@ -261,7 +261,7 @@ public final class SearcherTool extends CmdLineTool {
                 final TreeSet<ModelBase> modelBaseList = new TreeSet<>(Comparator.comparing(ModelBase::toString));
 
                 for (String parametricModel : parametricModels)
-                    modelBaseList.add(train(parametricModel, dataset, tag, Measure.NDCG1000, "OR"));
+                    modelBaseList.add(train(parametricModel, dataset, "KStem", Measure.NDCG1000, "OR"));
 
                 modelBaseList.add(new DFIC());
                 modelBaseList.add(new DPH());
@@ -274,7 +274,7 @@ public final class SearcherTool extends CmdLineTool {
                 modelBaseList.clear();
             }
 
-            System.out.println("Field based feature extaction completed in " + execution(start));
+            System.out.println("Field based feature extraction completed in " + execution(start));
             return;
         }
 
