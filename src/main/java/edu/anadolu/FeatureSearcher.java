@@ -33,6 +33,17 @@ import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
  */
 public class FeatureSearcher extends Searcher {
 
+    static private boolean floatIsDifferent(float f1, float f2, float delta) {
+        if (Float.compare(f1, f2) == 0) {
+            return false;
+        }
+        if ((Math.abs(f1 - f2) <= delta)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public FeatureSearcher(Path indexPath, DataSet dataSet, int numHits) throws IOException {
         super(indexPath, dataSet, numHits);
     }
@@ -47,7 +58,6 @@ public class FeatureSearcher extends Searcher {
 
         final List<LeafReaderContext> leaves = reader.leaves();
         if (leaves.size() == 1) {
-            System.out.println("leaves size is 1");
             NumericDocValues norms = leaves.get(0).reader().getNormValues(field);
         }
 
@@ -148,9 +158,10 @@ public class FeatureSearcher extends Searcher {
                     out.print(" ");
 
                     if (m.toString().equals(similarity.toString())) {
-                        System.out.println(String.format("%.5f %.5f", scores[i++], score));
+                        float s = scores[i++];
+                        if (floatIsDifferent((float) score, s, 0.001f))
+                            System.out.println(String.format("%S %s %d %.5f %.5f", need.toString(), m.toString(), i, s, score));
                     }
-
                 }
 
                 if (norms.advanceExact(entry.getKey())) {
@@ -191,29 +202,29 @@ public class FeatureSearcher extends Searcher {
         }
     }
 
-    private DocTermStat findDoc(int docId, String word, String field, NumericDocValues norms) throws IOException {
+    private long localDocLen(int luceneId, String field) throws IOException {
 
-        Term term = new Term(field, word);
-        PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(reader, field, term.bytes());
+        NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
 
-        if (postingsEnum == null) {
-            System.out.println("Cannot find the word " + word + " in the field " + field);
-            return new DocTermStat(word, -1, -1);
+        if (norms.advanceExact(luceneId)) {
+            return norms.longValue();
+        } else {
+            throw new RuntimeException("norms.advanceExact() cannot find " + luceneId);
         }
+    }
 
-        while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
+    private long localDocLen2(int luceneId, String field) throws IOException {
 
-            if (postingsEnum.docID() == docId) {
-                if (norms.advanceExact(postingsEnum.docID())) {
-                    return new DocTermStat(word, norms.longValue(), postingsEnum.freq());
-                } else {
-                    throw new RuntimeException("norms.advanceExact() cannot find " + postingsEnum.docID());
-                }
+        final List<LeafReaderContext> leaves = reader.leaves();
+        if (leaves.size() == 1) {
+            NumericDocValues norms = leaves.get(0).reader().getNormValues(field);
+            if (norms.advanceExact(luceneId)) {
+                return norms.longValue();
+            } else {
+                throw new RuntimeException("norms.advanceExact() cannot find " + luceneId);
             }
-        }
-
-        //System.out.println("Cannot find docId " + docId);
-        return new DocTermStat(word, -1, -1);
+        } else
+            throw new RuntimeException("leaves.size() != 1");
     }
 
     private void findDoc(LinkedHashMap<Integer, List<DocTermStat>> map, String word, String field, NumericDocValues norms) throws IOException {
@@ -230,14 +241,33 @@ public class FeatureSearcher extends Searcher {
 
         while (postingsEnum.nextDoc() != PostingsEnum.NO_MORE_DOCS) {
 
-            if (map.containsKey(postingsEnum.docID())) {
-                if (norms.advanceExact(postingsEnum.docID())) {
-                    map.get(postingsEnum.docID()).add(new DocTermStat(word, norms.longValue(), postingsEnum.freq()));
-                } else {
-                    throw new RuntimeException("norms.advanceExact() cannot find " + postingsEnum.docID());
-                }
+            final int luceneId = postingsEnum.docID();
+
+            if (!map.containsKey(luceneId)) continue;
+
+            List<DocTermStat> list = map.get(luceneId);
+
+            if (norms.advanceExact(luceneId)) {
+
+                long dl = norms.longValue();
+
+                if (!list.isEmpty())
+                    if (list.get(0).dl != dl)
+                        throw new RuntimeException("list.get(0).dl is different from current dl");
+
+                list.add(new DocTermStat(word, dl, postingsEnum.freq()));
+
+                if (dl != localDocLen(luceneId, field))
+                    throw new RuntimeException("dl is different from localDocLen");
+
+                if (dl != localDocLen2(luceneId, field))
+                    throw new RuntimeException("dl is different from localDocLen");
+
+            } else {
+                throw new RuntimeException("norms.advanceExact() cannot find " + luceneId);
             }
         }
+
     }
 
 
@@ -251,7 +281,6 @@ public class FeatureSearcher extends Searcher {
         }
 
         for (final Track track : dataSet.tracks()) {
-
             models.parallelStream().forEach(model -> {
                         try {
                             search(track, model, QueryParser.Operator.OR, FIELD_CONTENTS, Paths.get(dataSet.collectionPath().toString(), runsPath, indexTag, track.toString()), models);
@@ -273,7 +302,7 @@ public class FeatureSearcher extends Searcher {
 
         for (final Track track : dataSet.tracks())
             for (final String field : fields) {
-                models.forEach(model -> {
+                models.stream().parallel().forEach(model -> {
                             try {
                                 search(track, model, field, Paths.get(dataSet.collectionPath().toString(), "features", "KStem", track.toString()), models);
                             } catch (IOException e) {
@@ -285,7 +314,8 @@ public class FeatureSearcher extends Searcher {
     }
 
     /**
-     * A version of findDoc where keys of the map are ClueWeb document identifiers.
+     * A version of findDoc {@link FeatureSearcher#findDoc(java.util.LinkedHashMap, java.lang.String, java.lang.String, org.apache.lucene.index.NumericDocValues)}
+     * where keys of the map are ClueWeb09 document identifiers.
      */
     private void findDoc(LinkedHashMap<String, List<DocTermStat>> map, String word, String field, IndexSearcher searcher) throws IOException {
 
@@ -297,26 +327,27 @@ public class FeatureSearcher extends Searcher {
             for (String s : map.keySet())
                 map.get(s).add(new DocTermStat(word, -1, -1));
             return;
-        } else
-            System.out.println("the word " + word + " is found in " + field);
-
-        NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
-
-        //  while (norms.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
-
-        //System.out.println(norms.docID());
-        // }
+        }
 
         while (postingsEnum.nextDoc() != DocIdSetIterator.NO_MORE_DOCS) {
 
-            String docId = searcher.doc(postingsEnum.docID()).get(FIELD_ID);
+            final int luceneId = postingsEnum.docID();
+
+            String docId = searcher.doc(luceneId).get(FIELD_ID);
 
             if (map.containsKey(docId)) {
-                if (norms.advanceExact(postingsEnum.docID())) {
-                    map.get(docId).add(new DocTermStat(word, norms.longValue(), postingsEnum.freq()));
-                } else {
-                    throw new RuntimeException("norms.advanceExact() cannot find " + postingsEnum.docID());
-                }
+
+                List<DocTermStat> list = map.get(docId);
+
+                if (list.isEmpty()) {
+                    NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
+                    if (norms.advanceExact(luceneId)) {
+                        list.add(new DocTermStat(word, norms.longValue(), postingsEnum.freq()));
+                    } else {
+                        throw new RuntimeException("norms.advanceExact() cannot find " + luceneId);
+                    }
+                } else
+                    list.add(new DocTermStat(word, list.get(0).dl, postingsEnum.freq()));
             }
         }
     }
@@ -324,19 +355,9 @@ public class FeatureSearcher extends Searcher {
     public void search(Track track, Similarity similarity, String field, Path path, Collection<ModelBase> models) throws IOException {
 
         IndexSearcher searcher = new IndexSearcher(reader);
-
         CollectionStatistics collectionStatistics = searcher.collectionStatistics(field);
         final long docCount = collectionStatistics.docCount();
         final long sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
-
-        final List<LeafReaderContext> leaves = reader.leaves();
-        if (leaves.size() == 1) {
-            System.out.println("leaves size is 1");
-            NumericDocValues norms = leaves.get(0).reader().getNormValues(field);
-        }
-
-        //NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
-
         LinkedHashMap<Integer, ArrayList<String>> resultList = new LinkedHashMap<>(numHits);
 
         try (BufferedReader reader = Files.newBufferedReader(path.resolve(Evaluator.prettyModel(similarity.toString()) + ".features"), StandardCharsets.US_ASCII)) {
