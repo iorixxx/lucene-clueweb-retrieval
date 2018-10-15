@@ -64,6 +64,50 @@ public class SampleTool extends CmdLineTool {
     @Option(name = "-path", metaVar = "/home/iorixxx/features", required = false, usage = "/home/iorixxx/features")
     private String path = null;
 
+    @Option(name = "-task", required = false, usage = "task to be executed")
+    private String task;
+
+    private void merge(Path path) {
+
+        for (String model : new String[]{"DPH", "DFIC", "DFRee", "PL2", "DLH13", "BM25", "LGD", "Dirichlet"}) {
+
+            try (PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(model + ".features"), StandardCharsets.US_ASCII))) {
+
+                Map<String, List<String>> map = new LinkedHashMap<>();
+
+                int len = -1;
+                for (String field : new String[]{"whole", "anchor", "body", "title", "url"}) {
+                    List<String> lines = Files.readAllLines(path.resolve(model + "_" + field + ".features"), StandardCharsets.US_ASCII);
+                    map.put(field, lines);
+
+                    if (len != -1) {
+                        if (len != lines.size()) throw new RuntimeException("lines size does not match!");
+                    }
+                    len = lines.size();
+
+                }
+
+                for (int i = 0; i < len; i++) {
+                    StringBuilder builder = new StringBuilder();
+                    for (String field : new String[]{"whole", "anchor", "body", "title", "url"}) {
+                        String line = map.get(field).get(i);
+                        builder.append(line).append(" ");
+                    }
+                    out.print(builder.toString());
+                    out.println();
+                }
+
+                out.flush();
+
+
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+
+        }
+
+    }
+
     @Override
     public void run(Properties props) throws Exception {
 
@@ -78,14 +122,14 @@ public class SampleTool extends CmdLineTool {
 
         DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
 
-        if (path != null) {
+        if ("spam".equals(task)) {
 
             List<List<String>> dupDOCNOlist = new ArrayList<>();
             for (String line : Files.readAllLines(Paths.get(tfd_home, "topics-and-qrels", "dupDOCNOlist.txt"))) {
                 dupDOCNOlist.add(Arrays.asList(whiteSpaceSplitter.split(line)));
             }
 
-            Path path = Paths.get(this.path);
+            Path path = Paths.get(tfd_home, collection.toString(), "features");
 
             try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
                 for (Path in : directoryStream) {
@@ -98,6 +142,15 @@ public class SampleTool extends CmdLineTool {
                     }
                 }
             }
+            return;
+        }
+
+        if ("merge".equals(task)) {
+
+            Path path = Paths.get(tfd_home, collection.toString(), "features");
+
+            merge(path);
+
             return;
         }
 
