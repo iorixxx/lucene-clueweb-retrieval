@@ -61,11 +61,33 @@ public class SampleTool extends CmdLineTool {
     @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
     protected int spam = 0;
 
-    @Option(name = "-path", metaVar = "/home/iorixxx/features", required = false, usage = "/home/iorixxx/features")
-    private String path = null;
-
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
+
+    /**
+     * Strips : from the elements of the array
+     *
+     * @param src    "0 qid:1 1:3 2:3 3:81 4:36.48606 5:22.28823 6:24.98682 7:11.43550 8:17.87569"
+     * @param srcPos 4
+     * @return "81 36.48606 22.28823 24.98682 11.43550 17.87569"
+     */
+    private static String[] copy(String[] src, int srcPos) {
+
+        String[] copy = new String[src.length - srcPos];
+
+        for (int i = srcPos; i < src.length; i++) {
+
+            int j = src[i].indexOf(":");
+
+            if (j == -1) {
+                throw new RuntimeException("cannot find : in " + src[i]);
+            }
+
+            copy[i - srcPos] = src[i].substring(j + 1);
+        }
+
+        return copy;
+    }
 
     private void merge(Path path) {
 
@@ -87,18 +109,54 @@ public class SampleTool extends CmdLineTool {
 
                 }
 
-                for (int i = 0; i < len; i++) {
+                for (int j = 0; j < len; j++) {
                     StringBuilder builder = new StringBuilder();
+                    String DOC_ID = null, Q_ID = null;
+                    int f = 0;
                     for (String field : new String[]{"whole", "anchor", "body", "title", "url"}) {
-                        String line = map.get(field).get(i);
-                        builder.append(line).append(" ");
+                        String line = map.get(field).get(j);
+
+                        int i = line.indexOf("#");
+
+                        if (i == -1) {
+                            throw new RuntimeException("cannot find # in " + line);
+                        }
+
+                        String p1 = line.substring(0, i).trim();
+                        String docId = line.substring(i + 1).trim();
+                        String[] parts = whiteSpaceSplitter.split(p1);
+
+                        if (DOC_ID == null) {
+                            DOC_ID = docId;
+                        } else {
+                            if (!DOC_ID.equals(docId))
+                                throw new RuntimeException("docIds are not equal to each other!");
+                        }
+
+                        if (Q_ID == null) {
+                            Q_ID = parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3];
+                            builder.append(Q_ID).append(" ");
+                            f = 3;
+                        } else {
+                            if (!Q_ID.equals(parts[0] + " " + parts[1] + " " + parts[2] + " " + parts[3]))
+                                throw new RuntimeException("docIds are not equal to each other!");
+                        }
+
+                        String[] copy = copy(parts, 4);
+
+                        for (String s : copy) {
+                            builder.append(Integer.toString(f++));
+                            builder.append(":");
+                            builder.append(s);
+                            builder.append(" ");
+                        }
                     }
                     out.print(builder.toString());
+                    out.print("# ");
+                    out.print(DOC_ID);
                     out.println();
                 }
-
                 out.flush();
-
 
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -124,6 +182,9 @@ public class SampleTool extends CmdLineTool {
 
         if ("spam".equals(task)) {
 
+            List<String> models = Arrays.asList("DPH.features", "DFIC.features", "DFRee.features", "PL2.features", "DLH13.features", "BM25.features", "LGD.features", "Dirichlet.features");
+
+
             List<List<String>> dupDOCNOlist = new ArrayList<>();
             for (String line : Files.readAllLines(Paths.get(tfd_home, "topics-and-qrels", "dupDOCNOlist.txt"))) {
                 dupDOCNOlist.add(Arrays.asList(whiteSpaceSplitter.split(line)));
@@ -134,9 +195,7 @@ public class SampleTool extends CmdLineTool {
             try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(path)) {
                 for (Path in : directoryStream) {
                     if (Files.isDirectory(in)) continue;
-                    if (in.getFileName().toString().startsWith("X.")) continue;
-                    System.out.println(in.getFileName().toString());
-                    if (in.getFileName().toString().endsWith(".features")) {
+                    if (models.contains(in.getFileName().toString())) {
                         System.out.println("Processing " + in.toString());
                         addPageRank(in, path.resolve("X." + in.getFileName().toString()), dupDOCNOlist);
                     }
@@ -432,5 +491,8 @@ public class SampleTool extends CmdLineTool {
         double rank = 455.564546;
         System.out.println(p1 + " 21:" + spam + " 22:" + rank + " # " + docId);
 
+        String[] src = whiteSpaceSplitter.split("0 qid:1 1:81.0 2:86.0 3:122.0 4:122.0 5:50.0 6:86.0 7:86.0 8:3.0 9:3.0 10:81.0 11:81.0 12:18.444643 13:247.42574 14:3.0 15:827.0 16:3.4250813 17:2.9271529 18:7.4784217 19:-2.817856 20:17.85046");
+
+        System.out.println(Arrays.toString(copy(src, 4)));
     }
 }
