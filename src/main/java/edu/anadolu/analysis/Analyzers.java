@@ -93,7 +93,7 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("icu")
                         .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
-                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin")
+                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin,Common")
                         .addTokenFilter("lowercase")
                         .build();
 
