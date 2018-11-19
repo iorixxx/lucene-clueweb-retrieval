@@ -5,6 +5,7 @@ import edu.anadolu.field.FieldTool;
 import edu.anadolu.field.SelectiveStemmingTool;
 import edu.anadolu.knn.*;
 import org.apache.lucene.util.Version;
+import org.clueweb09.WarcTool;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -137,6 +138,8 @@ public final class CLI {
         tools.add(new SearchTool());
 
         tools.add(new SelectiveStemmingTool());
+
+        tools.add(new WarcTool());
 
         tools.add(new QueryPerTFTool());
 

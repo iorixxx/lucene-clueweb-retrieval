@@ -21,7 +21,7 @@ import java.util.Set;
 public final class DoclenTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    protected edu.anadolu.datasets.Collection collection;
+    private edu.anadolu.datasets.Collection collection;
 
     @Override
     public String getHelp() {

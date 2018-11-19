@@ -1,7 +1,11 @@
 package org.clueweb09;
 
 import edu.anadolu.Indexer;
+import edu.anadolu.cmdline.CLI;
+import edu.anadolu.cmdline.CmdLineTool;
+import edu.anadolu.datasets.Collection;
 import org.jsoup.Jsoup;
+import org.kohsuke.args4j.Option;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -9,26 +13,53 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Random;
+import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
 /**
  * Test WarcRecord: Shows how to read, ID, URL, and Title.
  */
-public class WarcRecordTest {
+public class WarcTool extends CmdLineTool {
 
+    @Option(name = "-collection", required = true, usage = "Collection")
+    private edu.anadolu.datasets.Collection collection;
 
-    public static void main(String[] args) throws IOException {
+    @Option(name = "-doc", required = true, usage = "43.warc.gz")
+    private String doc;
 
-        //   gov2();
-        cw12();
-        //cw09();
+    @Override
+    public String getHelp() {
+        return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " tfd.home";
+    }
+
+    @Override
+    public String getShortDescription() {
+        return "Computes Document Length Statistics";
     }
 
 
-    public static void gov2() throws IOException {
-        Path file = Paths.get("/Users/iorixxx/Desktop/00.gz");
+    @Override
+    public void run(Properties props) throws Exception {
 
+        if (parseArguments(props) == -1) return;
+
+        if (Collection.CW09A.equals(collection))
+            this.cw09();
+        else if (Collection.CW12A.equals(collection))
+            cw12();
+        else if (Collection.GOV2.equals(collection))
+            gov2();
+        else
+            System.out.println("this warc record test tool is not defined for the input collection: " + collection);
+
+
+    }
+
+
+    public void gov2() throws IOException {
+
+
+        Path file = Paths.get(doc);
         StringBuilder builder = new StringBuilder();
 
         boolean found = false;
@@ -77,9 +108,9 @@ public class WarcRecordTest {
         }
     }
 
-    public static void cw12() throws IOException {
+    private void cw12() throws IOException {
 
-        Path inputWarcFile = Paths.get("/Users/iorixxx/1100wb-15.warc.gz");
+        Path inputWarcFile = Paths.get(doc);
 
         int i = 0;
 
@@ -107,6 +138,7 @@ public class WarcRecordTest {
                     try {
                         Jsoup.parse(c);
                     } catch (Exception e) {
+                        e.printStackTrace();
 
                     }
 
@@ -119,11 +151,10 @@ public class WarcRecordTest {
         System.out.println(i + " many record found.");
     }
 
-    public static void cw09() throws IOException {
+    private void cw09() throws IOException {
 
-        Path inputWarcFile = Paths.get("/Users/iorixxx/ClueWeb09_English_1/en0001/" + new Random().nextInt(100) + ".warc.gz");
 
-        try (DataInputStream inStream = new DataInputStream(new GZIPInputStream(Files.newInputStream(inputWarcFile, StandardOpenOption.READ)))) {
+        try (DataInputStream inStream = new DataInputStream(new GZIPInputStream(Files.newInputStream(Paths.get(doc), StandardOpenOption.READ)))) {
 
             // iterate through our stream
             ClueWeb09WarcRecord wDoc;
@@ -137,10 +168,17 @@ public class WarcRecordTest {
 
                     String url = wDoc.getURL();
 
+                    String c = wDoc.getContent();
 
-                    String title = Jsoup.parse(wDoc.getContent()).title();
+                    System.out.println(id + " " + url + " " + c.length());
 
-                    System.out.println(id + " " + url + " " + title);
+
+                    try {
+                        Jsoup.parse(c);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+
+                    }
 
                 }
             }

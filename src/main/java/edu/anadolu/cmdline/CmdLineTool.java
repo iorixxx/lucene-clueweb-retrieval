@@ -2,7 +2,7 @@ package edu.anadolu.cmdline;
 
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.freq.*;
+import edu.anadolu.freq.Freq;
 import edu.anadolu.knn.Winner;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -41,7 +41,7 @@ public abstract class CmdLineTool {
 
     protected final static Winner[] winners = {Winner.Single, Winner.Multi};
 
-    protected int parseArguments(Properties props) throws Exception {
+    protected int parseArguments(Properties props) {
 
         CmdLineParser parser = new CmdLineParser(this, ParserProperties.defaults().withUsageWidth(90));
 
@@ -63,12 +63,12 @@ public abstract class CmdLineTool {
         return 0;
     }
 
-    static Properties cacheProperties(DataSet dataSet) {
+    static synchronized Properties cacheProperties(DataSet dataSet) {
         Path cacheFile = dataSet.collectionPath().resolve("cache.properties");
         return cacheProperties(cacheFile);
     }
 
-    static Properties cacheProperties(Path cacheFile) {
+    static synchronized Properties cacheProperties(Path cacheFile) {
         if (!Files.exists(cacheFile))
             try {
                 Files.createFile(cacheFile);
@@ -86,7 +86,7 @@ public abstract class CmdLineTool {
         return properties;
     }
 
-    static void saveCacheProperties(DataSet dataSet, Properties properties) {
+    static synchronized void saveCacheProperties(DataSet dataSet, Properties properties) {
 
         Path cacheFile = dataSet.collectionPath().resolve("cache.properties");
 
@@ -170,7 +170,7 @@ public abstract class CmdLineTool {
     }
 
 
-    Set<String> distinctTerms(List<InfoNeed> needs, Analyzer analyzer) throws IOException {
+    Set<String> distinctTerms(List<InfoNeed> needs, Analyzer analyzer) {
         Set<String> set = new HashSet<>();
         for (InfoNeed need : needs)
             set.addAll(Analyzers.getAnalyzedTokens(need.query(), analyzer));
