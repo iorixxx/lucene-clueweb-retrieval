@@ -269,7 +269,7 @@ public class Indexer {
         public void run() {
             try {
 
-                Thread.currentThread().setName(inputWarcFile.getFileName().toString());
+                Thread.currentThread().setName(inputWarcFile.toAbsolutePath().toString());
                 setName(inputWarcFile.getFileName().toString());
 
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
