@@ -42,7 +42,7 @@ public class FilterTypeTokenFilterFactory extends TokenFilterFactory implements 
     }
 
     @Override
-    public void inform(ResourceLoader loader) throws IOException {
+    public void inform(ResourceLoader loader) {
         List<String> files = splitFileNames(types);
         if (files.size() > 0) {
             stopTypes = new HashSet<>(files);
