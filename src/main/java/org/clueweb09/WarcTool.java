@@ -43,9 +43,14 @@ public class WarcTool extends CmdLineTool {
 
         if (parseArguments(props) == -1) return;
 
-        if (Collection.CW09A.equals(collection))
-            this.cw09();
-        else if (Collection.CW12A.equals(collection))
+        if (Collection.CW09A.equals(collection)) {
+            if (this.doc.endsWith(".txt")) {
+                for (String line : Files.readAllLines(Paths.get(doc)))
+                    cw09(line);
+            } else
+                cw09(doc);
+
+        } else if (Collection.CW12A.equals(collection))
             cw12();
         else if (Collection.GOV2.equals(collection))
             gov2();
@@ -151,7 +156,7 @@ public class WarcTool extends CmdLineTool {
         System.out.println(i + " many record found.");
     }
 
-    private void cw09() throws IOException {
+    private void cw09(String doc) throws IOException {
 
 
         try (DataInputStream inStream = new DataInputStream(new GZIPInputStream(Files.newInputStream(Paths.get(doc), StandardOpenOption.READ)))) {
