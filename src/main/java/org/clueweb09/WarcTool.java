@@ -137,7 +137,9 @@ public class WarcTool extends CmdLineTool {
 
                     String c = wDoc.getContent();
 
-                    System.out.println(id + " " + url + " " + c.length());
+                    //  System.out.println(id + " " + url + " " + c.length());
+
+                    System.out.println(id);
 
 
                     try {
@@ -164,8 +166,6 @@ public class WarcTool extends CmdLineTool {
             // iterate through our stream
             ClueWeb09WarcRecord wDoc;
             while ((wDoc = ClueWeb09WarcRecord.readNextWarcRecord(inStream)) != null) {
-                System.out.println(wDoc.getHeaderRecordType());
-                System.out.println(wDoc.getHeaderString());
                 // see if it's a response record
                 if ("response".equals(wDoc.getHeaderRecordType())) {
 
@@ -175,8 +175,9 @@ public class WarcTool extends CmdLineTool {
 
                     String c = wDoc.getContent();
 
-                    System.out.println(id + " " + url + " " + c.length());
+                    // System.out.println(id + " " + url + " " + c.length());
 
+                    System.out.println(id);
 
                     try {
                         Jsoup.parse(c);
