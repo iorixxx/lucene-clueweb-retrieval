@@ -45,3 +45,17 @@ use LWP::Simple;
 
 ## Author
 Please feel free to contact Ahmet Arslan at `iorixxx@yahoo.com` if you have any questions, comments or contributions.
+
+## Citation Policy
+If you use this library for research purposes, please use the following citation:
+
+``` tex
+@article{
+  author = "Arslan, Ahmet and Din{\c{c}}er, Bekir Taner",
+  title = "A selective approach to index term weighting for robust information retrieval based on the frequency distributions of query terms",
+  journal = "Information Retrieval Journal",
+  year = "2018",
+  doi = "10.1007/s10791-018-9347-9",
+  url = "https://link.springer.com/article/10.1007/s10791-018-9347-9"
+}
+```
