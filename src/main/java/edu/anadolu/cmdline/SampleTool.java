@@ -4,15 +4,12 @@ import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.eval.Evaluator;
 import edu.anadolu.knn.Measure;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
-import org.clueweb09.InfoNeed;
-import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
 import java.io.BufferedReader;
@@ -25,7 +22,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static edu.anadolu.eval.Evaluator.discoverTextFiles;
 import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
 import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
@@ -178,8 +174,6 @@ public class SampleTool extends CmdLineTool {
             return;
         }
 
-        DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
-
         if ("spam".equals(task)) {
 
             List<String> models = Arrays.asList("DPH.features", "DFIC.features", "DFRee.features", "PL2.features", "DLH13.features", "BM25.features", "LGD.features", "Dirichlet.features");
@@ -214,105 +208,6 @@ public class SampleTool extends CmdLineTool {
         }
 
 
-        List<InfoNeed> needs = dataSet.getTopics();
-
-        Set<String> models = new TreeSet<>();
-
-        for (String parametricModel : parametricModels)
-            models.add(ParamTool.train(parametricModel, dataSet, tag, measure, "OR").toString());
-
-        System.out.println("========= best parameters ===========");
-        System.out.println(models);
-
-        models.add("DFIC");
-        models.add("DPH");
-        models.add("DFRee");
-        models.add("DLH13");
-
-
-        String runsDirectory = spam == 0 ? "runs" : "spam_" + spam + "_runs";
-
-
-        Path samplePath = dataSet.collectionPath().resolve("samples");
-        if (!Files.exists(samplePath))
-            Files.createDirectory(samplePath);
-
-
-        for (Track track : dataSet.tracks()) {
-
-            Path thePath = dataSet.collectionPath().resolve(runsDirectory).resolve(tag).resolve(track.toString());
-
-            if (!Files.exists(thePath) || !Files.isDirectory(thePath) || !Files.isReadable(thePath))
-                throw new IllegalArgumentException(thePath + " does not exist or is not a directory.");
-
-            List<Path> paths = discoverTextFiles(thePath, "_OR_all.txt");
-
-            for (String model : models) {
-
-                Path outPath = samplePath.resolve(track.toString() + "." + Evaluator.prettyModel(model) + ".txt");
-                PrintWriter out = new PrintWriter(Files.newBufferedWriter(outPath, StandardCharsets.US_ASCII));
-
-                int c = 0;
-                for (Path path : paths) {
-                    if (path.getFileName().toString().startsWith(model + "_")) {
-                        c++;
-                        List<String> lines = Files.readAllLines(path, StandardCharsets.US_ASCII);
-
-                        for (String s : lines) {
-
-                            String[] parts = whiteSpaceSplitter.split(s);
-
-                            if (parts.length != 6)
-                                throw new RuntimeException("submission file does not contain 6 columns " + s);
-
-                            final String docId = parts[2];
-
-                            final int qID = Integer.parseInt(parts[0]);
-
-                            InfoNeed need = new InfoNeed(qID, "", track, Collections.emptyMap());
-
-                            int i = needs.indexOf(need);
-                            if (-1 == i) {
-                                System.out.println("cannot find information need " + qID);
-                                continue;
-                            }
-                            final int judge = needs.get(i).getJudgeMap().getOrDefault(docId, 0);
-                            out.println(qID + " 0 " + docId + " " + Integer.toString(judge == -2 ? 0 : judge));
-
-                        }
-                    }
-                }
-                if (c != 1) throw new RuntimeException(c + " many files start with for model " + model);
-
-                out.flush();
-                out.close();
-            }
-        }
-
-
-        if (dataSet.tracks().length == 1) return;
-        for (String model : models) {
-
-            Path unifiedPath = samplePath.resolve(dataSet.collection().toString() + "." + Evaluator.prettyModel(model) + ".txt");
-
-            final PrintWriter out = new PrintWriter(Files.newBufferedWriter(unifiedPath, StandardCharsets.US_ASCII));
-
-            for (Track track : dataSet.tracks()) {
-
-                Path localPath = samplePath.resolve(track.toString() + "." + Evaluator.prettyModel(model) + ".txt");
-
-                List<String> lines = Files.readAllLines(localPath, StandardCharsets.US_ASCII);
-
-                for (String line : lines)
-                    out.println(line);
-
-                out.flush();
-                lines.clear();
-
-            }
-            out.flush();
-            out.close();
-        }
     }
 
     private void addPageRank(Path in, Path out, List<List<String>> dupDOCNOlist) throws IOException, SolrServerException {

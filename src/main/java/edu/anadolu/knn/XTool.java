@@ -1107,6 +1107,7 @@ public class XTool extends CmdLineTool {
 
                     if (DIV.equals(predict) && querySimilarity instanceof CartesianQueryTermSimilarity && BEST.equals(querySimilarity.name())) {
                         RxT.getRow(counter).createCell(column).setCellValue(predicted.predictedScore);
+                        System.out.println(testQuery.id() + " " + predictedModel);
                     }
 
 
