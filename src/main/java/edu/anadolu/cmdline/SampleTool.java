@@ -1,10 +1,6 @@
 package edu.anadolu.cmdline;
 
-import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
-import edu.anadolu.datasets.CollectionFactory;
-import edu.anadolu.datasets.DataSet;
-import edu.anadolu.knn.Measure;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -46,16 +42,6 @@ public class SampleTool extends CmdLineTool {
     public String getHelp() {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " tfd.home";
     }
-
-    @Option(name = "-metric", required = false, usage = "Effectiveness measure")
-    protected Measure measure = Measure.NDCG1000;
-
-    @Option(name = "-tag", metaVar = "[KStem KStemAnchor]", required = false, usage = "Index Tag")
-    protected String tag = Tag.KStem.toString();
-
-
-    @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
-    protected int spam = 0;
 
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
@@ -364,30 +350,5 @@ public class SampleTool extends CmdLineTool {
         query.clear();
 
         return rank;
-    }
-
-    public static void main(String[] args) {
-
-        String line = "0 qid:1 1:81.0 2:86.0 3:122.0 4:122.0 5:50.0 6:86.0 7:86.0 8:3.0 9:3.0 10:81.0 11:81.0 12:18.444643 13:247.42574 14:3.0 15:827.0 16:3.4250813 17:2.9271529 18:7.4784217 19:-2.817856 20:17.85046 # clueweb09-en0010-79-02218";
-
-        int i = line.indexOf("#");
-
-        if (i == -1) {
-            System.out.println(line);
-
-        }
-
-        String p1 = line.substring(0, i).trim();
-        String docId = line.substring(i + 1).trim();
-        System.out.println(p1);
-        System.out.println(docId);
-
-        int spam = 50;
-        double rank = 455.564546;
-        System.out.println(p1 + " 21:" + spam + " 22:" + rank + " # " + docId);
-
-        String[] src = whiteSpaceSplitter.split("0 qid:1 1:81.0 2:86.0 3:122.0 4:122.0 5:50.0 6:86.0 7:86.0 8:3.0 9:3.0 10:81.0 11:81.0 12:18.444643 13:247.42574 14:3.0 15:827.0 16:3.4250813 17:2.9271529 18:7.4784217 19:-2.817856 20:17.85046");
-
-        System.out.println(Arrays.toString(copy(src, 4)));
     }
 }
