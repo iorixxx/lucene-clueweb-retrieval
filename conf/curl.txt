@@ -14,3 +14,18 @@ curl "http://192.168.10.111:8983/solr/spam09A/update/csv?commit=true&separator=%
 # curl -O http://boston.lti.cs.cmu.edu/clueweb09/pagerank/ClueWeb09-En-PRranked.tar.gz
 # tar -xvf ClueWeb09-En-PRranked.tar.gz
 curl "http://192.168.10.111:8983/solr/rank09A/update/csv?commit=true&separator=%09&fieldnames=id,rank" --data-binary @ClueWeb09-En-PRranked.txt -H 'Content-type:text/plain; charset=utf-8'
+
+
+# for different spam rankings
+
+bunzip2 -c clueweb09spam.UK2006.bz2 | ./decompress-spamp > clueweb09spam.UK2006
+bunzip2 -c clueweb09spam.GroupX.bz2 | ./decompress-spamp > clueweb09spam.GroupX
+bunzip2 -c clueweb09spam.Britney.bz2 | ./decompress-spamp > clueweb09spam.Britney
+
+curl "http://localhost:8983/solr/uk2006/update/csv?commit=true&separator=%20&fieldnames=percentile,id" --data-binary @clueweb09spam.UK2006 -H 'Content-type:text/plain; charset=utf-8'
+curl "http://localhost:8983/solr/groupx/update/csv?commit=true&separator=%20&fieldnames=percentile,id" --data-binary @clueweb09spam.GroupX -H 'Content-type:text/plain; charset=utf-8'
+curl "http://localhost:8983/solr/britney/update/csv?commit=true&separator=%20&fieldnames=percentile,id" --data-binary @clueweb09spam.Britney -H 'Content-type:text/plain; charset=utf-8'
+
+curl "http://localhost:8983/solr/uk2006/update?optimize=true"
+curl "http://localhost:8983/solr/groupx/update?optimize=true"
+curl "http://localhost:8983/solr/britney/update?optimize=true"
