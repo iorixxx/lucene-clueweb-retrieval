@@ -28,6 +28,10 @@ public class RocTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
 
+    @Option(name = "-rank", required = false, usage = "Spam ranking to be processed")
+    private Ranking ranking = fusion;
+
+
     @Override
     public String getShortDescription() {
         return "Tool for intrinsic evaluation of Waterloo Spam Rankings";
@@ -64,8 +68,11 @@ public class RocTool extends CmdLineTool {
         if (Collection.CW09A.equals(collection)) {
             qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt"};
             solrURLs = new HttpSolrClient[4];
-            for (int i = 0; i < 4; i++)
-                solrURLs[i] = getCW09Solr(Ranking.values()[i]);
+            solrURLs[0] = getCW09Solr(Ranking.fusion);
+            solrURLs[1] = getCW09Solr(Ranking.britney);
+            solrURLs[2] = getCW09Solr(Ranking.groupx);
+            solrURLs[3] = getCW09Solr(Ranking.uk2006);
+
         } else if (Collection.CW12A.equals(collection)) {
             qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt"};
             solrURLs = new HttpSolrClient[1];
@@ -115,13 +122,28 @@ public class RocTool extends CmdLineTool {
 
     }
 
-    private void distribution(Ranking ranking) throws IOException {
+    class Struct {
+        final Ranking ranking;
+        final int[] relevant, spam, non;
+
+        Struct(int[] relevant, int[] spam, int[] non, Ranking ranking) {
+            this.relevant = relevant;
+            this.spam = spam;
+            this.non = non;
+            this.ranking = ranking;
+        }
+    }
+
+    private Struct distribution(Ranking ranking) throws IOException {
 
         int[] relevant = new int[100];
         Arrays.fill(relevant, 0);
 
         int[] spam = new int[100];
         Arrays.fill(spam, 0);
+
+        int[] non = new int[100];
+        Arrays.fill(non, 0);
 
         Set<String> set = new HashSet<>();
 
@@ -169,12 +191,16 @@ public class RocTool extends CmdLineTool {
 
             if (grade > 0)
                 relevant[percentile]++;
+
+            if (grade == 0)
+                non[percentile]++;
         }
 
-        System.out.println(ranking + ",spam,relevant");
+        //    System.out.println(ranking + ",spam,relevant");
+        //    for (int i = 0; i < 100; i++)
+        //       System.out.println(i + "," + spam[i] + "," + relevant[i]);
 
-        for (int i = 0; i < 100; i++)
-            System.out.println(i + "," + spam[i] + "," + relevant[i]);
+        return new Struct(relevant, spam, non, ranking);
 
     }
 
@@ -196,7 +222,21 @@ public class RocTool extends CmdLineTool {
             return;
         }
 
-        distribution(fusion);
+        if (Collection.CW09A.equals(collection)) {
+            Struct fusion = distribution(Ranking.fusion);
+            Struct britney = distribution(Ranking.britney);
+            Struct groupx = distribution(Ranking.groupx);
+            Struct uk2006 = distribution(Ranking.uk2006);
 
+
+            System.out.println("percentile,fusionSpam,fusionRel,britneySpam,britneyRel,groupxSpam,groupxRel,uk2006Spam,uk2006Rel");
+            for (int i = 0; i < 100; i++)
+                System.out.println(i + "," +
+                        fusion.spam[i] + "," + fusion.relevant[i] + "," +
+                        britney.spam[i] + "," + britney.relevant[i] + "," +
+                        groupx.spam[i] + "," + groupx.relevant[i] + "," +
+                        uk2006.spam[i] + "," + uk2006.relevant[i]
+                );
+        }
     }
 }
