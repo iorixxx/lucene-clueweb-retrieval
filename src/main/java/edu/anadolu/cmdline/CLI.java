@@ -143,6 +143,8 @@ public final class CLI {
 
         tools.add(new QueryPerTFTool());
 
+        tools.add(new RocTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
@@ -178,7 +180,7 @@ public final class CLI {
         }
     }
 
-    public static Properties readProperties() {
+    private static Properties readProperties() {
 
         Properties prop = new Properties();
 

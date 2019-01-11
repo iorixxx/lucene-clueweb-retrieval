@@ -1,4 +1,4 @@
-curl "http://localhost:8983/solr/spam09A/update/csv?commit=true&separator=%20&fieldnames=percentile,id" -T clueweb09spam.Fusion -H 'Content-type:text/plain; charset=utf-8'
+curl "http://localhost:8983/solr/spam09A/update/csv?commit=true&separator=%20&fieldnames=percentile,id" -T clueweb09spam.Fusion -X POST -H 'Content-type:text/plain; charset=utf-8'
 
 
 
