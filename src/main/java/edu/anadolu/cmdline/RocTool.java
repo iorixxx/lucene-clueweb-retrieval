@@ -323,6 +323,19 @@ public class RocTool extends CmdLineTool {
             // default setting Fusion with 70% threshold
             System.out.println(fusion.classify(70));
 
+            for (int t = 0; t < 100; t++) {
+
+                Confusion f = fusion.classify(t);
+                Confusion b = britney.classify(t);
+                Confusion g = groupx.classify(t);
+                Confusion u = uk2006.classify(t);
+                System.out.println(t + "," +
+                        f.recall() + "," + f.fallout() + "," +
+                        b.recall() + "," + b.fallout() + "," +
+                        g.recall() + "," + g.fallout() + "," +
+                        u.recall() + "," + u.fallout());
+            }
+
         } else if (Collection.CW12A.equals(collection)) {
 
             this.ranking = fusion;
@@ -330,6 +343,14 @@ public class RocTool extends CmdLineTool {
             System.out.println("percentile,fusionSpam,fusionRel");
             for (int i = 0; i < 100; i++)
                 System.out.println(i + "," + fusion.spam[i] + "," + fusion.relevant[i]);
+
+
+            for (int t = 0; t < 100; t++) {
+
+                Confusion f = fusion.classify(t);
+
+                System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.fallout());
+            }
         }
     }
 }
