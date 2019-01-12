@@ -132,6 +132,78 @@ public class RocTool extends CmdLineTool {
             this.non = non;
             this.ranking = ranking;
         }
+
+
+        /**
+         * label those with percentile-score<70 to be spam
+         *
+         * @param threshold 70
+         * @return elements of confusion matrix
+         */
+        Confusion classify(int threshold) {
+
+            int tp = 0;
+            int tn = 0;
+
+            int fp = 0;
+            int fn = 0;
+
+            for (int i = 0; i < threshold; i++) {
+
+                tp += spam[i];
+
+                // false positive: when a relevant document is incorrectly classified as spam
+                fp += relevant[i];
+            }
+
+            for (int i = threshold; i < 100; i++) {
+
+                tn += relevant[i];
+
+                // false negative: when a spam document is incorrectly classified as non-spam
+                fn += spam[i];
+            }
+
+            return new Confusion(tp, tn, fp, fn);
+        }
+    }
+
+    class Confusion {
+
+        final int tp, tn, fp, fn;
+
+        Confusion(int tp, int tn, int fp, int fn) {
+            this.tp = tp;
+            this.tn = tn;
+            this.fp = fp;
+            this.fn = fn;
+        }
+
+        double precision() {
+            return (double) tp / (tp + fp);
+        }
+
+        double recall() {
+            return (double) tp / (tp + fn);
+        }
+
+        double fallout() {
+            return (double) fp / (tn + fp);
+        }
+
+        double f1() {
+            return 2.0d * precision() * recall() / (precision() + recall());
+        }
+
+        @Override
+        public String toString() {
+            return "Confusion{" +
+                    "tp=" + tp +
+                    ", tn=" + tn +
+                    ", fp=" + fp +
+                    ", fn=" + fn +
+                    '}';
+        }
     }
 
     private Struct distribution(Ranking ranking) throws IOException {
@@ -237,6 +309,27 @@ public class RocTool extends CmdLineTool {
                         groupx.spam[i] + "," + groupx.relevant[i] + "," +
                         uk2006.spam[i] + "," + uk2006.relevant[i]
                 );
+
+            for (int t = 0; t < 100; t++) {
+
+                Confusion f = fusion.classify(t);
+                Confusion b = britney.classify(t);
+                Confusion g = groupx.classify(t);
+                Confusion u = uk2006.classify(t);
+
+                System.out.println(t + "," + f.f1() + "," + b.f1() + "," + g.f1() + "," + u.f1());
+            }
+
+            // default setting Fusion with 70% threshold
+            System.out.println(fusion.classify(70));
+
+        } else if (Collection.CW12A.equals(collection)) {
+
+            this.ranking = fusion;
+            Struct fusion = distribution(Ranking.fusion);
+            System.out.println("percentile,fusionSpam,fusionRel");
+            for (int i = 0; i < 100; i++)
+                System.out.println(i + "," + fusion.spam[i] + "," + fusion.relevant[i]);
         }
     }
 }
