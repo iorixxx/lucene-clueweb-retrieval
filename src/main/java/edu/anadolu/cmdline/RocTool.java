@@ -28,10 +28,6 @@ public class RocTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
 
-    @Option(name = "-rank", required = false, usage = "Spam ranking to be processed")
-    private Ranking ranking = fusion;
-
-
     @Override
     public String getShortDescription() {
         return "Tool for intrinsic evaluation of Waterloo Spam Rankings";
@@ -276,6 +272,44 @@ public class RocTool extends CmdLineTool {
 
     }
 
+    private void wiki() throws IOException {
+
+        int[] fusion = wiki("wFusion.txt");
+        int[] britney = wiki("wBritney.txt");
+        int[] groupx = wiki("wGroupX.txt");
+        int[] uk2006 = wiki("wUK.txt");
+
+        System.out.println("percentile,fusionWiki,britneyWiki,groupxWiki,uk2006Wiki");
+        for (int i = 0; i < 100; i++)
+            System.out.println(i + "," + fusion[i] + "," + britney[i] + "," + groupx[i] + "," + uk2006[i]);
+
+    }
+
+    // Use grep tool to identify wikipedia pages whose docIds start with enwp*
+    // grep enwp clueweb09spam.GroupX > wGroupX.txt
+
+    private int[] wiki(String wikiPages) throws IOException {
+
+        int[] wiki = new int[100];
+        Arrays.fill(wiki, 0);
+
+        final List<String> lines = Files.readAllLines(Paths.get(wikiPages), StandardCharsets.US_ASCII);
+
+        for (String line : lines) {
+
+            String[] parts = line.split("\\s+");
+
+            if (parts.length != 2) throw new RuntimeException("lines length not equal to 2");
+
+            int percentile = Integer.parseInt(parts[0]);
+
+            if (percentile >= 0 && percentile < 100)
+                wiki[percentile]++;
+            else throw new RuntimeException("percentile invalid " + percentile);
+        }
+        return wiki;
+    }
+
 
     @Override
     public void run(Properties props) throws Exception {
@@ -291,6 +325,11 @@ public class RocTool extends CmdLineTool {
 
         if ("raw".equals(task)) {
             raw(tfd_home);
+            return;
+        }
+
+        if ("wiki".equals(task)) {
+            wiki();
             return;
         }
 
@@ -323,6 +362,7 @@ public class RocTool extends CmdLineTool {
             // default setting Fusion with 70% threshold
             System.out.println(fusion.classify(70));
 
+            // print recall and fallout necessary for ROC curves
             for (int t = 0; t < 100; t++) {
 
                 Confusion f = fusion.classify(t);
@@ -336,9 +376,14 @@ public class RocTool extends CmdLineTool {
                         u.recall() + "," + u.fallout());
             }
 
+            //
+
+            System.out.println("percentile,fusionNon,britneyNon,groupxNon,uk2006Non");
+            for (int i = 0; i < 100; i++)
+                System.out.println(i + "," + fusion.non[i] + "," + britney.non[i] + "," + groupx.non[i] + "," + uk2006.non[i]);
+
         } else if (Collection.CW12A.equals(collection)) {
 
-            this.ranking = fusion;
             Struct fusion = distribution(Ranking.fusion);
             System.out.println("percentile,fusionSpam,fusionRel");
             for (int i = 0; i < 100; i++)
@@ -351,6 +396,10 @@ public class RocTool extends CmdLineTool {
 
                 System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.fallout());
             }
+
+            System.out.println("percentile,fusionNon");
+            for (int i = 0; i < 100; i++)
+                System.out.println(i + "," + fusion.non[i]);
         }
     }
 }
