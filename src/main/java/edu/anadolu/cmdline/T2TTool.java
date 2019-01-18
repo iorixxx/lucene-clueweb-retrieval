@@ -1,6 +1,7 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Decorator;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
@@ -8,21 +9,23 @@ import edu.anadolu.freq.Freq;
 import edu.anadolu.knn.ChiBase;
 import edu.anadolu.knn.ChiSquare;
 import edu.anadolu.knn.TFDAwareNeed;
+import edu.anadolu.qpp.PMI;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
+import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
+
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Term2Term (T2T Tool)
@@ -31,6 +34,12 @@ class T2TTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
+
+    @Option(name = "-task", required = false, usage = "task to be executed")
+    private String task;
+
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected String tag = Tag.KStem.toString();
 
     @Override
     public String getShortDescription() {
@@ -58,6 +67,35 @@ class T2TTool extends CmdLineTool {
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         Path collectionPath = Paths.get(tfd_home, collection.toString());
+
+        if ("pmi".equals(task)) {
+
+
+            PMI pmi = new PMI(dataset.indexesPath().resolve(tag));
+
+            List<String> terms = dataset.getTopics().stream()
+                    .map(InfoNeed::query)
+                    .map(whiteSpaceSplitter::split)
+                    .flatMap(Arrays::stream)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            System.out.print("\t");
+            for (String term : terms)
+                System.out.print(term + "\t");
+            System.out.println();
+
+            for (String term : terms) {
+                System.out.print(term + "\t");
+                for (String other : terms) {
+                    double v = pmi.pmi(term, other);
+                    System.out.print(String.format("%.4f", v) + "\t");
+                }
+                System.out.println();
+            }
+            return;
+        }
 
         Path excelPath = collectionPath.resolve("excels");
         if (!Files.exists(excelPath))
