@@ -6,10 +6,10 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.similarities.ModelBase;
 import org.clueweb09.InfoNeed;
 
-import static org.apache.lucene.search.similarities.ModelBase.log2;
-
 import java.io.IOException;
 import java.nio.file.Path;
+
+import static org.apache.lucene.search.similarities.ModelBase.log2;
 
 /**
  * The PMI of a pair of outcomes x and y belonging to discrete random variables X and Y quantifies the discrepancy between
@@ -44,7 +44,7 @@ public class PMI extends Base {
     }
 
     public double pmi(String m1, String m2) throws IOException, ParseException {
-        return 1.0d / -log2((double) term1ANDterm2(m1, m2) / (double) (analyzedDF(field, m1) * analyzedDF(field, m2)));
+        return log2(docCount * (double) term1ANDterm2(m1, m2) / (double) (analyzedDF(field, m1) * analyzedDF(field, m2)));
     }
 
 
