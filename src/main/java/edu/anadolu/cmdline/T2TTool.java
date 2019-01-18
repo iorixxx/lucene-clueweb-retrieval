@@ -16,16 +16,15 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.clueweb09.InfoNeed;
-import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
-
-import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 /**
  * Term2Term (T2T Tool)
@@ -70,8 +69,9 @@ class T2TTool extends CmdLineTool {
 
         if ("pmi".equals(task)) {
 
+            final Map<String, Double> cache = new HashMap<>();
 
-            PMI pmi = new PMI(dataset.indexesPath().resolve(tag));
+            PMI pmi = new PMI(dataset.indexesPath().resolve(tag), "contents");
 
             List<String> terms = dataset.getTopics().stream()
                     .map(InfoNeed::query)
@@ -89,11 +89,30 @@ class T2TTool extends CmdLineTool {
             for (String term : terms) {
                 System.out.print(term + "\t");
                 for (String other : terms) {
-                    double v = pmi.pmi(term, other);
-                    System.out.print(String.format("%.4f", v) + "\t");
+
+                    final String key1 = other + "_" + term;
+                    final String key2 = term + "_" + other;
+
+                    final double sim;
+                    if (cache.containsKey(key1)) {
+                        sim = cache.get(key1);
+                    } else if (cache.containsKey(key2)) {
+                        sim = cache.get(key2);
+                    } else {
+                        sim = pmi.pmi(term, other);
+                        cache.put(key1, sim);
+                    }
+                    System.out.print(String.format("%.4f", sim) + "\t");
                 }
                 System.out.println();
             }
+
+            System.out.println("=========================");
+            System.out.print("terms={");
+            for (String term : terms) {
+                System.out.print("'" + term + "',");
+            }
+            System.out.println("}");
             return;
         }
 

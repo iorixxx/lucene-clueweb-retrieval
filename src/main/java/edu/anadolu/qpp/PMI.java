@@ -1,14 +1,18 @@
 package edu.anadolu.qpp;
 
-import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.similarities.ModelBase;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.TermQuery;
 import org.clueweb09.InfoNeed;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
+import static edu.anadolu.analysis.Analyzers.getAnalyzedToken;
 import static org.apache.lucene.search.similarities.ModelBase.log2;
 
 /**
@@ -19,10 +23,14 @@ public class PMI extends Base {
 
     private final QueryParser queryParser;
 
-    public PMI(Path indexPath) throws IOException {
-        super(indexPath, "contents");
+    public PMI(Path indexPath, String field) throws IOException {
+        super(indexPath, field);
         queryParser = new QueryParser(field, analyzer);
         queryParser.setDefaultOperator(QueryParser.Operator.AND);
+    }
+
+    public PMI(DataSet dataset, String tag, String field) throws IOException {
+        this(dataset.indexesPath().resolve(tag), field);
     }
 
 
@@ -30,7 +38,21 @@ public class PMI extends Base {
      * the number of documents containing at both of the terms
      */
     private int term1ANDterm2(String term1, String term2) throws IOException, ParseException {
-        return searcher.count(queryParser.parse(term1 + " " + term2));
+        return searcher.count(queryParser.parse(term1 + " " + term2)) + 1;
+    }
+
+    /**
+     * the number of documents containing at both of the terms
+     */
+    private int t1ANDt2(String term1, String term2) throws IOException {
+
+        TermQuery t1 = new TermQuery(new Term(field, getAnalyzedToken(term1, analyzer)));
+        TermQuery t2 = new TermQuery(new Term(field, getAnalyzedToken(term2, analyzer)));
+
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        builder.add(t1, BooleanClause.Occur.MUST).add(t2, BooleanClause.Occur.MUST);
+
+        return searcher.count(builder.build()) + 1;
     }
 
     @Override
@@ -40,11 +62,11 @@ public class PMI extends Base {
 
 
     public long analyzedDF(String field, String word) throws IOException {
-        return df(field, Analyzers.getAnalyzedToken(word, analyzer));
+        return df(field, getAnalyzedToken(word, analyzer)) + 1;
     }
 
     public double pmi(String m1, String m2) throws IOException, ParseException {
-        return log2(docCount * (double) term1ANDterm2(m1, m2) / (double) (analyzedDF(field, m1) * analyzedDF(field, m2)));
+        return log2((docCount + 1) * (double) term1ANDterm2(m1, m2) / (double) (analyzedDF(field, m1) * analyzedDF(field, m2)));
     }
 
 
@@ -65,7 +87,14 @@ public class PMI extends Base {
             for (int j = i + 1; j < distinctTerms.length; j++) {
                 final String m2 = distinctTerms[j];
 
-                pmi += ModelBase.log2((double) term1ANDterm2(m1, m2) / (double) (analyzedDF(field, m1) * analyzedDF(field, m2)));
+                int intersect = term1ANDterm2(m1, m2);
+
+                if (intersect == 0) {
+                    //TODO do something when there is no intersection since logarithm of zero is not defined.
+                    // at the time of being use +1 trick
+                }
+
+                pmi += pmi(m1, m2);
                 counter++;
 
             }

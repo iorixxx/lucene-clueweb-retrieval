@@ -86,7 +86,7 @@ public final class FeatureTool extends CmdLineTool {
         Analyzer analyzer = Analyzers.analyzer(Tag.tag(tag));
         ModelSelection modelSelection = new ModelSelection(dataset, tag);
 
-        PMI pmi = new PMI(dataset.indexesPath().resolve(tag));
+        PMI pmi = new PMI(dataset.indexesPath().resolve(tag), "contents");
 
         QuerySelector querySelector = new QuerySelector(dataset, tag);
         boolean term = "term".equals(task);
