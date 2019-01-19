@@ -7,9 +7,24 @@ Useful when you need to bypass training phase of hyper parameters. Instead suppl
 ./run.sh Indexer -collection GOV2 -tag ICU
 ./run.sh Indexer -collection GOV2 -tag Latin
 
-./run.sh Indexer -collection MQ09 -tag ICU
-./run.sh Indexer -collection MQ09 -tag Latin
+./run.sh Indexer -collection CW09B -tag ICU
+./run.sh Indexer -collection CW09B -tag Latin
 
 # Searcher
 
-./run.sh Custom -collection MQ09 -tag KStem -task search
+Terrer's defaults:
+./run.sh Custom -collection MQ07 -task search
+./run.sh Custom -collection MQ08 -task search
+./run.sh Custom -collection MQ09 -task search
+
+Average of trained parameters
+./run.sh Custom -collection MQ07 -task search -models 
+./run.sh Custom -collection MQ08 -task search -models
+./run.sh Custom -collection MQ09 -task search -models
+
+
+# Evaluate
+
+./run.sh Cross -collection MQ07 -tags ICU_Latin -baseline Latin -measure NDCG20
+./run.sh Cross -collection MQ08 -tags ICU_Latin -baseline Latin -measure NDCG20
+./run.sh Cross -collection MQ09 -tags ICU_Latin -baseline Latin -measure NDCG20

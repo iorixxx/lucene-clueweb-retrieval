@@ -24,7 +24,7 @@ import static edu.anadolu.field.FieldTool.sortByValue;
  */
 public class CrossTool extends CmdLineTool {
 
-    @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "CW09A_CW12B")
+    @Option(name = "-collection", required = true, usage = "the collection", metaVar = "CW09A")
     protected Collection collection;
 
     @Override
@@ -61,6 +61,12 @@ public class CrossTool extends CmdLineTool {
 
     private final TTest tTest = new TTest();
 
+    /**
+     * Terrier's default values
+     */
+    @Option(name = "-models", required = false, usage = "term-weighting models")
+    protected String models = "BM25k1.2b0.75_DirichletLMc2500.0_LGDc1.0_PL2c1.0_DPH_DFRee_DLH13_DFIC";
+
     @Override
     public void run(Properties props) throws Exception {
 
@@ -89,7 +95,7 @@ public class CrossTool extends CmdLineTool {
 
         for (int i = 0; i < tagsArr.length; i++) {
             String tag = tagsArr[i];
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, "all", evalDirectory, op);
+            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, models, evalDirectory, op);
             evaluatorMap.put(tag, evaluator);
             needs = evaluator.getNeeds();
 
