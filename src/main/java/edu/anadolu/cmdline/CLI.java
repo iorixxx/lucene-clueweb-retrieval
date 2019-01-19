@@ -145,6 +145,8 @@ public final class CLI {
 
         tools.add(new RocTool());
 
+        tools.add(new CustomTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
