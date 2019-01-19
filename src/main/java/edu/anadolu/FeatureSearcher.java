@@ -164,6 +164,7 @@ public class FeatureSearcher extends Searcher {
                     }
                 }
 
+                // document length
                 if (norms.advanceExact(entry.getKey())) {
                     out.print(Integer.toString(++f));
                     out.print(":");
@@ -475,6 +476,8 @@ public class FeatureSearcher extends Searcher {
                     out.print(" ");
 
                 }
+
+                // TODO consider dumping field length as we did for the whole document
 
                 out.print("# ");
                 out.print(entry.getKey());

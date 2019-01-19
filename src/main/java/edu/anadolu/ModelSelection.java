@@ -46,7 +46,7 @@ public class ModelSelection {
             List<String> lines = Files.readAllLines(cacheFile, StandardCharsets.US_ASCII);
 
             if (allQueries.size() != lines.size()) {
-                throw new RuntimeException("all queries size does not equal to lines");
+                throw new RuntimeException("all queries size = " + allQueries.size() + "does not equal to lines = " + lines.size());
             }
 
             for (int i = 0; i < allQueries.size(); i++) {

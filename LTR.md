@@ -1,14 +1,54 @@
 # Learning to Rank Experiments
 
-This library can produce a features file that is acceptable by learning to rank libraries such as RankLib and RankSVM.
+This library can produce a features file that is compatible with learning to rank libraries such as RankLib and RankSVM.
 
+## Extraction of Type-Q
+Not all learning to rank algorithms can handle this type of features.
+Pre-retrieval predictors,  
+Running stats tool is a pre-requisite
 
-## Feature extraction
+` ./run.sh Stats -collection CW09B `
+` ./run.sh Stats -collection CW09B -task query `
+` ./run.sh TFDistribution -collection CW09B -task query `
+` ./run.sh TFDistribution -collection CW09B -task term `
+` ./run.sh MS -collection CW09B -tag KStem -metric NDCG20 -spam `
 
+Following command dumps query features in the format: qid:1   0.6     0.4715      0.0896
+` ./run.sh Feature -collection CW09B`
+
+## Extraction of Type-QD
+
+To extract Weighting Model Whole Document (WMWD) features
 ` ./run.sh Searcher -collection MQ09 -task feature -tag KStem `
+
+To extract Weighting Model Single Field (WMSF) features
 ` ./run.sh Searcher -collection MQ09 -task field -tag KStem `
-manually copy *. features files of individual tracks in to TFD_HOME/MQ09/ModelName.features or
+
+The eight models are: BM25, LGD 
+Fields: ULR, title, body, anchor
+
+To be implemented WMFB
+
+WMWD: Multiple standard weighting models computed on whole documents
+WMSF: A standard weighting model calculated individually on each “single field” of the document. 
+WMFB: A weighting model that is field-based, where term frequencies are combined rather than the weighting model scores.
+
+The above notations are borrowed from "About Learning Models with Multiple Query Dependent Features"
+
+This step appends (row-based) different files into a single file.
+manually copy *.features files of individual tracks in to TFD_HOME/MQ09/ModelName.features or
 ` ./merge.sh `
+
+This step merges WMWD features and WMSF features in a column oriented way.
 ` ./run.sh Sample -collection MQ09 -task merge `
+
+This step concludes the extraction of Type-QD features.
+
+## Extraction of Type-D
+
+This family of features are document priors.
+The document prior is the probability that the document is relevant to *any* query.
+At the moment we have PageRank and SpamRankings.
+We store them in Apache Solr for fast lookup.
 ` ./run.sh Sample -collection MQ09 -task spam `
 The last command will produce TFD_HOME/MQ09/X.ModelName.features files.

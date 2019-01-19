@@ -38,7 +38,12 @@ public class PMI extends Base {
      * the number of documents containing at both of the terms
      */
     private int term1ANDterm2(String term1, String term2) throws IOException, ParseException {
-        return searcher.count(queryParser.parse(term1 + " " + term2)) + 1;
+        int temp = t1ANDt2(term1, term2);
+        int actual = searcher.count(queryParser.parse(term1 + " " + term2)) + 1;
+
+        if (temp != actual) throw new RuntimeException("previous implementation returns different result from new one");
+
+        return actual;
     }
 
     /**
