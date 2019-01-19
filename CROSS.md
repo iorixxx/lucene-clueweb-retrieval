@@ -10,6 +10,12 @@ Useful when you need to bypass training phase of hyper parameters. Instead suppl
 ./run.sh Indexer -collection CW09B -tag ICU
 ./run.sh Indexer -collection CW09B -tag Latin
 
+# Optimize
+
+./run.sh Optimize -collection GOV2
+./run.sh Optimize -collection CW09B
+
+
 # Searcher
 
 Terrer's defaults:
