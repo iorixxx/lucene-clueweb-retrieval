@@ -12,14 +12,15 @@ import org.jsoup.nodes.Element;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
-public class DocFeatureBase implements IDocFeature {
+public class DocFeatureBase {
 
     private final WarcRecord warcRecord;
     Document jDoc;
     String docId, url;
 
-    public DocFeatureBase(WarcRecord warcRecord) {
+    DocFeatureBase(WarcRecord warcRecord) {
         this.warcRecord = warcRecord;
         try {
             jDoc = Jsoup.parse(warcRecord.content());
@@ -31,9 +32,14 @@ public class DocFeatureBase implements IDocFeature {
         }
     }
 
-    @Override
-    public double calculate(WarcRecord warcRecord) {
-        return 0;
+
+    synchronized void calculate(List<IDocFeature> featureList) {
+        System.out.print(docId);
+        for (IDocFeature iDoc : featureList) {
+            double value = iDoc.calculate(warcRecord);
+            System.out.print("\t" + iDoc.toString() + ":" + value);
+        }
+        System.out.println();
     }
 
     /**

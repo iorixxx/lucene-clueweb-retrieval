@@ -47,10 +47,8 @@ public class Traverser {
 
             if (skip(id)) return 0;
 
-            for (IDocFeature iDoc : featureList) {
-                double value = iDoc.calculate(warcRecord);
-                System.out.println(id + "\t" + iDoc.toString() + ":" + value);
-            }
+            DocFeatureBase base = new DocFeatureBase(warcRecord);
+            base.calculate(featureList);
             return 1;
         }
 
