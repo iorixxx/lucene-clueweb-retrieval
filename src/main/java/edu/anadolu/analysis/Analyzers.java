@@ -22,7 +22,7 @@ import static edu.anadolu.analysis.Tag.KStem;
  */
 public class Analyzers {
 
-    private static final String FIELD = "field";
+    public static final String FIELD = "field";
 
     /**
      * Intended to use with one term queries (otq) only

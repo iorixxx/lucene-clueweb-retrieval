@@ -140,7 +140,7 @@ public class Indexer {
             StringBuilder contents = new StringBuilder(jDoc.text()).append(" ");
 
             if (config.anchor && solr != null) {
-                String anchor = anchor(id);
+                String anchor = anchor(id, solr);
                 if (anchor != null)
                     stripHTMLAndAppend(anchor, contents);
             }
@@ -306,7 +306,7 @@ public class Indexer {
     private final IndexerConfig config;
     private final Collection collection;
 
-    private String anchor(String id) {
+    public static String anchor(String id, SolrClient solr) {
         SolrQuery query = new SolrQuery();
         query.setQuery(id);
         query.setFields("anchor");
@@ -438,7 +438,7 @@ public class Indexer {
 
 
         if (config.anchor && solr != null) {
-            String anchor = anchor(wDoc.id());
+            String anchor = anchor(wDoc.id(), solr);
             if (anchor != null)
                 document.add(new NoPositionsTextField("anchor", anchor));
         }

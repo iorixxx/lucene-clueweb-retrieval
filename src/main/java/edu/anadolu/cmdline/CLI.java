@@ -4,6 +4,7 @@ import edu.anadolu.field.CrossTool;
 import edu.anadolu.field.FieldTool;
 import edu.anadolu.field.SelectiveStemmingTool;
 import edu.anadolu.knn.*;
+import edu.anadolu.ltr.TraverseTool;
 import org.apache.lucene.util.Version;
 import org.clueweb09.WarcTool;
 
@@ -146,6 +147,8 @@ public final class CLI {
         tools.add(new RocTool());
 
         tools.add(new CustomTool());
+
+        tools.add(new TraverseTool());
 
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
