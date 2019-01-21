@@ -10,6 +10,7 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.knn.Measure;
 import edu.anadolu.qpp.PMI;
+import edu.anadolu.qpp.SCS;
 import edu.anadolu.stats.TermStats;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -87,12 +88,13 @@ public final class FeatureTool extends CmdLineTool {
         ModelSelection modelSelection = new ModelSelection(dataset, tag);
 
         PMI pmi = new PMI(dataset.indexesPath().resolve(tag), "contents");
+        SCS scs = new SCS(dataset.indexesPath().resolve(tag), "contents");
 
         QuerySelector querySelector = new QuerySelector(dataset, tag);
         boolean term = "term".equals(task);
 
         // Print header
-        System.out.println("QueryID\tWordCount\tGamma\tOmega\tavgPMI\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt");
+        System.out.println("QueryID\tWordCount\tGamma\tOmega\tavgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt");
         for (InfoNeed need : querySelector.allQueries) {
 
             Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");
@@ -121,7 +123,7 @@ public final class FeatureTool extends CmdLineTool {
             double[] vector = modelSelection.getFeatureVector(need);
 
             System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + vector[1] + "\t" + vector[2] + "\t");
-            System.out.print(pmi.value(need) + "\t");
+            System.out.print(pmi.value(need) + "\t" + scs.value(need) + "\t");
             System.out.print(StatUtils.mean(idf) + "\t" + StatUtils.variance(idf) + "\t");
             System.out.print(StatUtils.mean(cti) + "\t" + StatUtils.variance(cti) + "\t");
             System.out.println(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt));
