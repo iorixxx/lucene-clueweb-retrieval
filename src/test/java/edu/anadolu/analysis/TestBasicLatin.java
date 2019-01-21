@@ -50,5 +50,32 @@ public class TestBasicLatin extends BaseTokenStreamTestCase {
 
     }
 
+    @Test
+    public void tesASCIIOnly() throws IOException {
+
+        Analyzer a = Analyzers.analyzer(Tag.ASCII);
+
+        assertAnalyzesTo(a, "b3s Ulusal Bulut Bilişim ve Büyük Veri Sempozyumu", // Turkish
+                new String[]{"b3s", "ulusal", "bulut", "ve", "veri", "sempozyumu"},
+                new String[]{"ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII"});
+    }
+
+    @Test
+    public void tesASCIIOnly2() throws IOException {
+
+        Analyzer a = Analyzers.analyzer(Tag.ASCII);
+
+        assertAnalyzesTo(a, "321\n" +
+                        "Je t'aime \n" +
+                        "Te quiero \n" +
+                        "\n Ich liebe dich \n" +
+                        "ผมรักคุณ \n" + // Thai
+                        "მიყვარხარ \n" + // Georgian
+                        "seni çok seviyorum 123\n", // Turkish
+                new String[]{"321", "je", "t'aime", "te", "quiero", "ich", "liebe", "dich", "seni", "seviyorum", "123"},
+                new String[]{"ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII"});
+
+    }
+
 
 }

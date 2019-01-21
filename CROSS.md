@@ -4,9 +4,11 @@ Useful when you need to bypass training phase of hyper parameters. Instead suppl
 
 # Indexer
 
+./run.sh Indexer -collection GOV2 -tag ASCII
 ./run.sh Indexer -collection GOV2 -tag ICU
 ./run.sh Indexer -collection GOV2 -tag Latin
 
+./run.sh Indexer -collection CW09B -tag ASCII
 ./run.sh Indexer -collection CW09B -tag ICU
 ./run.sh Indexer -collection CW09B -tag Latin
 
