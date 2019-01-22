@@ -1,15 +1,14 @@
 package edu.anadolu.ltr;
 
-import org.clueweb09.WarcRecord;
+import java.io.IOException;
 
+@FunctionalInterface
 public interface IDocFeature {
     /**
-     * Calculate a feature value from the warc Record
+     * Calculate a feature value using the data provided by a DocFeatureBase instance
      *
-     * @param warcRecord input warcRecord
+     * @param base input docFeatureBase
      * @return the value of the feature
      */
-    double calculate(WarcRecord warcRecord);
-
-    String toString();
+    double calculate(DocFeatureBase base) throws IOException;
 }

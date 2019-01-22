@@ -78,6 +78,7 @@ public class TraverseTool extends CmdLineTool {
         Set<String> docIdSet = retrieveDocIdSet(file);
 
         List<IDocFeature> features = new ArrayList<>();
+        features.add(new Favicon());
         features.add(new StopWordRatio());
 
         Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);

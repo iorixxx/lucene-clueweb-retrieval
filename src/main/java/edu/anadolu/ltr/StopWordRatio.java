@@ -18,9 +18,7 @@ public class StopWordRatio implements IDocFeature {
     }
 
     @Override
-    public double calculate(WarcRecord warcRecord) {
-
-        DocFeatureBase base = new DocFeatureBase(warcRecord);
+    public double calculate(DocFeatureBase base) {
 
         String text = base.jDoc.text();
 

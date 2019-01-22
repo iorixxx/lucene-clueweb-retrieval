@@ -48,7 +48,12 @@ public class Traverser {
             if (skip(id)) return 0;
 
             DocFeatureBase base = new DocFeatureBase(warcRecord);
-            base.calculate(featureList);
+            try {
+                base.calculate(featureList);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
             return 1;
         }
 
