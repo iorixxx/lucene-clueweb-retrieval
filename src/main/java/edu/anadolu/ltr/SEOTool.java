@@ -14,13 +14,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class TraverseTool extends CmdLineTool {
+/**
+ * Tool that compute SEO-based document features.
+ */
+public class SEOTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     private Collection collection;
 
-    @Option(name = "-file", required = true, usage = "Collection")
+    @Option(name = "-file", required = true, usage = "input file")
     private String file;
+
+    @Option(name = "-out", required = true, usage = "output file")
+    private String out;
 
     @Override
     public String getShortDescription() {
@@ -79,11 +85,12 @@ public class TraverseTool extends CmdLineTool {
 
         List<IDocFeature> features = new ArrayList<>();
         features.add(new Favicon());
+        features.add(new Https());
         features.add(new StopWordRatio());
 
         Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
-        traverser.traverseParallel();
-        System.out.println("Total documents are processed in " + execution(start));
+        traverser.traverseParallel(Paths.get(out));
+        System.out.println("Document features are extracted in " + execution(start));
     }
 
     private Set<String> retrieveDocIdSet(Path file) throws IOException {
