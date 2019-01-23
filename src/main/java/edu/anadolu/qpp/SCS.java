@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
-import static edu.anadolu.analysis.Analyzers.getAnalyzedToken;
 import static edu.anadolu.analysis.Analyzers.getAnalyzedTokens;
 
 /**
@@ -26,8 +25,8 @@ public class SCS extends Base {
 
     /**
      * Kullback-Leibler between a (simplified) query language model and a collection model
-     * qtf is the number of occurences of a term in the query
-     * ctf is the number of occurences of a term in the collection
+     * qtf is the number of occurrences of a term in the query
+     * ctf is the number of occurrences of a term in the collection
      */
     public double value(InfoNeed need) throws IOException {
 
@@ -38,7 +37,7 @@ public class SCS extends Base {
 
         for (String term : terms) {
             qtf = (double) Collections.frequency(terms, term) / terms.size();
-            ctf = (double) ctf(field, getAnalyzedToken(term, analyzer)) / sumTotalTermFreq;
+            ctf = (double) ctf(field, term) / sumTotalTermFreq;
 
             // the specificity of a query term is assumed to be large if it does not exist in the collection
             scs += qtf * Math.log(ctf == 0.0 ? Double.MAX_VALUE : qtf / ctf);
