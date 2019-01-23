@@ -1,8 +1,9 @@
 package edu.anadolu.ltr;
 
-public class Https implements IDocFeature {
+import org.jsoup.select.Elements;
 
-    IDocFeature f = (base) -> base.url.startsWith("https") ? 1 : 0;
+
+public class ImgToMax implements IDocFeature {
 
     @Override
     public String toString() {
@@ -11,6 +12,8 @@ public class Https implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        return base.url.startsWith("https:") ? 1 : 0;
+        Elements images = base.jDoc.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
+        return images.size();
     }
 }
+

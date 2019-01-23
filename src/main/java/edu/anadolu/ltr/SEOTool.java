@@ -84,9 +84,39 @@ public class SEOTool extends CmdLineTool {
         Set<String> docIdSet = retrieveDocIdSet(file);
 
         List<IDocFeature> features = new ArrayList<>();
+
+        features.add(new Contact());
+        features.add(new ContentLengthOver1800());
+        features.add(new Copyright());
+        features.add(new Description());
         features.add(new Favicon());
         features.add(new Https());
+        features.add(new Keyword());
+        features.add(new KeywordInDomain());
+        features.add(new KeywordInFirst100Words());
+        features.add(new KeywordInImgAltTag());
+        features.add(new KeywordInTitle());
+        features.add(new Robots());
+        features.add(new SocialMediaShare());
+        features.add(new Viewport());
+        
+        features.add(new AlttagToImg());
+        features.add(new ContentLengthToMax());
+        features.add(new HdensityToMax());
+        features.add(new ImgToMax());
+        features.add(new IndexOfKeywordInTitle());
+        features.add(new InOutlinkToAll());
+        features.add(new InversedUrlLength());
+        features.add(new MetaTagToMax());
+        features.add(new NoFollowToAll());
+        features.add(new SimDescriptionH());
+        features.add(new SimKeywordDescription());
+        features.add(new SimDescriptionH());
+        features.add(new SimTitleDescription());
+        features.add(new SimTitleH());
+        features.add(new SimTitleKeyword());
         features.add(new StopWordRatio());
+        features.add(new TextToDocRatio());
 
         Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
         traverser.traverseParallel(Paths.get(out));

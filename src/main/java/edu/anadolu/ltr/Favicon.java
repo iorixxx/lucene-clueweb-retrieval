@@ -6,7 +6,7 @@ public class Favicon implements IDocFeature {
 
     @Override
     public String toString() {
-        return "Favicon";
+        return this.getClass().getSimpleName();
     }
 
     @Override
