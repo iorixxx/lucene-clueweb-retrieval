@@ -9,6 +9,7 @@ import edu.cmu.lti.ws4j.impl.WuPalmer;
 import edu.cmu.lti.ws4j.util.MatrixCalculator;
 import edu.cmu.lti.ws4j.util.StopWordRemover;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.common.StringUtils;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
@@ -172,8 +173,8 @@ public class DocFeatureBase {
     }
 
     protected double textSimilarity(String str1, String str2) {
-        if (str1.length() == 0) return 0;
-        if (str2.length() == 0) return 0;
+        if (StringUtils.isEmpty(str1)) return 0;
+        if (StringUtils.isEmpty(str2)) return 0;
         ILexicalDatabase db = new NictWordNet();
         RelatednessCalculator rc1 = new WuPalmer(db);
         Pattern UNWANTED_SYMBOLS = Pattern.compile("\\p{Punct}");

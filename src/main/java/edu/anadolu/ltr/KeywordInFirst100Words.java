@@ -21,7 +21,8 @@ public class KeywordInFirst100Words implements IDocFeature {
             String keyword = MetaTag.enrich3(base.jDoc, "keywords");
             List<String> content = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(Tag.NoStem));
             String first100words = "";
-            for (int i = 0; i < 100; i++) {
+            int first100 = content.size()>100?100:content.size();
+            for (int i = 0; i < first100; i++) {
                 first100words += content.get(i);
             }
             for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {

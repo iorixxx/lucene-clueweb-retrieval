@@ -1,8 +1,11 @@
 package edu.anadolu.ltr;
 
+
+import org.apache.solr.common.StringUtils;
+
 public class Https implements IDocFeature {
 
-    IDocFeature f = (base) -> base.url.startsWith("https") ? 1 : 0;
+//    IDocFeature f = (base) -> base.url.startsWith("https") ? 1 : 0;
 
     @Override
     public String toString() {
@@ -11,6 +14,10 @@ public class Https implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
+        if(StringUtils.isEmpty(base.url)) {
+            //TODO think how to handle
+            return 0;
+        }
         return base.url.startsWith("https:") ? 1 : 0;
     }
 }

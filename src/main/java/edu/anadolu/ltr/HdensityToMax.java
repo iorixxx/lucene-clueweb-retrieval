@@ -1,5 +1,6 @@
 package edu.anadolu.ltr;
 
+import org.apache.solr.common.StringUtils;
 import org.jsoup.select.Elements;
 
 import java.util.function.Predicate;
@@ -17,6 +18,9 @@ public class HdensityToMax implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
+
+        if(base.jDoc.body()==null) return 0;
+
         Elements hTags = base.jDoc.select("h1, h2, h3, h4, h5, h6");
 
         StringBuilder builder = new StringBuilder();

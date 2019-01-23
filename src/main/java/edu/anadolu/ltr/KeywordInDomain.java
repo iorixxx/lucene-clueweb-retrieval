@@ -28,8 +28,9 @@ public class KeywordInDomain implements IDocFeature {
             }
             return 0;
         } catch (URISyntaxException | NullPointerException  e) {
-            //return 0;
-            throw new RuntimeException("URL error for : "+base.url);
+            //TODO think how to handle
+            return 0;
+//            throw new RuntimeException("URL error for : "+base.url);
         }
     }
 }

@@ -55,6 +55,8 @@ public class Traverser {
                 String line = base.calculate(featureList);
                 out.get().println(line);
             } catch (Exception ex) {
+                System.err.println("jdoc exception " + warcRecord.id());
+                System.err.println("Document : " + warcRecord.content());
                 throw new RuntimeException(ex);
             }
 

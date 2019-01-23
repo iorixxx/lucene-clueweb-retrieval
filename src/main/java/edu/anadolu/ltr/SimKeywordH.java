@@ -17,7 +17,8 @@ public class SimKeywordH implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
         Elements hTags = base.jDoc.select("h1, h2, h3, h4, h5, h6");
-
+        //TODO think how to handle
+        if(hTags.size()==0) return 0;
         StringBuilder builder = new StringBuilder();
 
         hTags.stream()
