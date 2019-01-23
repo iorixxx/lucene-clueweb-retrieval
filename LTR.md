@@ -7,6 +7,7 @@ Not all learning to rank algorithms can handle this type of features.
 Pre-retrieval predictors,  
 Running stats tool is a pre-requisite
 
+` ./run.sh Optimize -collection CW09B `
 ` ./run.sh Stats -collection CW09B `
 ` ./run.sh Stats -collection CW09B -task query `
 ` ./run.sh TFDistribution -collection CW09B -task query `

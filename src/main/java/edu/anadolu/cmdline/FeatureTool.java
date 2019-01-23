@@ -94,7 +94,7 @@ public final class FeatureTool extends CmdLineTool {
         boolean term = "term".equals(task);
 
         // Print header
-        System.out.println("QueryID\tWordCount\tGamma\tOmega\tavgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt");
+        System.out.println("QueryID\tWordCount\tGamma\tOmega\tAvgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt\tMeanSCQ\tVarSCQ");
         for (InfoNeed need : querySelector.allQueries) {
 
             Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");
@@ -105,6 +105,7 @@ public final class FeatureTool extends CmdLineTool {
             double[] cti = new double[analyzedTokens.size()];
             double[] skew = new double[analyzedTokens.size()];
             double[] kurt = new double[analyzedTokens.size()];
+            double[] scq = new double[analyzedTokens.size()];
 
             for (int c = 0; c < analyzedTokens.size(); c++) {
                 String word = analyzedTokens.get(c);
@@ -119,7 +120,6 @@ public final class FeatureTool extends CmdLineTool {
                     System.out.println(need.id() + ":" + word + "\t" + idf[c] + "\t" + cti[c] + "\t" + skew[c] + "\t" + kurt[c]);
             }
 
-
             double[] vector = modelSelection.getFeatureVector(need);
 
             System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + vector[1] + "\t" + vector[2] + "\t");
@@ -127,6 +127,7 @@ public final class FeatureTool extends CmdLineTool {
             System.out.print(StatUtils.mean(idf) + "\t" + StatUtils.variance(idf) + "\t");
             System.out.print(StatUtils.mean(cti) + "\t" + StatUtils.variance(cti) + "\t");
             System.out.println(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt));
+            System.out.println(StatUtils.mean(scq) + "\t" + StatUtils.variance(scq) + "\t");
         }
     }
 }
