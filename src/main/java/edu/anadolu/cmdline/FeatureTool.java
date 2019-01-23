@@ -1,6 +1,5 @@
 package edu.anadolu.cmdline;
 
-import edu.anadolu.ModelSelection;
 import edu.anadolu.QuerySelector;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
@@ -10,14 +9,12 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.knn.Measure;
 import edu.anadolu.qpp.*;
-import edu.anadolu.stats.TermStats;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -27,17 +24,14 @@ import java.util.Properties;
  */
 public final class FeatureTool extends CmdLineTool {
 
-    @Option(name = "-task", required = false, usage = "task to be executed")
-    private String task;
-
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
-
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     protected String tag = Tag.KStem.toString();
-
     @Option(name = "-measure", required = false, usage = "Effectiveness measure")
     protected Measure measure = Measure.NDCG100;
+    @Option(name = "-task", required = false, usage = "task to be executed")
+    private String task;
 
     @Override
     public String getShortDescription() {
@@ -136,6 +130,7 @@ public final class FeatureTool extends CmdLineTool {
         scs.close();
         scq.close();
         idf.close();
+        cti.close();
         scope.close();
     }
 }
