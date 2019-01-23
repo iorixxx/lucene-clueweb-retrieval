@@ -1,6 +1,5 @@
 package edu.anadolu.cmdline;
 
-import edu.anadolu.ModelSelection;
 import edu.anadolu.QuerySelector;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
@@ -9,9 +8,7 @@ import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.knn.Measure;
-import edu.anadolu.qpp.PMI;
-import edu.anadolu.qpp.SCS;
-import edu.anadolu.stats.TermStats;
+import edu.anadolu.qpp.*;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.lucene.analysis.Analyzer;
@@ -27,17 +24,14 @@ import java.util.Properties;
  */
 public final class FeatureTool extends CmdLineTool {
 
-    @Option(name = "-task", required = false, usage = "task to be executed")
-    private String task;
-
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
-
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     protected String tag = Tag.KStem.toString();
-
     @Option(name = "-measure", required = false, usage = "Effectiveness measure")
     protected Measure measure = Measure.NDCG100;
+    @Option(name = "-task", required = false, usage = "task to be executed")
+    private String task;
 
     @Override
     public String getShortDescription() {
@@ -85,48 +79,58 @@ public final class FeatureTool extends CmdLineTool {
         }
 
         Analyzer analyzer = Analyzers.analyzer(Tag.tag(tag));
-        ModelSelection modelSelection = new ModelSelection(dataset, tag);
 
         PMI pmi = new PMI(dataset.indexesPath().resolve(tag), "contents");
         SCS scs = new SCS(dataset.indexesPath().resolve(tag), "contents");
+        SCQ scq = new SCQ(dataset.indexesPath().resolve(tag));
+        IDF idf = new IDF(dataset.indexesPath().resolve(tag));
+        CTI cti = new CTI(dataset.indexesPath().resolve(tag));
+        Scope scope = new Scope(dataset.indexesPath().resolve(tag));
 
         QuerySelector querySelector = new QuerySelector(dataset, tag);
         boolean term = "term".equals(task);
 
         // Print header
-        System.out.println("QueryID\tWordCount\tGamma\tOmega\tavgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt");
+        System.out.println("QueryID\tWordCount\tGamma\tOmega\tAvgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt\tMeanSCQ\tVarSCQ");
         for (InfoNeed need : querySelector.allQueries) {
 
             Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");
 
             List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), analyzer);
 
-            double[] idf = new double[analyzedTokens.size()];
-            double[] cti = new double[analyzedTokens.size()];
+            double[] idfs = new double[analyzedTokens.size()];
+            double[] ctis = new double[analyzedTokens.size()];
             double[] skew = new double[analyzedTokens.size()];
             double[] kurt = new double[analyzedTokens.size()];
+            double[] scqs = new double[analyzedTokens.size()];
 
             for (int c = 0; c < analyzedTokens.size(); c++) {
                 String word = analyzedTokens.get(c);
                 String freqLine = map.get(word);
                 DescriptiveStatistics descriptiveStatistics = querySelector.toDescriptiveStatistics(freqLine);
-                TermStats termStats = querySelector.termStatisticsMap.get(word);
-                idf[c] = Math.log((double) querySelector.numberOfDocuments / termStats.docFreq());
-                cti[c] = termStats.cti();
+
+                idfs[c] = idf.value(word);
+                ctis[c] = cti.value(word);
                 skew[c] = descriptiveStatistics.getSkewness();
                 kurt[c] = descriptiveStatistics.getKurtosis();
+                scqs[c] = scq.value(word);
                 if (term)
-                    System.out.println(need.id() + ":" + word + "\t" + idf[c] + "\t" + cti[c] + "\t" + skew[c] + "\t" + kurt[c]);
+                    System.out.println(need.id() + ":" + word + "\t" + idfs[c] + "\t" + ctis[c] + "\t" + skew[c] + "\t" + kurt[c]);
             }
 
-
-            double[] vector = modelSelection.getFeatureVector(need);
-
-            System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + vector[1] + "\t" + vector[2] + "\t");
+            System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + idf.aggregated(need, new Aggregate.Gamma1()) + "\t" + scope.value(need) + "\t");
             System.out.print(pmi.value(need) + "\t" + scs.value(need) + "\t");
-            System.out.print(StatUtils.mean(idf) + "\t" + StatUtils.variance(idf) + "\t");
-            System.out.print(StatUtils.mean(cti) + "\t" + StatUtils.variance(cti) + "\t");
-            System.out.println(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt));
+            System.out.print(StatUtils.mean(idfs) + "\t" + StatUtils.variance(idfs) + "\t");
+            System.out.print(StatUtils.mean(ctis) + "\t" + StatUtils.variance(ctis) + "\t");
+            System.out.print(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt) + "\t");
+            System.out.println(StatUtils.mean(scqs) + "\t" + StatUtils.variance(scqs));
         }
+
+        pmi.close();
+        scs.close();
+        scq.close();
+        idf.close();
+        cti.close();
+        scope.close();
     }
 }
