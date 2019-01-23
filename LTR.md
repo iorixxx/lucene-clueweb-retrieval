@@ -18,6 +18,9 @@ Following command dumps query features in the format: qid:1   0.6     0.4715    
 
 ## Extraction of Type-QD
 
+./run.sh Indexer -collection CW09B -tag KStem
+./run.sh Indexer -collection CW09B -tag KStem -field
+
 To extract Weighting Model Whole Document (WMWD) features
 ` ./run.sh Searcher -collection MQ09 -task feature -tag KStem `
 

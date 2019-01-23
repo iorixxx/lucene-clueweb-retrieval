@@ -40,9 +40,6 @@ public class CollectionFactory {
             case ROB04:
                 return new ROB04(tfd_home);
 
-            case MQE1:
-                return new MQE1(tfd_home);
-
             case MQE2:
                 return new MQE2(tfd_home);
 

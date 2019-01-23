@@ -66,7 +66,7 @@ class CacheTool extends CmdLineTool {
             throw new RuntimeException(ioe);
         }
 
-        Collection[] collections = {Collection.CW09A, Collection.CW09B, Collection.CW12B, Collection.MQ09, Collection.GOV2, Collection.ROB04, Collection.MQE1};
+        Collection[] collections = {Collection.CW09A, Collection.CW09B, Collection.CW12B, Collection.MQ09, Collection.GOV2, Collection.ROB04, Collection.MQE2};
 
         for (final Collection collection : collections) {
 
@@ -84,7 +84,7 @@ class CacheTool extends CmdLineTool {
 
     private void spam() {
 
-        Collection[] collections = {Collection.CW09A, Collection.CW09B, Collection.CW12B, Collection.MQ09, Collection.MQE1};
+        Collection[] collections = {Collection.CW09A, Collection.CW09B, Collection.CW12B, Collection.MQ09, Collection.MQE2};
 
         for (final Collection collection : collections) {
 
@@ -105,7 +105,7 @@ class CacheTool extends CmdLineTool {
 
     private void param() {
 
-        Collection[] collections = {Collection.CW09A, Collection.CW09B, Collection.CW12B, Collection.GOV2, Collection.ROB04, Collection.MQ09, Collection.MQE1};
+        Collection[] collections = {Collection.CW09A, Collection.CW09B, Collection.CW12B, Collection.GOV2, Collection.ROB04, Collection.MQ09, Collection.MQE2};
 
         for (final Collection collection : collections) {
 
