@@ -19,6 +19,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -32,10 +33,12 @@ public class Traverser {
 
     private final class WorkerThread {
 
-        final private Path inputWarcFile;
+        private final Path inputWarcFile;
+        private final AtomicReference<PrintWriter> out;
 
-        WorkerThread(Path inputWarcFile) {
+        WorkerThread(Path inputWarcFile, AtomicReference<PrintWriter> out) {
             this.inputWarcFile = inputWarcFile;
+            this.out = out;
         }
 
         private int processWarcRecord(WarcRecord warcRecord) {
@@ -48,7 +51,13 @@ public class Traverser {
             if (skip(id)) return 0;
 
             DocFeatureBase base = new DocFeatureBase(warcRecord);
-            base.calculate(featureList);
+            try {
+                String line = base.calculate(featureList);
+                out.get().println(line);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
             return 1;
         }
 
@@ -177,17 +186,21 @@ public class Traverser {
     /**
      * Traverse based on Java8's parallel streams
      */
-    void traverseParallel() throws IOException {
+    void traverseParallel(Path resultPath) throws IOException {
 
         final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
+
+        final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
 
         try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
 
             stream.parallel().forEach(p -> {
-                new WorkerThread(p).run();
+                new WorkerThread(p, out).run();
             });
-
         }
+
+        out.get().flush();
+        out.get().close();
     }
 
     private final class WarcMatcher implements BiPredicate<Path, BasicFileAttributes> {

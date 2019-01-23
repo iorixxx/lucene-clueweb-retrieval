@@ -17,7 +17,7 @@ import java.util.Map;
  * <p>
  * http://ir.cis.udel.edu/million/data.html
  */
-public class MQE2 extends MQE1 {
+public class MQE2 extends MQ09 {
 
     /**
      * @param home tfd.home directory
@@ -29,7 +29,7 @@ public class MQE2 extends MQE1 {
 
     @Override
     protected void populateQRelsMap() throws Exception {
-        populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrels.mq.20251_20750.txt"));
+        populateQRelsMap(Paths.get(home, "topics-and-qrels", "09.mq.qrels.20251-20750.deep.judged.txt"));
     }
 
     @Override
@@ -54,7 +54,7 @@ public class MQE2 extends MQE1 {
 
 
             if (!isJudged(qID)) {
-                System.out.println(qID + ":" + query + " is not judged. Skipping...");
+                //System.out.println(qID + ":" + query + " is not judged. Skipping...");
                 continue;
             }
 
@@ -63,13 +63,27 @@ public class MQE2 extends MQE1 {
             InfoNeed need = new InfoNeed(qID, escape(query), this, innerMap);
 
             if (need.relevant() == 0) {
-                System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
+                //System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
                 continue;
             }
             needs.add(need);
 
         }
         lines.clear();
+    }
+
+    protected Triple processQRelLine(String line) {
+
+        String[] parts = whiteSpaceSplitter.split(line);
+
+        assert parts.length == 4 : "qrels file should contain four columns : " + line;
+
+        int queryID = Integer.parseInt(parts[0]);
+
+        String docID = parts[2];
+        int judge = Integer.parseInt(parts[3]);
+
+        return new Triple(queryID, docID, judge);
     }
 
 }

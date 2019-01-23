@@ -97,6 +97,14 @@ public class Analyzers {
                         .addTokenFilter("lowercase")
                         .build();
 
+            case ASCII:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("icu")
+                        .addTokenFilter(BasicLatinTokenFilterFactory.class)
+                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "ASCII")
+                        .addTokenFilter("lowercase")
+                        .build();
+
             case Zemberek:
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")

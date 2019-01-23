@@ -47,7 +47,7 @@ public final class SpamRemoveTool extends CmdLineTool {
 
         if (parseArguments(props) == -1) return;
 
-        if (Collection.MQ07.equals(collection) || Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection) || Collection.MQE2.equals(collection)) {
+        if (Collection.MQ07.equals(collection) || Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
             System.out.println("No need to run separate indexer for Million Query!");
             return;
         }
