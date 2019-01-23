@@ -1,5 +1,7 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.field.MetaTag;
 
 
@@ -15,8 +17,7 @@ public class KeywordInTitle implements IDocFeature {
         try {
             String title = base.jDoc.title();
             String keyword = MetaTag.enrich3(base.jDoc, "keywords");
-            String[] keywords = keyword.split(",");
-            for (String token : keywords) {
+            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
                 if (title.contains(token))
                     return 1;
             }

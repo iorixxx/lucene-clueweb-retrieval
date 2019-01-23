@@ -1,6 +1,7 @@
 package edu.anadolu.ltr;
 
 import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.field.MetaTag;
 
 import java.io.IOException;
@@ -21,14 +22,12 @@ public class KeywordInDomain implements IDocFeature {
             URI uri = new URI(base.url);
             String host = uri.getHost();
             String domain = host.startsWith("www.") ? host.substring(4) : host;
-            String[] keywords = keyword.split(",");
-            for (String token : keywords) {
-                token = Analyzers.getAnalyzedToken(token, MetaTag.whitespaceAnalyzer());
+            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
                 if (domain.contains(token))
                     return 1;
             }
             return 0;
-        } catch (URISyntaxException | NullPointerException | IOException e) {
+        } catch (URISyntaxException | NullPointerException  e) {
             //return 0;
             throw new RuntimeException("URL error for : "+base.url);
         }

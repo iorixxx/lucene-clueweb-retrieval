@@ -1,5 +1,7 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.field.MetaTag;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -18,8 +20,7 @@ public class KeywordInImgAltTag implements IDocFeature {
             String keyword = MetaTag.enrich3(base.jDoc, "keywords");
             Elements images = base.jDoc.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
             if (images.size() == 0 || keyword.length() == 0) return 0;
-            String[] keywords = keyword.split(",");
-            for (String token : keywords) {
+            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
                 for (Element image : images) {
                     if (image.attr("alt") == null) continue;
                     if (image.attr("alt").equals("")) continue;
