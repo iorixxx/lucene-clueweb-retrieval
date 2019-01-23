@@ -10,14 +10,16 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import static org.clueweb09.tracks.MQ09.escape;
+
 /**
- * Extensively judged topics from 20251 to 20750 of the
+ * Extensively judged topics from 20251 to 20708 of the
  * <p>
  * TREC 2009 Million Query (1MQ) Track
  * <p>
  * http://ir.cis.udel.edu/million/data.html
  */
-public class MQE2 extends MQ09 {
+public class MQE2 extends Track {
 
     /**
      * @param home tfd.home directory
@@ -43,15 +45,12 @@ public class MQE2 extends MQ09 {
             assert parts.length == 3 : "topic does not contain colon : " + line;
 
             int qID = Integer.parseInt(parts[0]);
-            checkQueryIDRange(qID);
+
             // P is the priority (a number 1-4, with 1 indicating highest priority)
             if (qID <= 20250) continue;
-            if (qID > 20750) break;
-            int priority = Integer.parseInt(parts[1]);
-            if (priority > P) break;
+            if (qID > 20708) break;
 
             String query = parts[2].trim();
-
 
             if (!isJudged(qID)) {
                 //System.out.println(qID + ":" + query + " is not judged. Skipping...");
@@ -67,23 +66,7 @@ public class MQE2 extends MQ09 {
                 continue;
             }
             needs.add(need);
-
         }
         lines.clear();
     }
-
-    protected Triple processQRelLine(String line) {
-
-        String[] parts = whiteSpaceSplitter.split(line);
-
-        assert parts.length == 4 : "qrels file should contain four columns : " + line;
-
-        int queryID = Integer.parseInt(parts[0]);
-
-        String docID = parts[2];
-        int judge = Integer.parseInt(parts[3]);
-
-        return new Triple(queryID, docID, judge);
-    }
-
 }

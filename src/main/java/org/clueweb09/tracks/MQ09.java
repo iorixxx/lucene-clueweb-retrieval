@@ -101,17 +101,11 @@ public class MQ09 extends Track {
 
             InfoNeed need = new InfoNeed(qID, escape(query), this, innerMap);
 
-
             if (need.relevant() == 0) {
                 //System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
                 continue;
             }
-
-            //if (need.relevant() == 1) {
-                //System.out.println(qID + ":" + query + " has only one relevant document.");
-            //}
             needs.add(need);
-
         }
         lines.clear();
     }

@@ -5,7 +5,7 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.freq.BinningStrategy;
 import edu.anadolu.freq.LengthNormalized;
 import edu.anadolu.freq.TermFreqDistribution;
-import org.apache.lucene.analysis.core.StopAnalyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.kohsuke.args4j.Option;
 
 import java.nio.file.Path;
@@ -39,7 +39,7 @@ public final class StopWordTool extends CmdLineTool {
 
         if (props.getProperty("stop.words") == null) {
             System.out.println("Falling back to default stop words set for English since stop.words property is not defined in config.properties");
-            for (Object o : StopAnalyzer.ENGLISH_STOP_WORDS_SET) {
+            for (Object o : EnglishAnalyzer.ENGLISH_STOP_WORDS_SET) {
                 stopWords.add(new String((char[]) o));
             }
         } else
