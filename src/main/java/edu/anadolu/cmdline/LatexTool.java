@@ -73,13 +73,14 @@ public final class LatexTool extends EvaluatorTool {
 
         if (model.startsWith("HYBRID")) return "RB";
 
-        if (model.startsWith("LGDc")) return printFreeParameters ? "LGD (" + handleParam(model) + ")": "LGD";
+        if (model.startsWith("LGDc")) return printFreeParameters ? "LGD (" + handleParam(model) + ")" : "LGD";
 
         if (model.startsWith("BM25k")) return printFreeParameters ? "BM25 (" + handleParam(model) + ")" : "BM25";
 
         if (model.startsWith("PL2c")) return printFreeParameters ? "PL2 (" + handleParam(model) + ")" : "PL2";
 
-        if (model.startsWith("DirichletLMc")) return printFreeParameters ? "Dirichlet (" + handleParam(model) + ")" : "DLM";
+        if (model.startsWith("DirichletLMc"))
+            return printFreeParameters ? "Dirichlet (" + handleParam(model) + ")" : "DLM";
 
         if ("DIV_Cm".equals(model)) return "SEL";
 

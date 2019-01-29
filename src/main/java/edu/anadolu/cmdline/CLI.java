@@ -102,17 +102,11 @@ public final class CLI {
         // Tool for Term2Term (T2T)
         tools.add(new T2TTool());
 
-        tools.add(new ExcelTool());
-
         tools.add(new AbsoluteTool());
 
         tools.add(new XTool());
 
         tools.add(new YTool());
-
-        tools.add(new IPTool());
-
-        tools.add(new TallyTool());
 
         tools.add(new BinaryTool());
 
@@ -121,8 +115,6 @@ public final class CLI {
         tools.add(new ExampleTool());
 
         tools.add(new TFTool());
-
-        tools.add(new SigTool());
 
         tools.add(new FieldTool());
 
