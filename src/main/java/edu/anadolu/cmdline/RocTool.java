@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static edu.anadolu.cmdline.RocTool.Ranking.fusion;
 import static edu.anadolu.cmdline.SpamTool.getSpamSolr;
@@ -400,6 +401,145 @@ public class RocTool extends CmdLineTool {
             System.out.println("percentile,fusionNon");
             for (int i = 0; i < 100; i++)
                 System.out.println(i + "," + fusion.non[i]);
+        }
+    }
+
+    private static Character letter(int i) {
+        if (i > 0) return 'R';
+        if (i == 0) return 'N';
+        if (i == -2) return 'S';
+
+        throw new AssertionError("cannot understand relevance grade " + i);
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        Path file = Paths.get("/Users/iorixxx/spam-eval/CW09A.txt");
+
+        final List<String> lines = Files.readAllLines(file, StandardCharsets.US_ASCII);
+
+        int counter = 0;
+
+        Map<String, List<Integer>> map = new HashMap<>();
+
+        for (String line : lines) {
+
+            if (line.startsWith("queryID,docID,relevance,fusion"))
+                continue;
+
+            String[] parts = line.split(",");
+
+            assert parts.length == 4 || parts.length == 7 : "raw file should contain four columns : " + line;
+
+
+            String docID = parts[1];
+            int grade = Integer.parseInt(parts[2]);
+
+
+            List<Integer> judges = map.getOrDefault(docID, new ArrayList<>());
+            judges.add(grade);
+            map.put(docID, judges);
+
+            counter++;
+        }
+
+        RSN rsn = new RSN();
+        RSN sr = new RSN();
+        RSN sn = new RSN();
+
+        System.out.println("document-query pairs : " + counter + " distinct documents : " + map.keySet().size());
+
+        counter = 0;
+        for (Map.Entry<String, List<Integer>> entry : map.entrySet()) {
+
+            if (entry.getValue().size() == 1) {
+                counter++;
+                continue;
+            }
+
+            Set<Character> set = entry.getValue()
+                    .stream()
+                    .map(RocTool::letter)
+                    .distinct()
+                    .sorted()
+                    .collect(Collectors.toSet());
+
+            if (set.size() > 2)
+                System.out.println(entry.getKey());
+
+
+            if (set.contains('S') && set.size() > 1) {
+                System.out.println(set);
+                int S = 0, R = 0, N = 0;
+                for (String line : lines) {
+
+                    if (line.startsWith("queryID,docID,relevance,fusion"))
+                        continue;
+
+                    String[] parts = line.split(",");
+
+                    assert parts.length == 4 || parts.length == 7 : "raw file should contain four columns : " + line;
+
+                    String docID = parts[1];
+
+                    if (!docID.equals(entry.getKey())) continue;
+
+                    int grade = Integer.parseInt(parts[2]);
+
+                    if (grade > 0) R++;
+                    else if (grade == 0) N++;
+                    else if (grade == -2) S++;
+                }
+
+                switch (set.toString()) {
+                    case "[S, N]":
+                        sn.increment(S, R, N);
+                        break;
+
+                    case "[R, S, N]":
+                        rsn.increment(S, R, N);
+                        break;
+
+                    case "[R, S]":
+                        sr.increment(S, R, N);
+                        break;
+
+                    default:
+                        throw new RuntimeException("cannot recognize " + set.toString());
+
+                }
+
+            }
+        }
+
+        System.out.println("number of docs judged multiple : " + (map.keySet().size() - counter));
+        System.out.println(rsn);
+        System.out.println(sr);
+        System.out.println(sn);
+
+    }
+
+    static class RSN {
+        int S = 0, R = 0, N = 0;
+
+        @Override
+        public String toString() {
+            if (S == 0) return "";
+
+            StringBuilder builder = new StringBuilder();
+            builder.append("S(").append(S).append(")");
+            if (R > 0)
+                builder.append(" R(").append(R).append(")");
+            if (N > 0)
+                builder.append(" N(").append(N).append(")");
+
+            return builder.toString();
+        }
+
+        void increment(int S, int R, int N) {
+            this.N += N;
+            this.R += R;
+            this.S += S;
         }
     }
 }
