@@ -4,8 +4,8 @@ import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
-import edu.anadolu.exp.Presentation;
 import edu.anadolu.knn.Measure;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.kohsuke.args4j.Option;
 
 import java.util.*;
@@ -77,16 +77,30 @@ public final class SpamEvalTool extends EvaluatorTool {
         System.out.println();
         models.forEach(System.out::println);
 
-        List<ModelScore> list = scores.keySet().stream().map(s -> new ModelScore(s, Presentation.var4(scores.get(s).stream().mapToDouble(d -> d).toArray()))).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-        print(list);
-
-
         print(scores.keySet()
                 .stream()
-                .map(s -> new ModelScore(s, Presentation.coefficientOfVariation(scores.get(s).stream().mapToDouble(d -> d).toArray())))
+                .map(s -> new ModelScore(s, coefficientOfVariation(scores.get(s).stream().mapToDouble(d -> d).toArray())))
                 .sorted(Comparator.reverseOrder())
                 .collect(Collectors.toList())
         );
+
+    }
+
+    /**
+     * http://www.statisticshowto.com/probability-and-statistics/how-to-find-a-coefficient-of-variation/
+     * The coefficient of variation (CV) is a measure of relative variability.
+     *
+     * @param array data elements
+     * @return coefficient of variation, which is the ratio of the standard deviation to the mean (average).
+     */
+    public static double coefficientOfVariation(double[] array) {
+
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+
+        for (double d : array)
+            stats.addValue(d);
+
+        return stats.getStandardDeviation() / stats.getMean() * 100;
 
     }
 
