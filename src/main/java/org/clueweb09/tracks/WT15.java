@@ -109,6 +109,16 @@ public class WT15 extends Track {
             For Adhoc, we derived document relevance by using the maximum relevance label assigned for that document over all possible tasks.
             */
             if (innerMap.containsKey(docID)) {
+
+                if (innerMap.get(docID) == -2) {
+                    if (judge != -2) throw new RuntimeException("all subtopics must be spam! " + judge + " " + docID);
+                }
+
+                if (judge == -2) {
+                    if (innerMap.get(docID) != -2)
+                        throw new RuntimeException("+++ subtopics must be spam! " + innerMap.get(docID) + " " + docID);
+                }
+
                 if (judge > innerMap.get(docID))
                     innerMap.put(docID, judge);
             } else

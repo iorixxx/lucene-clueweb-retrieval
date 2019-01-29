@@ -63,7 +63,8 @@ public class RocTool extends CmdLineTool {
         HttpSolrClient[] solrURLs;
 
         if (Collection.CW09A.equals(collection)) {
-            qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt"};
+            qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt",
+                    "qrels.session.201-262.txt", "qrels.session.301-348.txt"};
             solrURLs = new HttpSolrClient[4];
             solrURLs[0] = getCW09Solr(Ranking.fusion);
             solrURLs[1] = getCW09Solr(Ranking.britney);
@@ -71,7 +72,8 @@ public class RocTool extends CmdLineTool {
             solrURLs[3] = getCW09Solr(Ranking.uk2006);
 
         } else if (Collection.CW12A.equals(collection)) {
-            qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt"};
+            qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt",
+                    "qrels.session.401-469.txt", "qrels.session.501-560.txt"};
             solrURLs = new HttpSolrClient[1];
             solrURLs[0] = getSpamSolr(Collection.CW12A);
         } else return;
@@ -95,7 +97,8 @@ public class RocTool extends CmdLineTool {
 
                 String[] parts = whiteSpaceSplitter.split(line);
 
-                assert parts.length == 4 : "qrels file should contain four columns : " + line;
+                if (parts.length != 4) throw new RuntimeException("qrels file should contain four columns : " + line);
+                if (Integer.parseInt(parts[1]) != 0) throw new RuntimeException("second column should be zero");
 
                 int queryID = Integer.parseInt(parts[0]);
                 String docID = parts[2];
@@ -517,6 +520,11 @@ public class RocTool extends CmdLineTool {
         System.out.println(sr);
         System.out.println(sn);
 
+        session(11, 200);
+        offset(12, 300, "qrels.session.301-348.txt");
+        offset(13, 400, "qrels.session.401-469.txt");
+        offset(14, 500, "qrels.session.501-560.txt");
+
     }
 
     static class RSN {
@@ -541,5 +549,148 @@ public class RocTool extends CmdLineTool {
             this.R += R;
             this.S += S;
         }
+    }
+
+    private static void session(int year, int offset) throws IOException {
+
+        Path file = Paths.get("/Users/iorixxx/spam-eval/Session" + year + ".txt");
+
+        final List<String> lines = Files.readAllLines(file, StandardCharsets.US_ASCII);
+
+
+        final SortedSet<Integer> judgeLevels = new TreeSet<>();
+
+        final Map<Integer, Map<String, Integer>> map = new TreeMap<>();
+
+        for (String line : lines) {
+
+
+            line = line.trim();
+
+            String[] parts = whiteSpaceSplitter.split(line);
+
+            if (parts.length != 4) throw new RuntimeException("qrels file should contain four columns : " + line);
+
+
+            int queryID = Integer.parseInt(parts[0]) + offset;
+            String docID = parts[2];
+            int judge = Integer.parseInt(parts[3]);
+
+
+            judgeLevels.add(judge);
+
+            Map<String, Integer> innerMap = map.getOrDefault(queryID, new HashMap<>());
+
+            /*
+            For the task completion, given a query, NIST assessors assigned document multiple relevance grades, each for possible tasks provided in ground truth.
+            For Adhoc, we derived document relevance by using the maximum relevance label assigned for that document over all possible tasks.
+            */
+            if (innerMap.containsKey(docID)) {
+
+                if (innerMap.get(docID) == -2) {
+                    if (judge != -2) System.out.println("*** subtopics must be spam! " + judge + " " + docID);
+                }
+
+                if (judge == -2) {
+                    if (innerMap.get(docID) != -2)
+                        System.out.println("+++ subtopics must be spam! " + innerMap.get(docID) + " " + docID);
+                    //  innerMap.put(docID, judge);
+                }
+
+                //   if (innerMap.get(docID) != -2)
+                if (judge > innerMap.get(docID))
+                    innerMap.put(docID, judge);
+            } else
+                innerMap.put(docID, judge);
+
+            map.put(queryID, innerMap);
+        }
+
+        System.out.println(judgeLevels + " num_queries " + map.keySet().size());
+
+        int spam = 0;
+        int rel = 0;
+
+        PrintWriter output = new PrintWriter(Files.newBufferedWriter(Paths.get("/Users/iorixxx/spam-eval/qrels.session.201-262.txt"), StandardCharsets.US_ASCII));
+
+        for (Map.Entry<Integer, Map<String, Integer>> entry : map.entrySet()) {
+
+            int queryID = entry.getKey();
+
+            Map<String, Integer> innerMap = entry.getValue();
+
+            for (Map.Entry<String, Integer> e : innerMap.entrySet()) {
+                String docID = e.getKey();
+                int judge = e.getValue();
+
+                if (judge < -2 || judge > 3)
+                    throw new IllegalArgumentException("unexpected judge level for session track [-2, 0, 1, 2, 3] " + judge);
+
+                if (judge == -2) spam++;
+                if (judge > 0) rel++;
+
+                output.println(queryID + " 0 " + docID + " " + judge);
+            }
+        }
+
+        output.flush();
+        output.close();
+
+        System.out.println("rel=" + rel + " spam=" + spam);
+
+
+    }
+
+    private static void offset(int year, int offset, String out) throws IOException {
+
+        Path file = Paths.get("/Users/iorixxx/spam-eval/Session" + year + ".txt");
+
+        final List<String> lines = Files.readAllLines(file, StandardCharsets.US_ASCII);
+
+
+        final SortedSet<Integer> judgeLevels = new TreeSet<>();
+
+        Set<Integer> queries = new HashSet<>();
+
+        int spam = 0;
+        int rel = 0;
+
+        PrintWriter output = new PrintWriter(Files.newBufferedWriter(Paths.get("/Users/iorixxx/spam-eval/" + out), StandardCharsets.US_ASCII));
+
+
+        for (String line : lines) {
+
+
+            line = line.trim();
+
+            String[] parts = whiteSpaceSplitter.split(line);
+
+            if (parts.length != 4) throw new RuntimeException("qrels file should contain four columns : " + line);
+
+
+            int queryID = Integer.parseInt(parts[0]) + offset;
+
+            queries.add(queryID);
+            String docID = parts[2];
+            int judge = Integer.parseInt(parts[3]);
+
+            if (Integer.parseInt(parts[1]) != 0) throw new RuntimeException("second column should be zero");
+
+            if (judge == -2) spam++;
+            if (judge > 0) rel++;
+
+            judgeLevels.add(judge);
+
+
+            output.println(queryID + " 0 " + docID + " " + judge);
+
+        }
+        output.flush();
+        output.close();
+        System.out.println(judgeLevels + " num_queries " + queries.size());
+        System.out.println("rel=" + rel + " spam=" + spam);
+
+        System.out.println("rel=" + String.format("%.1f", (double) rel / queries.size()) + " spam=" + String.format("%.1f", (double) spam / queries.size()));
+        ;
     }
 }
