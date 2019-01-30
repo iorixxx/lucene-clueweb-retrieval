@@ -417,7 +417,7 @@ public class RocTool extends CmdLineTool {
 
     public static void main(String[] args) throws IOException {
 
-        Path file = Paths.get("/Users/iorixxx/spam-eval/CW09A.txt");
+        Path file = Paths.get("/Users/iorixxx/spam-eval/CW12S.txt");
 
         final List<String> lines = Files.readAllLines(file, StandardCharsets.US_ASCII);
 
@@ -562,6 +562,8 @@ public class RocTool extends CmdLineTool {
 
         final Map<Integer, Map<String, Integer>> map = new TreeMap<>();
 
+        Set<String> bogusTopics = new HashSet<>();
+
         for (String line : lines) {
 
 
@@ -588,16 +590,19 @@ public class RocTool extends CmdLineTool {
             if (innerMap.containsKey(docID)) {
 
                 if (innerMap.get(docID) == -2) {
-                    if (judge != -2) System.out.println("*** subtopics must be spam! " + judge + " " + docID);
+                    if (judge != -2) {
+                        System.out.println(queryID + " *** subtopics must be spam! " + judge + " " + docID);
+                        bogusTopics.add(queryID + "_" + docID);
+                    }
                 }
 
                 if (judge == -2) {
-                    if (innerMap.get(docID) != -2)
-                        System.out.println("+++ subtopics must be spam! " + innerMap.get(docID) + " " + docID);
-                    //  innerMap.put(docID, judge);
+                    if (innerMap.get(docID) != -2) {
+                        System.out.println(queryID + " +++ subtopics must be spam! " + innerMap.get(docID) + " " + docID);
+                        bogusTopics.add(queryID + "_" + docID);
+                    }
                 }
 
-                //   if (innerMap.get(docID) != -2)
                 if (judge > innerMap.get(docID))
                     innerMap.put(docID, judge);
             } else
@@ -606,10 +611,27 @@ public class RocTool extends CmdLineTool {
             map.put(queryID, innerMap);
         }
 
-        System.out.println(judgeLevels + " num_queries " + map.keySet().size());
+
+        System.out.println("bogus topics " + bogusTopics.size() + " " + bogusTopics);
 
         int spam = 0;
         int rel = 0;
+
+        bogusTopics.forEach(s -> {
+
+            int i = s.indexOf('_');
+            if (-1 == i) throw new RuntimeException("cannot happen!");
+            int queryId = Integer.parseInt(s.substring(0, i));
+            String docId = s.substring(i + 1);
+
+            Map<String, Integer> innerMap = map.get(queryId);
+            if (innerMap.remove(docId) == null) throw new RuntimeException("cannot happen");
+            if (innerMap.isEmpty())
+                if (map.remove(queryId) == null) throw new RuntimeException("cannot happen");
+
+        });
+
+        System.out.println(judgeLevels + " num_queries " + map.keySet().size());
 
         PrintWriter output = new PrintWriter(Files.newBufferedWriter(Paths.get("/Users/iorixxx/spam-eval/qrels.session.201-262.txt"), StandardCharsets.US_ASCII));
 
