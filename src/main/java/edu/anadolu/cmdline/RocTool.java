@@ -711,8 +711,5 @@ public class RocTool extends CmdLineTool {
         output.close();
         System.out.println(judgeLevels + " num_queries " + queries.size());
         System.out.println("rel=" + rel + " spam=" + spam);
-
-        System.out.println("rel=" + String.format("%.1f", (double) rel / queries.size()) + " spam=" + String.format("%.1f", (double) spam / queries.size()));
-        ;
     }
 }
