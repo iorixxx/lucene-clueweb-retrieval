@@ -29,6 +29,9 @@ public class RocTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
 
+    @Option(name = "-uniq", required = false, usage = "work on unique documents")
+    private boolean uniq = false;
+
     @Override
     public String getShortDescription() {
         return "Tool for intrinsic evaluation of Waterloo Spam Rankings";
@@ -221,6 +224,9 @@ public class RocTool extends CmdLineTool {
 
         final List<String> lines = Files.readAllLines(Paths.get(collection.toString() + ".txt"), StandardCharsets.US_ASCII);
 
+        Set<String> uniqueSpam = new HashSet<>();
+        Set<String> uniqueRelevant = new HashSet<>();
+        Set<String> uniqueNon = new HashSet<>();
 
         for (String line : lines) {
 
@@ -259,13 +265,16 @@ public class RocTool extends CmdLineTool {
             }
 
             if (grade == -2)
-                spam[percentile]++;
+                increment(spam, uniqueSpam, docID, percentile);
+            //spam[percentile]++;
 
             if (grade > 0)
-                relevant[percentile]++;
+                increment(relevant, uniqueRelevant, docID, percentile);
+            //relevant[percentile]++;
 
             if (grade == 0)
-                non[percentile]++;
+                increment(non, uniqueNon, docID, percentile);
+            //non[percentile]++;
         }
 
         //    System.out.println(ranking + ",spam,relevant");
@@ -274,6 +283,16 @@ public class RocTool extends CmdLineTool {
 
         return new Struct(relevant, spam, non, ranking);
 
+    }
+
+    private void increment(int[] array, Set<String> set, String docId, int percentile) {
+        if (uniq) {
+            if (!set.contains(docId)) {
+                array[percentile]++;
+                set.add(docId);
+            }
+        } else
+            array[percentile]++;
     }
 
     private void wiki() throws IOException {
@@ -417,12 +436,18 @@ public class RocTool extends CmdLineTool {
 
     public static void main(String[] args) throws IOException {
 
-        Path file = Paths.get("/Users/iorixxx/spam-eval/CW12S.txt");
+        Path file = Paths.get("/Users/iorixxx/spam-eval/CW09S.txt");
 
         final List<String> lines = Files.readAllLines(file, StandardCharsets.US_ASCII);
 
         int counter = 0;
 
+        Set<String> spam = new HashSet<>();
+        Set<String> relevant = new HashSet<>();
+        Set<String> non = new HashSet<>();
+        int r = 0;
+        int s = 0;
+        int n = 0;
         Map<String, List<Integer>> map = new HashMap<>();
 
         for (String line : lines) {
@@ -438,6 +463,16 @@ public class RocTool extends CmdLineTool {
             String docID = parts[1];
             int grade = Integer.parseInt(parts[2]);
 
+            if (grade > 0) {
+                relevant.add(docID);
+                r++;
+            } else if (grade == -2) {
+                spam.add(docID);
+                s++;
+            } else if (grade == 0) {
+                non.add(docID);
+                n++;
+            }
 
             List<Integer> judges = map.getOrDefault(docID, new ArrayList<>());
             judges.add(grade);
@@ -446,8 +481,12 @@ public class RocTool extends CmdLineTool {
             counter++;
         }
 
+        System.out.println("spam = " + s + " unique_spam = " + spam.size());
+        System.out.println("relevant = " + r + " unique_relevant = " + relevant.size());
+        System.out.println("non-relevant = " + n + " unique_non_relevant = " + non.size());
+
         RSN rsn = new RSN();
-        RSN sr = new RSN();
+        RSN rs = new RSN();
         RSN sn = new RSN();
 
         System.out.println("document-query pairs : " + counter + " distinct documents : " + map.keySet().size());
@@ -463,8 +502,6 @@ public class RocTool extends CmdLineTool {
             Set<Character> set = entry.getValue()
                     .stream()
                     .map(RocTool::letter)
-                    .distinct()
-                    .sorted()
                     .collect(Collectors.toSet());
 
             if (set.size() > 2)
@@ -474,6 +511,7 @@ public class RocTool extends CmdLineTool {
             if (set.contains('S') && set.size() > 1) {
                 System.out.println(set);
                 int S = 0, R = 0, N = 0;
+                Set<Integer> q = new HashSet<>();
                 for (String line : lines) {
 
                     if (line.startsWith("queryID,docID,relevance,fusion"))
@@ -489,6 +527,9 @@ public class RocTool extends CmdLineTool {
 
                     int grade = Integer.parseInt(parts[2]);
 
+                    int qid = Integer.parseInt(parts[0]);
+                    q.add(qid);
+
                     if (grade > 0) R++;
                     else if (grade == 0) N++;
                     else if (grade == -2) S++;
@@ -497,14 +538,17 @@ public class RocTool extends CmdLineTool {
                 switch (set.toString()) {
                     case "[S, N]":
                         sn.increment(S, R, N);
+                        sn.incrementQ(q);
                         break;
 
                     case "[R, S, N]":
                         rsn.increment(S, R, N);
+                        rsn.incrementQ(q);
                         break;
 
                     case "[R, S]":
-                        sr.increment(S, R, N);
+                        rs.increment(S, R, N);
+                        rs.incrementQ(q);
                         break;
 
                     default:
@@ -517,9 +561,10 @@ public class RocTool extends CmdLineTool {
 
         System.out.println("number of docs judged multiple : " + (map.keySet().size() - counter));
         System.out.println(rsn);
-        System.out.println(sr);
         System.out.println(sn);
+        System.out.println(rs);
 
+        if (true) return;
         session(11, 200);
         offset(12, 300, "qrels.session.301-348.txt");
         offset(13, 400, "qrels.session.401-469.txt");
@@ -529,6 +574,7 @@ public class RocTool extends CmdLineTool {
 
     static class RSN {
         int S = 0, R = 0, N = 0;
+        Set<Integer> q = new HashSet<>();
 
         @Override
         public String toString() {
@@ -541,6 +587,8 @@ public class RocTool extends CmdLineTool {
             if (N > 0)
                 builder.append(" N(").append(N).append(")");
 
+            builder.append(" q=").append(q.size());
+
             return builder.toString();
         }
 
@@ -548,6 +596,10 @@ public class RocTool extends CmdLineTool {
             this.N += N;
             this.R += R;
             this.S += S;
+        }
+
+        void incrementQ(Set<Integer> q) {
+            this.q.addAll(q);
         }
     }
 
