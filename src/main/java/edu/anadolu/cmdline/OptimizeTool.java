@@ -3,10 +3,7 @@ package edu.anadolu.cmdline;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import org.apache.lucene.index.ConcurrentMergeScheduler;
-import org.apache.lucene.index.IndexNotFoundException;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.kohsuke.args4j.Option;
@@ -22,6 +19,13 @@ final class OptimizeTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     protected Collection collection;
+
+    @Option(name = "-task", required = false, usage = "task to be executed")
+    private String task;
+
+    @Option(name = "-field", required = false, usage = "Lucene field")
+    private String field = "contents";
+
 
     @Override
     public String getShortDescription() {
@@ -47,7 +51,10 @@ final class OptimizeTool extends CmdLineTool {
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         for (Path path : discoverIndexes(dataset)) {
-            optimize(path);
+            if ("uniq".equals(task))
+                unique(path);
+            else
+                optimize(path);
             System.out.println("=================================");
         }
     }
@@ -80,5 +87,37 @@ final class OptimizeTool extends CmdLineTool {
         }
 
         System.out.println("Optimization completed in " + execution(start));
+    }
+
+    /**
+     * Print the number of unique terms in a Lucene index
+     *
+     * @param indexPath Lucene index
+     * @throws IOException should not happen
+     */
+    private void unique(Path indexPath) throws IOException {
+
+        System.out.println("Opening Lucene index directory '" + indexPath.toAbsolutePath() + "'...");
+
+        try (final Directory dir = FSDirectory.open(indexPath);
+             IndexReader reader = DirectoryReader.open(dir)) {
+
+            final Terms terms = MultiFields.getTerms(reader, field);
+            if (terms == null) {
+                System.out.println("MultiFields.getTerms returns null. Wrong field ? " + field);
+                return;
+            }
+
+            TermsEnum termsEnum = terms.iterator();
+            long c = 0;
+            while (termsEnum.next() != null) {
+                c++;
+            }
+
+            System.out.println("The number of unique terms : " + c);
+
+        } catch (IndexNotFoundException e) {
+            System.out.println("IndexNotFound in " + indexPath.toAbsolutePath());
+        }
     }
 }

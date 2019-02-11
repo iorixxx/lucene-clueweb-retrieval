@@ -9,12 +9,12 @@ import org.apache.lucene.analysis.util.TokenFilterFactory;
 import java.io.IOException;
 import java.util.Map;
 
-public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
+public class TypeAsTermTokenFilterFactory extends TokenFilterFactory {
 
     /**
-     * Creates a new BasicLatinTokenFilterFactory
+     * Creates a new TypeAsTermTokenFilterFactory
      */
-    public BasicLatinTokenFilterFactory(Map<String, String> args) {
+    public TypeAsTermTokenFilterFactory(Map<String, String> args) {
         super(args);
         if (!args.isEmpty()) {
             throw new IllegalArgumentException("Unknown parameters: " + args);
@@ -23,35 +23,34 @@ public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
 
     @Override
     public TokenFilter create(TokenStream input) {
-        return new BasicLatinTokenFilter(input);
+        return new TypeAsTermTokenFilter(input);
     }
 
-    private final class BasicLatinTokenFilter extends TokenFilter {
+    private final class TypeAsTermTokenFilter extends TokenFilter {
 
         private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
         private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
 
-        private BasicLatinTokenFilter(TokenStream input) {
+        private TypeAsTermTokenFilter(TokenStream input) {
             super(input);
         }
 
         @Override
         public final boolean incrementToken() throws IOException {
 
-            if (!input.incrementToken()) return false;
+            if (input.incrementToken()) {
 
-            char[] buffer = this.termAtt.buffer();
-            int length = this.termAtt.length();
+                String type = typeAtt.type();
 
-            for (int i = 0; i < length; i++) {
+                if (type != null && !type.isEmpty()) {
+                    termAtt.setEmpty().append(type);
+                } else
+                    termAtt.setEmpty().append("NULL");
 
-                final int codePoint = Character.codePointAt(buffer, i, length);
-
-                if (codePoint < 0 || codePoint >= 128)
-                    return true;
+                return true;
+            } else {
+                return false;
             }
-            typeAtt.setType("ASCII");
-            return true;
         }
     }
 }
