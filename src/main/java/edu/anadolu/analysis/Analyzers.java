@@ -123,10 +123,12 @@ public class Analyzers {
             case Script:
                 return CustomAnalyzer.builder()
                         .withTokenizer("icu")
-                        .addTokenFilter(ScriptAsTermTokenFilterFactory.class)
+                        .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
+                        .addTokenFilter(BasicLatinTokenFilterFactory.class)
+                        .addTokenFilter(TypeAsTermTokenFilterFactory.class)
                         .build();
 
-            case KStemField: {
+                case KStemField: {
 
                 Map<String, Analyzer> analyzerPerField = new HashMap<>();
                 analyzerPerField.put("url", new SimpleAnalyzer());
