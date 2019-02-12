@@ -24,6 +24,19 @@ public class Analyzers {
 
     public static final String FIELD = "field";
 
+    public static final String[] scripts = new String[]{
+            "Jpan",
+            "Cyrillic",
+            "Greek",
+            "Arabic",
+            "Hangul",
+            "Thai",
+            "Armenian",
+            "Devanagari",
+            "Hebrew",
+            "Georgian"
+    };
+
     /**
      * Intended to use with one term queries (otq) only
      *
@@ -120,15 +133,7 @@ public class Analyzers {
                         .addTokenFilter("turkishlowercase")
                         .build();
 
-            case Script:
-                return CustomAnalyzer.builder()
-                        .withTokenizer("icu")
-                        .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
-                        .addTokenFilter(BasicLatinTokenFilterFactory.class)
-                        .addTokenFilter(TypeAsTermTokenFilterFactory.class)
-                        .build();
-
-                case KStemField: {
+            case KStemField: {
 
                 Map<String, Analyzer> analyzerPerField = new HashMap<>();
                 analyzerPerField.put("url", new SimpleAnalyzer());
@@ -137,7 +142,7 @@ public class Analyzers {
                         Analyzers.analyzer(KStem), analyzerPerField);
             }
 
-            case UAX:
+            case UAX: {
 
                 Map<String, Analyzer> analyzerPerField = new HashMap<>();
 
@@ -157,10 +162,38 @@ public class Analyzers {
                         .withTokenizer("uax29urlemail")
                         .addTokenFilter("lowercase")
                         .build(), analyzerPerField);
+            }
 
+
+            case Script: {
+
+                Map<String, Analyzer> analyzerPerField = new HashMap<>();
+
+                for (String script : scripts)
+                    analyzerPerField.put(script, script(script));
+
+                return new PerFieldAnalyzerWrapper(
+                        CustomAnalyzer.builder()
+                                .withTokenizer("icu")
+                                .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
+                                .addTokenFilter(BasicLatinTokenFilterFactory.class)
+                                .addTokenFilter(TypeAsTermTokenFilterFactory.class)
+                                .build(),
+                        analyzerPerField);
+            }
             default:
                 throw new AssertionError(Analyzers.class);
 
         }
+    }
+
+
+    private static Analyzer script(String script) throws IOException {
+        return CustomAnalyzer.builder()
+                .withTokenizer("icu")
+                .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
+                .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", script)
+                .addTokenFilter("lowercase")
+                .build();
     }
 }

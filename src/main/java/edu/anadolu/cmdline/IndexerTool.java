@@ -30,8 +30,8 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-field", usage = "Boolean switch to index different document representations")
     private boolean field = false;
 
-    @Option(name = "-artificial", usage = "Boolean switch to index artificial field and token")
-    private boolean artificial = false;
+    @Option(name = "-script", usage = "Boolean switch to index scripts as separate fields")
+    private boolean script = false;
 
     @Option(name = "-semantic", usage = "Boolean switch to index HTML5 semantic elements")
     private boolean semantic = false;
@@ -115,7 +115,7 @@ public final class IndexerTool extends CmdLineTool {
         Indexer.IndexerConfig config = new Indexer.IndexerConfig()
                 .useAnchorText(anchor)
                 .useMetaFields(field)
-                .useArtificialField(artificial)
+                .useScripts(script)
                 .useSemanticElements(semantic);
         Indexer indexer = new Indexer(dataset, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);

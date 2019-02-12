@@ -49,6 +49,7 @@ import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
+import static edu.anadolu.analysis.Analyzers.scripts;
 import static edu.anadolu.field.MetaTag.notEmpty;
 import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
 import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
@@ -57,11 +58,6 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public class Indexer {
-
-    /**
-     * artificial field and token: every document should have this
-     */
-    public static final IndexableField ARTIFICIAL = new NoPositionsTextField("all", "all");
 
     public static final class NoPositionsTextField extends Field {
 
@@ -108,8 +104,10 @@ public class Indexer {
             document.add(new NoPositionsTextField(FIELD_CONTENTS, contents));
 
             // add artificial: every document should have this
-            if (!config.field && config.artificial)
-                document.add(ARTIFICIAL);
+            if (!config.field && config.script)
+                for (String script : scripts)
+                    document.add(new NoPositionsTextField(script, contents));
+
 
             // URLs only
             // document.add(new NoPositionsTextField("url", contents));
@@ -443,7 +441,7 @@ public class Indexer {
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
 
-       // String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
+        // String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
 
         //   if (notEmpty.test(metaNames))
         //       document.add(new NoPositionsTextField("meta", metaNames));
@@ -700,7 +698,7 @@ public class Indexer {
 
         boolean anchor = false;
         boolean field = false;
-        boolean artificial = false;
+        boolean script = false;
         boolean semantic = false;
 
         public IndexerConfig useAnchorText(boolean anchor) {
@@ -708,8 +706,8 @@ public class Indexer {
             return this;
         }
 
-        public IndexerConfig useArtificialField(boolean artificial) {
-            this.artificial = artificial;
+        public IndexerConfig useScripts(boolean script) {
+            this.script = script;
             return this;
         }
 

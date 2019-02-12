@@ -73,7 +73,7 @@ public final class SpamRemoveTool extends CmdLineTool {
         Indexer.IndexerConfig config = new Indexer.IndexerConfig()
                 .useAnchorText(false)
                 .useMetaFields(false)
-                .useArtificialField(false)
+                .useScripts(false)
                 .useSemanticElements(false);
         SpamRemovingIndexer indexer = new SpamRemovingIndexer(dataset, docsPath, indexPath, solr, KStem, config, spam);
         int numIndexed = indexer.indexWithThreads(numThreads);
