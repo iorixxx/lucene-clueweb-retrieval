@@ -172,6 +172,16 @@ public class Analyzers {
                 for (String script : scripts)
                     analyzerPerField.put(script, script(script));
 
+                analyzerPerField.put("ascii", CustomAnalyzer.builder()
+                        .withTokenizer("icu")
+                        .addTokenFilter(NonASCIITokenFilterFactory.class)
+                        .build());
+
+                analyzerPerField.put("latin", CustomAnalyzer.builder()
+                        .withTokenizer("icu")
+                        .addTokenFilter(NonLatinTokenFilterFactory.class)
+                        .build());
+
                 return new PerFieldAnalyzerWrapper(
                         CustomAnalyzer.builder()
                                 .withTokenizer("icu")

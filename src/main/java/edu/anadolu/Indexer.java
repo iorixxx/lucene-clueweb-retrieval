@@ -15,7 +15,10 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.ConcurrentMergeScheduler;
+import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.SolrClient;
@@ -103,10 +106,15 @@ public class Indexer {
             // entire document
             document.add(new NoPositionsTextField(FIELD_CONTENTS, contents));
 
-            // add artificial: every document should have this
-            if (!config.field && config.script)
+            // handle script flag
+            if (!config.field && config.script) {
+
                 for (String script : scripts)
                     document.add(new NoPositionsTextField(script, contents));
+
+                document.add(new NoPositionsTextField("ascii", contents));
+                document.add(new NoPositionsTextField("latin", contents));
+            }
 
 
             // URLs only
