@@ -4,6 +4,7 @@ package edu.anadolu.freq;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.clueweb09.InfoNeed;
@@ -226,7 +227,7 @@ public class TermFreqDistribution implements TFD {
         final String indexTag = indexPath.getFileName().toString();
         Tag tag = Tag.tag(indexTag);
         System.out.println("analyzer tag " + tag);
-        Analyzer analyzer = Analyzers.analyzer(tag);
+        Analyzer analyzer = new WhitespaceAnalyzer(); //Analyzers.analyzer(tag);
         final TermFreqDistribution distribution = new TermFreqDistribution(reader, binningStrategy, field, analyzer);
         final Path path = Paths.get(freqsPath.toString(), indexTag, "StopWords");
         if (!Files.exists(path)) Files.createDirectories(path);

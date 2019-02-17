@@ -49,9 +49,6 @@ public abstract class Base implements Predictor, Closeable {
         this.searcher.setSimilarity(new MetaTerm());
         this.field = field;
 
-        assert reader.numDocs() == 48735885 : "ClueWeb09B has 48735885 many documents after 10% spam filtering";
-        assert reader.maxDoc() == 48735885 : "ClueWeb09B has 48735885 many documents after 10% spam filtering";
-
         System.out.println("Opened index directory : " + reader.directory().toString() + " has " + reader.numDocs() + " numDocs and has " + reader.maxDoc() + " maxDocs");
 
         CollectionStatistics collectionStatistics = searcher.collectionStatistics(field);

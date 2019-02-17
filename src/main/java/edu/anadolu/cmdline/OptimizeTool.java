@@ -4,6 +4,8 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import org.apache.lucene.index.*;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.kohsuke.args4j.Option;
@@ -90,7 +92,7 @@ final class OptimizeTool extends CmdLineTool {
     }
 
     /**
-     * Print the number of unique terms in a Lucene index
+     * Prints the number of unique terms in a Lucene index
      *
      * @param indexPath Lucene index
      * @throws IOException should not happen
@@ -101,6 +103,9 @@ final class OptimizeTool extends CmdLineTool {
 
         try (final Directory dir = FSDirectory.open(indexPath);
              IndexReader reader = DirectoryReader.open(dir)) {
+
+            IndexSearcher searcher = new IndexSearcher(reader);
+            CollectionStatistics statistics = searcher.collectionStatistics(field);
 
             final Terms terms = MultiFields.getTerms(reader, field);
             if (terms == null) {
@@ -114,6 +119,8 @@ final class OptimizeTool extends CmdLineTool {
                 c++;
             }
 
+            System.out.println("The number of documents : " + statistics.docCount());
+            System.out.println("The number of terms : " + statistics.sumTotalTermFreq());
             System.out.println("The number of unique terms : " + c);
 
         } catch (IndexNotFoundException e) {
