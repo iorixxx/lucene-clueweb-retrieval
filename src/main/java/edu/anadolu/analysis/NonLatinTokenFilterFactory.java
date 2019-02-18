@@ -44,7 +44,7 @@ public class NonLatinTokenFilterFactory extends TokenFilterFactory {
 
             int code = scriptAtt.getCode();
 
-            if (code == UScript.LATIN || code == UScript.COMMON) {
+            if (code == UScript.LATIN /*|| code == UScript.COMMON*/) {
                 termAtt.setEmpty().append("latin");
             } else {
                 termAtt.setEmpty().append("non");

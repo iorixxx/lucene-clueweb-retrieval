@@ -100,14 +100,16 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("icu")
                         .addTokenFilter("lowercase")
+                        .addTokenFilter("kstem")
                         .build();
 
             case Latin:
                 return CustomAnalyzer.builder()
                         .withTokenizer("icu")
                         .addTokenFilter(ScriptAsTypeTokenFilterFactory.class)
-                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin,Common")
+                        .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "Latin")
                         .addTokenFilter("lowercase")
+                        .addTokenFilter("kstem")
                         .build();
 
             case ASCII:
@@ -116,6 +118,7 @@ public class Analyzers {
                         .addTokenFilter(BasicLatinTokenFilterFactory.class)
                         .addTokenFilter(FilterTypeTokenFilterFactory.class, "useWhitelist", "true", "types", "ASCII")
                         .addTokenFilter("lowercase")
+                        .addTokenFilter("kstem")
                         .build();
 
             case Zemberek:
