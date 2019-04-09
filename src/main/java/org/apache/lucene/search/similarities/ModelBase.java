@@ -63,8 +63,10 @@ public abstract class ModelBase extends Similarity {
         return new BasicStats(field, boost);
     }
 
-    /** Fills all member fields defined in {@code BasicStats} in {@code stats}.
-     *  Subclasses can override this method to fill additional stats. */
+    /**
+     * Fills all member fields defined in {@code BasicStats} in {@code stats}.
+     * Subclasses can override this method to fill additional stats.
+     */
     protected void fillBasicStats(BasicStats stats, CollectionStatistics collectionStats, TermStatistics termStats) {
         // #positions(field) must be >= #positions(term)
         assert collectionStats.sumTotalTermFreq() == -1 || collectionStats.sumTotalTermFreq() >= termStats.totalTermFreq();
@@ -89,11 +91,11 @@ public abstract class ModelBase extends Similarity {
                 avgFieldLength = 1f;
             } else {
                 numberOfFieldTokens = collectionStats.sumDocFreq();
-                avgFieldLength = (float) (collectionStats.sumDocFreq() / (double)numberOfDocuments);
+                avgFieldLength = (float) (collectionStats.sumDocFreq() / (double) numberOfDocuments);
             }
         } else {
             numberOfFieldTokens = collectionStats.sumTotalTermFreq();
-            avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double)numberOfDocuments);
+            avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double) numberOfDocuments);
         }
 
         // TODO: add sumDocFreq for field (numberOfFieldPostings)
@@ -282,12 +284,12 @@ public abstract class ModelBase extends Similarity {
 
         long getLengthValue(int doc) throws IOException {
             if (norms == null) {
-                return 1L;
+                throw new RuntimeException("document length norms is null!");
             }
             if (norms.advanceExact(doc)) {
                 return norms.longValue();
             } else {
-                return 0;
+                throw new RuntimeException("norms.advanceExact(doc) returns false!");
             }
         }
 

@@ -164,6 +164,9 @@ public class Indexer {
             if (!RESPONSE.equals(warcRecord.type()))
                 return 0;
 
+            String id = warcRecord.id();
+            if (skip(id)) return 0;
+
             if (config.field) {
                 Document document = warc2LuceneDocument(warcRecord);
                 if (document != null)
@@ -179,10 +182,6 @@ public class Indexer {
 
                 return 1;
             }
-
-            String id = warcRecord.id();
-
-            if (skip(id)) return 0;
 
             org.jsoup.nodes.Document jDoc;
 
