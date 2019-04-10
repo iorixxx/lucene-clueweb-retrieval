@@ -75,33 +75,23 @@ public abstract class ModelBase extends Similarity {
         long docFreq = termStats.docFreq();
         long totalTermFreq = termStats.totalTermFreq();
 
-        // frequencies are omitted, all postings have tf=1, so totalTermFreq = docFreq
         if (totalTermFreq == -1) {
-            totalTermFreq = docFreq;
+            throw new RuntimeException("totalTermFreq == -1");
         }
 
         final long numberOfFieldTokens;
-        final float avgFieldLength;
+
 
         if (collectionStats.sumTotalTermFreq() == -1) {
+            throw new RuntimeException("collectionStats.sumTotalTermFreq() == -1");
             // frequencies are omitted, so sumTotalTermFreq = # postings
-            if (collectionStats.sumDocFreq() == -1) {
-                // theoretical case only: remove!
-                numberOfFieldTokens = docFreq;
-                avgFieldLength = 1f;
-            } else {
-                numberOfFieldTokens = collectionStats.sumDocFreq();
-                avgFieldLength = (float) (collectionStats.sumDocFreq() / (double) numberOfDocuments);
-            }
         } else {
             numberOfFieldTokens = collectionStats.sumTotalTermFreq();
-            avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double) numberOfDocuments);
         }
 
         // TODO: add sumDocFreq for field (numberOfFieldPostings)
         stats.setNumberOfDocuments(numberOfDocuments);
         stats.setNumberOfFieldTokens(numberOfFieldTokens);
-        stats.setAvgFieldLength(avgFieldLength);
         stats.setDocFreq(docFreq);
         stats.setTotalTermFreq(totalTermFreq);
     }
@@ -117,8 +107,12 @@ public abstract class ModelBase extends Similarity {
      */
     protected float score(BasicStats stats, float freq, long docLen) {
 
+
+        // avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double) numberOfDocuments);
+
         /** The average length of documents in the collection.*/
-        double averageDocumentLength = stats.getAvgFieldLength();
+        double averageDocumentLength = (double) stats.getNumberOfFieldTokens() / (double) stats.getNumberOfDocuments();
+
 
         /** The term frequency in the query.*/
         double keyFrequency = 1;
