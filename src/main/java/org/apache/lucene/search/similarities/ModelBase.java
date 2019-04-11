@@ -70,7 +70,10 @@ public abstract class ModelBase extends Similarity {
     protected void fillBasicStats(BasicStats stats, CollectionStatistics collectionStats, TermStatistics termStats) {
         // #positions(field) must be >= #positions(term)
         assert collectionStats.sumTotalTermFreq() == -1 || collectionStats.sumTotalTermFreq() >= termStats.totalTermFreq();
-        long numberOfDocuments = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
+
+        if (collectionStats.docCount() == -1) throw new RuntimeException("collectionStats.docCount() == -1");
+
+        long numberOfDocuments = collectionStats.docCount();
 
         long docFreq = termStats.docFreq();
         long totalTermFreq = termStats.totalTermFreq();
@@ -111,8 +114,7 @@ public abstract class ModelBase extends Similarity {
         // avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double) numberOfDocuments);
 
         /** The average length of documents in the collection.*/
-        double averageDocumentLength = (double) stats.getNumberOfFieldTokens() / (double) stats.getNumberOfDocuments();
-
+        double averageDocumentLength = (double) stats.getNumberOfFieldTokens() / stats.getNumberOfDocuments();
 
         /** The term frequency in the query.*/
         double keyFrequency = 1;
