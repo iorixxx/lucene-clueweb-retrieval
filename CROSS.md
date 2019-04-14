@@ -54,8 +54,7 @@ Average of trained parameters
 
 
 ./run.sh Custom -collection CW09A -task search
-
-
-./run.sh Cross -collection CW09A -tags ICU_Latin_ASCII -baseline ICU -metric MAP > cw09a_map.txt
-./run.sh Cross -collection CW09A -tags ICU_Latin_ASCII -baseline ICU -metric NDCG20 > cw09a_ndcg20.txt
-./run.sh Cross -collection CW09A -tags ICU_Latin_ASCII -baseline ICU -metric NDCG100 > cw09a_ndcg100.txt
+./run.sh Cross -collection CW09A -tags ICU_ASCII -baseline ICU -metric MAP > cw09a_map.txt
+./run.sh Cross -collection CW09A -tags ICU_ASCII -baseline ICU -metric NDCG20 > cw09a_ndcg20.txt
+./run.sh Cross -collection CW09A -tags ICU_ASCII -baseline ICU -metric ERR20 > cw09a_err20.txt
+./run.sh Cross -collection CW09A -tags ICU_ASCII -baseline ICU -metric NDCG100 > cw09a_ndcg100.txt
