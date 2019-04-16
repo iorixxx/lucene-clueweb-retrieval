@@ -656,7 +656,7 @@ public class Indexer {
 
         final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
 
-        try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
+        try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
             stream.parallel().forEach(p -> {
                 new IndexerThread(writer, p).run();
