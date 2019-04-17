@@ -59,17 +59,17 @@ public class SemanticElements {
             return null;
         }
 
-        semanticStats.incDocType(docType(jDoc));
+     //   semanticStats.incDocType(docType(jDoc));
 
         // make a new, empty document
         Document document = new Document();
         document.add(new StringField("id", wDoc.id(), Field.Store.YES));
         document.add(new Indexer.NoPositionsTextField("tags", semanticElements(jDoc)));
-        document.add(new Indexer.NoPositionsTextField("abbr", abbrSemantic(jDoc)));
-        document.add(new Indexer.NoPositionsTextField("acronym", acronymSemantic(jDoc)));
-        document.add(new Indexer.NoPositionsTextField("cite", citeSemantic(jDoc)));
-        document.add(new Indexer.NoPositionsTextField("dfn", dfnSemantic(jDoc)));
-        document.add(new Indexer.NoPositionsTextField("mark", markSemantic(jDoc)));
+//        document.add(new Indexer.NoPositionsTextField("abbr", abbrSemantic(jDoc)));
+//        document.add(new Indexer.NoPositionsTextField("acronym", acronymSemantic(jDoc)));
+//        document.add(new Indexer.NoPositionsTextField("cite", citeSemantic(jDoc)));
+//        document.add(new Indexer.NoPositionsTextField("dfn", dfnSemantic(jDoc)));
+//        document.add(new Indexer.NoPositionsTextField("mark", markSemantic(jDoc)));
 
         return document;
     }

@@ -119,9 +119,10 @@ final class OptimizeTool extends CmdLineTool {
                 c++;
             }
 
-            System.out.println("The number of documents : " + statistics.docCount());
+            System.out.println("The number of documents that have at least one term for" + " " + field + ": " + statistics.docCount());
             System.out.println("The number of terms : " + statistics.sumTotalTermFreq());
             System.out.println("The number of unique terms : " + c);
+            System.out.println("The total number of documents : " + reader.maxDoc() + " " + reader.numDocs());
 
         } catch (IndexNotFoundException e) {
             System.out.println("IndexNotFound in " + indexPath.toAbsolutePath());

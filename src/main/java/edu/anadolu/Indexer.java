@@ -45,9 +45,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
@@ -83,14 +80,14 @@ public class Indexer {
 
     public static final int BUFFER_SIZE = 1 << 16; // 64K
 
-    private final class IndexerThread extends Thread {
+    private final class IndexerThread /*extends Thread */ {
 
         final private Path inputWarcFile;
 
         final private IndexWriter writer;
 
         IndexerThread(IndexWriter writer, Path inputWarcFile) {
-            super(inputWarcFile.getFileName().toString());
+            // super(inputWarcFile.getFileName().toString());
             this.writer = writer;
             this.inputWarcFile = inputWarcFile;
         }
@@ -164,6 +161,9 @@ public class Indexer {
             if (!RESPONSE.equals(warcRecord.type()))
                 return 0;
 
+            String id = warcRecord.id();
+            if (skip(id)) return 0;
+
             if (config.field) {
                 Document document = warc2LuceneDocument(warcRecord);
                 if (document != null)
@@ -179,10 +179,6 @@ public class Indexer {
 
                 return 1;
             }
-
-            String id = warcRecord.id();
-
-            if (skip(id)) return 0;
 
             org.jsoup.nodes.Document jDoc;
 
@@ -271,12 +267,12 @@ public class Indexer {
             return i;
         }
 
-        @Override
+        //@Override
         public void run() {
             try {
 
                 Thread.currentThread().setName(inputWarcFile.toAbsolutePath().toString());
-                setName(inputWarcFile.getFileName().toString());
+                //setName(inputWarcFile.getFileName().toString());
 
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
                     int addCount = indexClueWeb09WarcFile();
@@ -547,94 +543,94 @@ public class Indexer {
             return Analyzers.analyzer(tag);
     }
 
-    public int indexWithThreads(int numThreads) throws IOException, InterruptedException {
-
-        System.out.println("Indexing with " + numThreads + " threads to directory '" + indexPath.toAbsolutePath() + "'...");
-
-        final Directory dir = FSDirectory.open(indexPath);
-
-        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
-
-        iwc.setSimilarity(new MetaTerm());
-        iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-        iwc.setRAMBufferSizeMB(512.0);
-        iwc.setUseCompoundFile(false);
-        iwc.setMergeScheduler(new ConcurrentMergeScheduler());
-
-        final IndexWriter writer = new IndexWriter(dir, iwc);
-
-        final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
-
-
-        final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
-        final Deque<Path> warcFiles = discoverWarcFiles(docsPath, suffix);
-
-        long totalWarcFiles = warcFiles.size();
-        System.out.println(totalWarcFiles + " many " + suffix + " files found under the docs path : " + docsPath.toString());
-
-        for (int i = 0; i < 2000; i++) {
-            if (!warcFiles.isEmpty())
-                executor.execute(new IndexerThread(writer, warcFiles.removeFirst()));
-            else {
-                if (!executor.isShutdown()) {
-                    Thread.sleep(30000);
-                    executor.shutdown();
-                }
-                break;
-            }
-        }
-
-
-        long previous = 0;
-        //add some delay to let some threads spawn by scheduler
-        Thread.sleep(30000);
-
-
-        try {
-            // Wait for existing tasks to terminate
-            while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-
-                System.out.print(String.format("%.2f percentage completed ", ((double) executor.getCompletedTaskCount() / totalWarcFiles) * 100.0d));
-                System.out.println("activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
-
-                final long completedTaskCount = executor.getCompletedTaskCount();
-
-                if (!warcFiles.isEmpty())
-                    for (long i = previous; i < completedTaskCount; i++) {
-                        if (!warcFiles.isEmpty())
-                            executor.execute(new IndexerThread(writer, warcFiles.removeFirst()));
-                        else {
-                            if (!executor.isShutdown())
-                                executor.shutdown();
-                        }
-                    }
-
-                previous = completedTaskCount;
-                Thread.sleep(1000);
-            }
-        } catch (InterruptedException ie) {
-            // (Re-)Cancel if current thread also interrupted
-            executor.shutdownNow();
-            // Preserve interrupt status
-            Thread.currentThread().interrupt();
-        }
-
-        if (totalWarcFiles != executor.getCompletedTaskCount())
-            throw new RuntimeException("totalWarcFiles = " + totalWarcFiles + " is not equal to completedTaskCount =  " + executor.getCompletedTaskCount());
-
-        System.out.println("outside while pool size = " + executor.getPoolSize() + " activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
-
-        int numIndexed = writer.maxDoc();
-
-        try {
-            writer.commit();
-        } finally {
-            writer.close();
-            dir.close();
-        }
-
-        return numIndexed;
-    }
+//    public int indexWithThreads(int numThreads) throws IOException, InterruptedException {
+//
+//        System.out.println("Indexing with " + numThreads + " threads to directory '" + indexPath.toAbsolutePath() + "'...");
+//
+//        final Directory dir = FSDirectory.open(indexPath);
+//
+//        final IndexWriterConfig iwc = new IndexWriterConfig(analyzer());
+//
+//        iwc.setSimilarity(new MetaTerm());
+//        iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+//        iwc.setRAMBufferSizeMB(512.0);
+//        iwc.setUseCompoundFile(false);
+//        iwc.setMergeScheduler(new ConcurrentMergeScheduler());
+//
+//        final IndexWriter writer = new IndexWriter(dir, iwc);
+//
+//        final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
+//
+//
+//        final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
+//        final Deque<Path> warcFiles = discoverWarcFiles(docsPath, suffix);
+//
+//        long totalWarcFiles = warcFiles.size();
+//        System.out.println(totalWarcFiles + " many " + suffix + " files found under the docs path : " + docsPath.toString());
+//
+//        for (int i = 0; i < 2000; i++) {
+//            if (!warcFiles.isEmpty())
+//                executor.execute(new IndexerThread(writer, warcFiles.removeFirst()));
+//            else {
+//                if (!executor.isShutdown()) {
+//                    Thread.sleep(30000);
+//                    executor.shutdown();
+//                }
+//                break;
+//            }
+//        }
+//
+//
+//        long previous = 0;
+//        //add some delay to let some threads spawn by scheduler
+//        Thread.sleep(30000);
+//
+//
+//        try {
+//            // Wait for existing tasks to terminate
+//            while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+//
+//                System.out.print(String.format("%.2f percentage completed ", ((double) executor.getCompletedTaskCount() / totalWarcFiles) * 100.0d));
+//                System.out.println("activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+//
+//                final long completedTaskCount = executor.getCompletedTaskCount();
+//
+//                if (!warcFiles.isEmpty())
+//                    for (long i = previous; i < completedTaskCount; i++) {
+//                        if (!warcFiles.isEmpty())
+//                            executor.execute(new IndexerThread(writer, warcFiles.removeFirst()));
+//                        else {
+//                            if (!executor.isShutdown())
+//                                executor.shutdown();
+//                        }
+//                    }
+//
+//                previous = completedTaskCount;
+//                Thread.sleep(1000);
+//            }
+//        } catch (InterruptedException ie) {
+//            // (Re-)Cancel if current thread also interrupted
+//            executor.shutdownNow();
+//            // Preserve interrupt status
+//            Thread.currentThread().interrupt();
+//        }
+//
+//        if (totalWarcFiles != executor.getCompletedTaskCount())
+//            throw new RuntimeException("totalWarcFiles = " + totalWarcFiles + " is not equal to completedTaskCount =  " + executor.getCompletedTaskCount());
+//
+//        System.out.println("outside while pool size = " + executor.getPoolSize() + " activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+//
+//        int numIndexed = writer.getDocStats().maxDoc;
+//
+//        try {
+//            writer.commit();
+//        } finally {
+//            writer.close();
+//            dir.close();
+//        }
+//
+//        return numIndexed;
+//    }
 
     /**
      * Indexer based on Java8's parallel streams
@@ -660,7 +656,7 @@ public class Indexer {
 
         final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
 
-        try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
+        try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
             stream.parallel().forEach(p -> {
                 new IndexerThread(writer, p).run();
@@ -668,7 +664,7 @@ public class Indexer {
 
         }
 
-        int numIndexed = writer.maxDoc();
+        int numIndexed = writer.getDocStats().maxDoc;
 
         try {
             writer.commit();

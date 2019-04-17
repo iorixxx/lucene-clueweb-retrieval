@@ -76,7 +76,7 @@ public final class SpamRemoveTool extends CmdLineTool {
                 .useScripts(false)
                 .useSemanticElements(false);
         SpamRemovingIndexer indexer = new SpamRemovingIndexer(dataset, docsPath, indexPath, solr, KStem, config, spam);
-        int numIndexed = indexer.indexWithThreads(numThreads);
+        int numIndexed = indexer.indexParallel();
 
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
     }

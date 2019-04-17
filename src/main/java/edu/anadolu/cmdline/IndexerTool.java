@@ -118,7 +118,7 @@ public final class IndexerTool extends CmdLineTool {
                 .useScripts(script)
                 .useSemanticElements(semantic);
         Indexer indexer = new Indexer(dataset, docsPath, indexPath, solr, tag, config);
-        int numIndexed = indexer.indexWithThreads(numThreads);
+        int numIndexed = indexer.indexParallel();
         if (semantic) SemanticStats.getSemanticObject().printSemanticStats();
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
     }

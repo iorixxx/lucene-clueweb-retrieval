@@ -133,9 +133,24 @@ public class CrossTool extends CmdLineTool {
 
                 ModelScore modelScore = evaluator.averagePerModel(model);
 
-                if (tTest.pairedTTest(baselines.get(model), scores, 0.05))
+                if (tTest.pairedTTest(baselines.get(model), scores, 0.05)) {
                     list.add(new ModelScore(tag + "*", modelScore.score));
-                else
+
+
+                    // for risk graphs bar(sort(x(1,:)-x(2,:)))
+                    System.out.print(baseline + "_" + model);
+                    for (int i = 0; i < needs.size(); i++) {
+                        System.out.print("\t" + baselines.get(model)[i]);
+                    }
+                    System.out.println();
+
+                    System.out.print(tag + "_" + model);
+                    for (int i = 0; i < needs.size(); i++) {
+                        System.out.print("\t" + scores[i]);
+                    }
+                    System.out.println();
+
+                } else
                     list.add(new ModelScore(tag, modelScore.score));
 
             }

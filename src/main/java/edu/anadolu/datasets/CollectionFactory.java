@@ -43,6 +43,9 @@ public class CollectionFactory {
             case MQE2:
                 return new MQE2(tfd_home);
 
+            case NTCIR:
+                return new NTCIR(tfd_home);
+
             default:
                 throw new RuntimeException(collection + " returned null DataSet");
 
