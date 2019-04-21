@@ -73,11 +73,13 @@ public class WikiTool extends CmdLineTool {
                 String host = aURL.getHost().toLowerCase(Locale.US).trim();
                 if (host.contains("wikipedia.org")) {
 
-                    if(host.contains("-"))
-                        System.out.println(host);
-                    //System.out.print(docId);
-                    //System.out.print(" ");
-                    //System.out.println(url);
+                    if (host.contains("-wiki")) {
+                        //System.out.println(host); 
+                        continue;
+                    }
+                    System.out.print(docId);
+                    System.out.print(" ");
+                    System.out.println(url);
                     c++;
                 }
             }
