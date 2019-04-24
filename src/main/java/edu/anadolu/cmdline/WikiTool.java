@@ -87,9 +87,9 @@ public class WikiTool extends CmdLineTool {
                     out.print(docId);
                     out.print(" ");
                     out.println(url);
+                    out.flush();
                 }
             }
-
         }
     }
 
