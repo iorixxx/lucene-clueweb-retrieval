@@ -3,6 +3,7 @@ package edu.anadolu.cmdline;
 import org.kohsuke.args4j.Option;
 
 import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +22,9 @@ public class WikiTool extends CmdLineTool {
      */
     @Option(name = "-f", required = false, usage = "Mapping of External Document Ids to URLs.")
     private String file = "/home/iorixxx/ClueWeb12_All_edocid2url.txt";
+
+    @Option(name = "-o", required = false, usage = "Output file")
+    private String output = "cw12_wiki.txt";
 
     @Override
     public String getShortDescription() {
@@ -45,20 +49,19 @@ public class WikiTool extends CmdLineTool {
         }
 
         Path path = Paths.get(file);
-        process(path);
+        process(path, Paths.get(output));
 
     }
 
-    private static void process(Path path) throws Exception {
+    private static void process(Path path, Path output) throws Exception {
 
         if (!(Files.isRegularFile(path) && Files.exists(path))) {
             System.out.println("Cannot read file " + path.toAbsolutePath().toString());
             return;
         }
 
-        int c = 0;
-
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+        try (BufferedReader reader = Files.newBufferedReader(path);
+             PrintWriter out = new PrintWriter(Files.newBufferedWriter((output)))) {
 
             for (; ; ) {
                 String line = reader.readLine();
@@ -81,22 +84,19 @@ public class WikiTool extends CmdLineTool {
                         //System.out.println(host); 
                         continue;
                     }
-                    System.out.print(docId);
-                    System.out.print(" ");
-                    System.out.println(url);
-                    c++;
+                    out.print(docId);
+                    out.print(" ");
+                    out.println(url);
                 }
             }
 
         }
-
-        // System.out.println(c + " many wikipedia documents found.");
     }
 
     public static void main(String[] args) throws Exception {
 
         Path path = Paths.get("/Users/iorixxx/Downloads/ClueWeb12_All_edocid2url.txt");
-        process(path);
+        process(path, Paths.get("cw12_wiki.txt"));
     }
 
 }

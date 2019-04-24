@@ -296,7 +296,7 @@ public class RocTool extends CmdLineTool {
     }
 
     /**
-     * First, use ./run.sh Wiki > cw12_wiki.txt to identify wikipedia pages of the ClueWeb12 dataset
+     * First, use ./run.sh Wiki -o cw12_wiki.txt to identify wikipedia pages of the ClueWeb12 dataset
      */
     private void wiki12() throws IOException, SolrServerException {
 
@@ -313,8 +313,6 @@ public class RocTool extends CmdLineTool {
         final List<String> lines = Files.readAllLines(Paths.get("cw12_wiki.txt"), StandardCharsets.US_ASCII);
 
         for (String line : lines) {
-
-            if (line.trim().length() == 0) continue;
 
             String[] parts = line.split("\\s+");
 
