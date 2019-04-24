@@ -73,6 +73,10 @@ public class WikiTool extends CmdLineTool {
                 String host = aURL.getHost().toLowerCase(Locale.US).trim();
                 if (host.contains("wikipedia.org")) {
 
+                    if ("britainloveswikipedia.org".equals(host)) {
+                        continue;
+                    }
+
                     if (host.contains("-wiki")) {
                         //System.out.println(host); 
                         continue;
