@@ -316,7 +316,8 @@ public class RocTool extends CmdLineTool {
 
             String[] parts = line.split("\\s+");
 
-            if (parts.length != 2) throw new RuntimeException("lines length not equal to 2 " + line);
+            if (parts.length != 2)
+                throw new RuntimeException("lines length not equal to 2 " + line + " " + line.length());
 
             int percentile = SpamTool.percentile(client, parts[0]);
 
