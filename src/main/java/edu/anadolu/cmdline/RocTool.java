@@ -295,6 +295,43 @@ public class RocTool extends CmdLineTool {
             array[percentile]++;
     }
 
+    /**
+     * First, use ./run.sh Wiki > cw12_wiki.txt to identify wikipedia pages of the ClueWeb12 dataset
+     */
+    private void wiki12() throws IOException, SolrServerException {
+
+        HttpSolrClient client = getSpamSolr(Collection.CW12A);
+
+        if (client == null) {
+            System.out.println("solr client is null!");
+            return;
+        }
+
+        int[] wiki = new int[100];
+        Arrays.fill(wiki, 0);
+
+        final List<String> lines = Files.readAllLines(Paths.get("cw12_wiki.txt"), StandardCharsets.US_ASCII);
+
+        for (String line : lines) {
+
+            String[] parts = line.split("\\s+");
+
+            if (parts.length != 2) throw new RuntimeException("lines length not equal to 2");
+
+            int percentile = SpamTool.percentile(client, parts[0]);
+
+            if (percentile >= 0 && percentile < 100)
+                wiki[percentile]++;
+            else throw new RuntimeException("percentile invalid " + percentile);
+        }
+
+        client.close();
+
+        System.out.println("percentile,fusionWiki");
+        for (int i = 0; i < 100; i++)
+            System.out.println(i + "," + wiki[i]);
+    }
+
     private void wiki() throws IOException {
 
         int[] fusion = wiki("wFusion.txt");
@@ -352,7 +389,11 @@ public class RocTool extends CmdLineTool {
         }
 
         if ("wiki".equals(task)) {
-            wiki();
+
+            if (Collection.CW12A.equals(collection))
+                wiki12();
+            else
+                wiki();
             return;
         }
 

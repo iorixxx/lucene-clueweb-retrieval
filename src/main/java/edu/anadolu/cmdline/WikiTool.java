@@ -86,7 +86,7 @@ public class WikiTool extends CmdLineTool {
 
         }
 
-        System.out.println(c + " many wikipedia documents found.");
+        // System.out.println(c + " many wikipedia documents found.");
     }
 
     public static void main(String[] args) throws Exception {

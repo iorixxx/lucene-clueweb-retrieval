@@ -142,6 +142,8 @@ public final class CLI {
 
         tools.add(new SEOTool());
 
+        tools.add(new WikiTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
