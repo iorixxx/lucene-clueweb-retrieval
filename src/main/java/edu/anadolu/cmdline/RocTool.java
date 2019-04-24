@@ -314,6 +314,8 @@ public class RocTool extends CmdLineTool {
 
         for (String line : lines) {
 
+            if (line.trim().length() == 0) continue;
+
             String[] parts = line.split("\\s+");
 
             if (parts.length != 2)
