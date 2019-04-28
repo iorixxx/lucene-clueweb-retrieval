@@ -292,13 +292,18 @@ public class Indexer {
     }
 
     /**
-     * Skip certain documents that hang Jsoup.parse method
+     * Skip certain documents that hang JSoup.parse method.
+     * See open ticket : https://github.com/jhy/jsoup/issues/1192
+     * Here are some binary files that hang JSoup.
+     * <p>
+     * clueweb12-0200wb-38-08218 http://www.innovative-dsp.com/ftp/MIT/x6_400m_lx240t-ff1156.bit 9229029
+     * clueweb12-0200wb-38-08219 http://www.innovative-dsp.com/ftp/MIT/x6_400m_sx315t-ff1156.bit 9975121
      *
      * @param docId document identifier
      * @return true if the document should be skipped
      */
     protected boolean skip(String docId) {
-        return "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId);
+        return "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId);
     }
 
     protected Path indexPath;
