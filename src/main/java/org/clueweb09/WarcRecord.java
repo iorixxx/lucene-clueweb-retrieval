@@ -12,4 +12,6 @@ public interface WarcRecord {
     String url();
 
     String type();
+
+    void free();
 }

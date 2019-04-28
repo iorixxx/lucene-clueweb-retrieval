@@ -131,7 +131,7 @@ public class WarcTool extends CmdLineTool {
                     i++;
                     String id = wDoc.getDocid();
 
-                    if ("clueweb12-1100wb-15-21381".equals(id) || "clueweb12-1013wb-14-21356".equals(id)
+                    if ("clueweb12-1100wb-15-21376".equals(id) || "clueweb12-1100wb-15-21381".equals(id) || "clueweb12-1013wb-14-21356".equals(id)
                             || "clueweb12-0200wb-38-08218".equals(id) || "clueweb12-0200wb-38-08219".equals(id))
                         continue;
 

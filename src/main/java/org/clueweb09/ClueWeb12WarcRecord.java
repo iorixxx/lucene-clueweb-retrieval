@@ -296,6 +296,11 @@ public final class ClueWeb12WarcRecord implements WarcRecord {
     }
 
     @Override
+    public void free() {
+        warcContent = null;
+    }
+
+    @Override
     public String content() {
         return getContent();
     }
