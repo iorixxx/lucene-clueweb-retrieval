@@ -48,6 +48,9 @@ public final class SearcherTool extends CmdLineTool {
     @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
     private String tag = null;
 
+    @Option(name = "-size", usage = "Sample size. 1000, 5000, etc.")
+    private int size = 5000;
+
     @Override
     public String getShortDescription() {
         return "Searcher Tool for Gov2 ClueWeb09 ClueWeb12";
@@ -239,7 +242,7 @@ public final class SearcherTool extends CmdLineTool {
                 modelBaseList.add(new DLH13());
                 modelBaseList.add(new DFRee());
 
-                try (FeatureSearcher searcher = new FeatureSearcher(path, dataset, 1000)) {
+                try (FeatureSearcher searcher = new FeatureSearcher(path, dataset, size)) {
                     searcher.searchF(modelBaseList, "features");
                 }
                 modelBaseList.clear();
