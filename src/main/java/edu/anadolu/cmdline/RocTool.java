@@ -174,6 +174,10 @@ public class RocTool extends CmdLineTool {
             this.ranking = ranking;
         }
 
+        Confusion classify(int threshold) {
+            return classify(threshold, 100);
+
+        }
 
         /**
          * label those with percentile-score<70 to be spam
@@ -181,7 +185,7 @@ public class RocTool extends CmdLineTool {
          * @param threshold 70
          * @return elements of confusion matrix
          */
-        Confusion classify(int threshold) {
+        Confusion classify(int threshold, int size) {
 
             int tp = 0;
             int tn = 0;
@@ -986,21 +990,14 @@ public class RocTool extends CmdLineTool {
 
         Struct struct = new Struct(relevant, spam, non, Ranking.odds);
 
-        System.out.println("bin,oddsSpam,oddsRel");
+        System.out.println("bin,oddsSpam,oddsRel,oddsNon");
         for (int i = 0; i < size; i++)
-            System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i]);
+            System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i] + "," + struct.non[i]);
 
 
         for (int t = 0; t < size; t++) {
-
-            Confusion f = struct.classify(t);
-
+            Confusion f = struct.classify(t, size);
             System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.fallout());
         }
-
-        System.out.println("bin,oddsNon");
-        for (int i = 0; i < size; i++)
-            System.out.println(i + "," + struct.non[i]);
-
     }
 }

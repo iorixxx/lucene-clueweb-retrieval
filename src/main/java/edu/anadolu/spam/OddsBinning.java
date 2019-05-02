@@ -64,23 +64,19 @@ public class OddsBinning {
     };
 
     public static int bin(double odds) {
+
         if (!(odds >= -10.42 && odds <= 15.96))
             throw new RuntimeException("odds ratio is invalid " + odds);
-
 
         for (int i = 0; i < intervals.length - 1; i++) {
             final double floor = intervals[i];
             final double ceiling = intervals[i + 1];
             if (odds >= floor && odds < ceiling) {
-
-                System.out.println(floor + ".." + ceiling);
                 return i;
             }
         }
 
         throw new RuntimeException("cannot find the bin for " + odds);
-
-
     }
 
     public static void main(String[] args) {
