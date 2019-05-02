@@ -201,7 +201,7 @@ public class RocTool extends CmdLineTool {
                 fp += relevant[i];
             }
 
-            for (int i = threshold; i < 100; i++) {
+            for (int i = threshold; i < size; i++) {
 
                 tn += relevant[i];
 
