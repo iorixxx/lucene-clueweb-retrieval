@@ -1,6 +1,7 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.spam.OddsBinning;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -851,7 +852,7 @@ public class RocTool extends CmdLineTool {
         System.out.println("rel=" + rel + " spam=" + spam);
     }
 
-    private void odds() throws IOException {
+    private void oddsMap() throws IOException {
 
         TreeMap<String, Integer> relevant = new TreeMap<>();
         TreeMap<String, Integer> spam = new TreeMap<>();
@@ -921,5 +922,85 @@ public class RocTool extends CmdLineTool {
             final int i = map.getOrDefault(odds, 0) + 1;
             map.put(odds, i);
         }
+    }
+
+    private void odds() throws IOException {
+
+        final int size = OddsBinning.intervals.length - 1;
+
+        int[] relevant = new int[size];
+        Arrays.fill(relevant, 0);
+
+        int[] spam = new int[size];
+        Arrays.fill(spam, 0);
+
+        int[] non = new int[size];
+        Arrays.fill(non, 0);
+
+        Set<String> set = new HashSet<>();
+
+        final List<String> lines = Files.readAllLines(Paths.get(collection.toString() + ".txt"), StandardCharsets.US_ASCII);
+
+        Set<String> uniqueSpam = new HashSet<>();
+        Set<String> uniqueRelevant = new HashSet<>();
+        Set<String> uniqueNon = new HashSet<>();
+
+        for (String line : lines) {
+
+            if (line.startsWith("queryID,docID,relevance,fusion"))
+                continue;
+
+            String[] parts = line.split(",");
+
+            if (parts.length != 8) throw new RuntimeException("raw file should contain 8 columns : " + line);
+
+            int queryID = Integer.parseInt(parts[0]);
+            String docID = parts[1];
+            int grade = Integer.parseInt(parts[2]);
+
+            String primaryKey = queryID + "_" + docID;
+            if (set.contains(primaryKey)) throw new RuntimeException("duplicate primary key " + primaryKey);
+            set.add(primaryKey);
+
+            String odds = parts[7];
+
+            double d = Double.parseDouble(odds);
+
+            if (!(d >= -10.42 && d <= 15.96))
+                throw new RuntimeException("odd ratio is invalid " + odds);
+
+            int bin = OddsBinning.bin(d);
+
+            if (grade == -2)
+                increment(spam, uniqueSpam, docID, bin);
+
+
+            if (grade > 0)
+                increment(relevant, uniqueRelevant, docID, bin);
+
+
+            if (grade == 0)
+                increment(non, uniqueNon, docID, bin);
+
+        }
+
+        Struct struct = new Struct(relevant, spam, non, Ranking.odds);
+
+        System.out.println("bin,oddsSpam,oddsRel");
+        for (int i = 0; i < size; i++)
+            System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i]);
+
+
+        for (int t = 0; t < size; t++) {
+
+            Confusion f = struct.classify(t);
+
+            System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.fallout());
+        }
+
+        System.out.println("bin,oddsNon");
+        for (int i = 0; i < size; i++)
+            System.out.println(i + "," + struct.non[i]);
+
     }
 }
