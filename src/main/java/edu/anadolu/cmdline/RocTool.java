@@ -994,10 +994,11 @@ public class RocTool extends CmdLineTool {
         for (int i = 0; i < size; i++)
             System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i] + "," + struct.non[i]);
 
+        System.out.println(struct);
 
         for (int t = 0; t < size; t++) {
             Confusion f = struct.classify(t, size);
-            System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.fallout());
+            System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.precision());
         }
     }
 }
