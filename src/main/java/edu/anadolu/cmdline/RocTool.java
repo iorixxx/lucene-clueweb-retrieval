@@ -1,8 +1,11 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.datasets.Collection;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -16,6 +19,8 @@ import java.util.stream.Collectors;
 
 import static edu.anadolu.cmdline.RocTool.Ranking.fusion;
 import static edu.anadolu.cmdline.SpamTool.getSpamSolr;
+import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
+import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 /**
@@ -44,7 +49,8 @@ public class RocTool extends CmdLineTool {
         fusion,
         britney,
         groupx,
-        uk2006
+        uk2006,
+        odds
     }
 
     @Override
@@ -68,11 +74,12 @@ public class RocTool extends CmdLineTool {
         if (Collection.CW09A.equals(collection)) {
             qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt",
                     "qrels.session.201-262.txt", "qrels.session.301-348.txt"};
-            solrURLs = new HttpSolrClient[4];
+            solrURLs = new HttpSolrClient[5];
             solrURLs[0] = getCW09Solr(Ranking.fusion);
             solrURLs[1] = getCW09Solr(Ranking.britney);
             solrURLs[2] = getCW09Solr(Ranking.groupx);
             solrURLs[3] = getCW09Solr(Ranking.uk2006);
+            solrURLs[4] = getCW09Solr(Ranking.odds);
 
         } else if (Collection.CW12A.equals(collection)) {
             qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt",
@@ -108,9 +115,11 @@ public class RocTool extends CmdLineTool {
                 int grade = Integer.parseInt(parts[3]);
 
                 out.print(queryID + "," + docID + "," + grade);
-                for (HttpSolrClient client : solrURLs) {
+                for (int i = 0; i < 4; i++) {
+                    HttpSolrClient client = solrURLs[i];
                     out.print("," + SpamTool.percentile(client, docID));
                 }
+                out.print("," + odds(solrURLs[4], docID));
                 out.println();
             }
 
@@ -123,6 +132,34 @@ public class RocTool extends CmdLineTool {
             client.close();
         }
 
+    }
+
+    public static String odds(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
+
+        SolrQuery query = new SolrQuery(docID).setFields("odds");
+        query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
+        query.set(OMIT_HEADER, true);
+        SolrDocumentList resp = solr.query(query).getResults();
+
+
+        if (resp.size() == 0) {
+            System.out.println("cannot find docID " + docID + " in " + solr.getBaseURL());
+        }
+
+        if (resp.size() != 1) {
+            System.out.println("docID " + docID + " returned " + resp.size() + " many hits!");
+        }
+
+        String odds = (String) resp.get(0).getFieldValue("odds");
+
+        resp.clear();
+        query.clear();
+
+        double d = Double.parseDouble(odds);
+
+        if (d >= -10.42 && d <= 15.96)
+            return odds;
+        else throw new RuntimeException("odd ratio is invalid " + odds);
     }
 
     class Struct {
