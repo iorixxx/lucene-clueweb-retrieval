@@ -8,8 +8,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
@@ -55,6 +57,9 @@ public class WikiTool extends CmdLineTool {
 
     private static void process(Path path, Path output) throws Exception {
 
+        Set<String> fakes = new HashSet<>();
+        fakes.add("britainloveswikipedia.org");
+
         if (!(Files.isRegularFile(path) && Files.exists(path))) {
             System.out.println("Cannot read file " + path.toAbsolutePath().toString());
             return;
@@ -81,7 +86,7 @@ public class WikiTool extends CmdLineTool {
                     }
 
                     if (host.contains("-wiki")) {
-                        //System.out.println(host); 
+                        fakes.add(host);
                         continue;
                     }
                     out.print(docId);
@@ -91,6 +96,8 @@ public class WikiTool extends CmdLineTool {
                 }
             }
         }
+
+        fakes.forEach(System.out::println);
     }
 
     public static void main(String[] args) throws Exception {
