@@ -58,7 +58,6 @@ public class WikiTool extends CmdLineTool {
     private static void process(Path path, Path output) throws Exception {
 
         Set<String> fakes = new HashSet<>();
-        fakes.add("britainloveswikipedia.org");
 
         if (!(Files.isRegularFile(path) && Files.exists(path))) {
             System.out.println("Cannot read file " + path.toAbsolutePath().toString());
@@ -81,14 +80,16 @@ public class WikiTool extends CmdLineTool {
                 String host = aURL.getHost().toLowerCase(Locale.US).trim();
                 if (host.contains("wikipedia.org")) {
 
-                    if ("britainloveswikipedia.org".equals(host)) {
-                        continue;
-                    }
-
                     if (host.contains("-wiki")) {
                         fakes.add(host);
                         continue;
                     }
+
+                    if (!host.contains(".wiki")) {
+                        fakes.add(host);
+                        continue;
+                    }
+
                     out.print(docId);
                     out.print(" ");
                     out.println(url);
