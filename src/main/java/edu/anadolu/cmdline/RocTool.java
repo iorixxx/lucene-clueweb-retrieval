@@ -435,6 +435,11 @@ public class RocTool extends CmdLineTool {
             return;
         }
 
+        if ("odds".equals(task) && Collection.CW09A.equals(collection)) {
+            odds();
+            return;
+        }
+
         if (Collection.CW09A.equals(collection)) {
             Struct fusion = distribution(Ranking.fusion);
             Struct britney = distribution(Ranking.britney);
@@ -844,5 +849,77 @@ public class RocTool extends CmdLineTool {
         output.close();
         System.out.println(judgeLevels + " num_queries " + queries.size());
         System.out.println("rel=" + rel + " spam=" + spam);
+    }
+
+    private void odds() throws IOException {
+
+        TreeMap<String, Integer> relevant = new TreeMap<>();
+        TreeMap<String, Integer> spam = new TreeMap<>();
+        TreeMap<String, Integer> non = new TreeMap<>();
+
+        Set<String> set = new HashSet<>();
+
+        final List<String> lines = Files.readAllLines(Paths.get(collection.toString() + ".txt"), StandardCharsets.US_ASCII);
+
+        Set<String> uniqueSpam = new HashSet<>();
+        Set<String> uniqueRelevant = new HashSet<>();
+        Set<String> uniqueNon = new HashSet<>();
+
+        for (String line : lines) {
+
+            if (line.startsWith("queryID,docID,relevance,fusion"))
+                continue;
+
+            String[] parts = line.split(",");
+
+            if (parts.length != 8) throw new RuntimeException("raw file should contain 8 columns : " + line);
+
+            int queryID = Integer.parseInt(parts[0]);
+            String docID = parts[1];
+            int grade = Integer.parseInt(parts[2]);
+
+            String primaryKey = queryID + "_" + docID;
+            if (set.contains(primaryKey)) throw new RuntimeException("duplicate primary key " + primaryKey);
+            set.add(primaryKey);
+
+            String odds = parts[7];
+
+            double d = Double.parseDouble(odds);
+
+            if (!(d >= -10.42 && d <= 15.96))
+                throw new RuntimeException("odd ratio is invalid " + odds);
+
+            if (grade == -2)
+                increment(spam, uniqueSpam, docID, odds);
+
+
+            if (grade > 0)
+                increment(relevant, uniqueRelevant, docID, odds);
+
+
+            if (grade == 0)
+                increment(non, uniqueNon, docID, odds);
+
+        }
+
+        System.out.println("odds,relevant");
+        relevant.forEach((k, v) -> System.out.println(k + "," + v));
+
+        System.out.println("odds,spam");
+        spam.forEach((k, v) -> System.out.println(k + "," + v));
+
+    }
+
+    private void increment(TreeMap<String, Integer> map, Set<String> set, String docId, String odds) {
+        if (uniq) {
+            if (!set.contains(docId)) {
+                final int i = map.getOrDefault(odds, 0) + 1;
+                map.put(odds, i);
+                set.add(docId);
+            }
+        } else {
+            final int i = map.getOrDefault(odds, 0) + 1;
+            map.put(odds, i);
+        }
     }
 }
