@@ -966,12 +966,10 @@ public class RocTool extends CmdLineTool {
             if (set.contains(primaryKey)) throw new RuntimeException("duplicate primary key " + primaryKey);
             set.add(primaryKey);
 
-            String odds = parts[7];
-
-            double d = Double.parseDouble(odds);
+            double d = Double.parseDouble(parts[7]);
 
             if (!(d >= -10.42 && d <= 15.96))
-                throw new RuntimeException("odd ratio is invalid " + odds);
+                throw new RuntimeException("odd ratio is invalid " + d);
 
             int bin = OddsBinning.bin(d);
 
@@ -994,10 +992,15 @@ public class RocTool extends CmdLineTool {
         for (int i = 0; i < size; i++)
             System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i] + "," + struct.non[i]);
 
-        System.out.println(struct);
-
+        int all = -1;
         for (int t = 0; t < size; t++) {
             Confusion f = struct.classify(t, size);
+            if (all == -1) {
+                all = f.tp + f.fp + f.tn + f.tn;
+            } else {
+                if (all != (f.tp + f.fp + f.tn + f.tn))
+                    throw new RuntimeException(all + " does not equal " + f.toString());
+            }
             System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.precision());
         }
     }
