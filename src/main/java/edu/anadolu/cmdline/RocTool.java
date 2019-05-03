@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static edu.anadolu.cmdline.RocTool.Ranking.fusion;
 import static edu.anadolu.cmdline.SpamTool.getSpamSolr;
@@ -214,6 +215,10 @@ public class RocTool extends CmdLineTool {
     }
 
     class Confusion {
+
+        int sum() {
+            return tp + tn + fp + fn;
+        }
 
         final int tp, tn, fp, fn;
 
@@ -986,21 +991,18 @@ public class RocTool extends CmdLineTool {
 
         }
 
+        int sum = IntStream.of(spam).sum() + IntStream.of(relevant).sum();
+
         Struct struct = new Struct(relevant, spam, non, Ranking.odds);
 
         System.out.println("bin,oddsSpam,oddsRel,oddsNon");
         for (int i = 0; i < size; i++)
             System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i] + "," + struct.non[i]);
 
-        int all = -1;
         for (int t = 0; t < size; t++) {
             Confusion f = struct.classify(t, size);
-            if (all == -1) {
-                all = f.tp + f.fp + f.tn + f.tn;
-            } else {
-                if (all != (f.tp + f.fp + f.tn + f.tn))
-                    throw new RuntimeException(all + " does not equal " + f.toString());
-            }
+            if (sum != f.sum())
+                throw new RuntimeException("t=" + t + " " + sum + " does not equal " + f.sum() + " " + f.toString());
             System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.precision());
         }
     }
