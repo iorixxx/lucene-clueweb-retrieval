@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -199,5 +200,20 @@ public class DocFeatureBase {
         }
         if (count == 0) return 0;
         return total / count;
+    }
+
+
+    protected String getFirstWords(String text, int wordCount){
+
+        if(StringUtils.isEmpty(text)) return text;
+
+        String updatedText = null;
+
+        String[] tokens = text.split("\\s+");
+        if(tokens.length>wordCount)
+            updatedText = String.join(" ",Arrays.copyOfRange(text.split("\\s+"), 0, wordCount));
+        else
+            updatedText = String.join(" ",tokens);
+        return updatedText;
     }
 }

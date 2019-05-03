@@ -112,15 +112,22 @@ public class SEOTool extends CmdLineTool {
         features.add(new NoFollowToAll());
         features.add(new SimDescriptionH());
         features.add(new SimKeywordDescription());
-        features.add(new SimDescriptionH());
+        features.add(new SimKeywordH());
         features.add(new SimTitleDescription());
         features.add(new SimTitleH());
         features.add(new SimTitleKeyword());
+        features.add(new SimContentDescription());
+        features.add(new SimContentH());
+        features.add(new SimContentKeyword());
+        features.add(new SimContentTitle());
         features.add(new StopWordRatio());
         features.add(new TextToDocRatio());
 
         Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
+
+//        int numThread = Integer.parseInt(props.getProperty("numThreads", "2"));
         traverser.traverseParallel(Paths.get(out));
+//        traverser.traverse(Paths.get(out),numThread);
         System.out.println("Document features are extracted in " + execution(start));
     }
 

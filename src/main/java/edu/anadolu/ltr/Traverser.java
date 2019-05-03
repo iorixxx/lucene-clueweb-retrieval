@@ -17,21 +17,25 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static edu.anadolu.Indexer.BUFFER_SIZE;
+import static edu.anadolu.Indexer.discoverWarcFiles;
 
 /**
  * Traverses for ClueWeb{09|12} plus GOV2
  */
 public class Traverser {
 
-    private final class WorkerThread {
+    private final class WorkerThread extends Thread{
 
         private final Path inputWarcFile;
         private final AtomicReference<PrintWriter> out;
@@ -48,7 +52,9 @@ public class Traverser {
 
             String id = warcRecord.id();
 
+
             if (skip(id)) return 0;
+
 
             DocFeatureBase base = new DocFeatureBase(warcRecord);
             try {
@@ -131,7 +137,6 @@ public class Traverser {
             return i;
         }
 
-
         public void run() {
             try {
 
@@ -182,6 +187,7 @@ public class Traverser {
             System.exit(1);
         }
         this.solr = solr;
+
     }
 
 
@@ -204,6 +210,72 @@ public class Traverser {
         out.get().flush();
         out.get().close();
     }
+
+
+//    void traverse(Path resultPath, int numThread) throws IOException, InterruptedException {
+//
+//        final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThread);
+//        final PrintWriter out = new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII));
+//
+//        final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
+//        final Deque<Path> warcFiles = discoverWarcFiles(docsPath, suffix);
+//
+//        long totalWarcFiles = warcFiles.size();
+//        System.out.println(totalWarcFiles + " many " + suffix + " files found under the docs path : " + docsPath.toString());
+//
+//        for (int i = 0; i < 2000; i++) {
+//            if (!warcFiles.isEmpty())
+//                executor.execute(new WorkerThread(warcFiles.removeFirst(),out));
+//            else {
+//                if (!executor.isShutdown()) {
+//                    Thread.sleep(30000);
+//                    executor.shutdown();
+//                }
+//                break;
+//            }
+//        }
+//
+//
+//        long previous = 0;
+//        //add some delay to let some threads spawn by scheduler
+//        Thread.sleep(30000);
+//
+//
+//        try {
+//            // Wait for existing tasks to terminate
+//            while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+//
+//                System.out.print(String.format("%.2f percentage completed ", ((double) executor.getCompletedTaskCount() / totalWarcFiles) * 100.0d));
+//                System.out.println("activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+//
+//                final long completedTaskCount = executor.getCompletedTaskCount();
+//
+//                if (!warcFiles.isEmpty())
+//                    for (long i = previous; i < completedTaskCount; i++) {
+//                        if (!warcFiles.isEmpty())
+//                            executor.execute(new WorkerThread(warcFiles.removeFirst(),out));
+//                        else {
+//                            if (!executor.isShutdown())
+//                                executor.shutdown();
+//                        }
+//                    }
+//
+//                previous = completedTaskCount;
+//                Thread.sleep(1000);
+//            }
+//        } catch (InterruptedException ie) {
+//            // (Re-)Cancel if current thread also interrupted
+//            executor.shutdownNow();
+//            // Preserve interrupt status
+//            Thread.currentThread().interrupt();
+//        }
+//
+//        if (totalWarcFiles != executor.getCompletedTaskCount())
+//            throw new RuntimeException("totalWarcFiles = " + totalWarcFiles + " is not equal to completedTaskCount =  " + executor.getCompletedTaskCount());
+//
+//        System.out.println("outside while pool size = " + executor.getPoolSize() + " activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+//
+//    }
 
     private final class WarcMatcher implements BiPredicate<Path, BasicFileAttributes> {
 
