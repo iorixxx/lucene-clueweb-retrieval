@@ -2,7 +2,14 @@ package edu.anadolu.ltr;
 
 import edu.anadolu.Indexer;
 import edu.anadolu.field.MetaTag;
+import edu.cmu.lti.lexical_db.ILexicalDatabase;
+import edu.cmu.lti.lexical_db.NictWordNet;
+import edu.cmu.lti.ws4j.RelatednessCalculator;
+import edu.cmu.lti.ws4j.impl.WuPalmer;
+import edu.cmu.lti.ws4j.util.MatrixCalculator;
+import edu.cmu.lti.ws4j.util.StopWordRemover;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.common.StringUtils;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
@@ -15,9 +22,13 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class DocFeatureBase {
 
@@ -160,5 +171,49 @@ public class DocFeatureBase {
             return 0;
         }
         return inlink;
+    }
+
+    protected double textSimilarity(String str1, String str2) {
+        if (StringUtils.isEmpty(str1)) return 0;
+        if (StringUtils.isEmpty(str2)) return 0;
+        ILexicalDatabase db = new NictWordNet();
+        RelatednessCalculator rc1 = new WuPalmer(db);
+        Pattern UNWANTED_SYMBOLS = Pattern.compile("\\p{Punct}");
+        Matcher unwantedMatcher = UNWANTED_SYMBOLS.matcher(str1);
+        str1 = unwantedMatcher.replaceAll("");
+        Matcher unwantedMatcher2 = UNWANTED_SYMBOLS.matcher(str2);
+        str2 = unwantedMatcher2.replaceAll("");
+        String[] words1 = str1.split("\\s+");
+        String[] words2 = str2.split("\\s+");
+        words1 = StopWordRemover.getInstance().removeStopWords(words1);
+        words2 = StopWordRemover.getInstance().removeStopWords(words2);
+        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
+        double total = 0;
+        int count = 0;
+
+        for (int i = 0; i < words1.length; i++) {
+            for (int j = 0; j < words2.length; j++) {
+                total += s1[i][j];
+                ;
+                if (s1[i][j] > 0) count++;
+            }
+        }
+        if (count == 0) return 0;
+        return total / count;
+    }
+
+
+    protected String getFirstWords(String text, int wordCount){
+
+        if(StringUtils.isEmpty(text)) return text;
+
+        String updatedText = null;
+
+        String[] tokens = text.split("\\s+");
+        if(tokens.length>wordCount)
+            updatedText = String.join(" ",Arrays.copyOfRange(text.split("\\s+"), 0, wordCount));
+        else
+            updatedText = String.join(" ",tokens);
+        return updatedText;
     }
 }

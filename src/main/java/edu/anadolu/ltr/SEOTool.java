@@ -6,6 +6,7 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.clueweb09.Gov2Record;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -81,15 +82,52 @@ public class SEOTool extends CmdLineTool {
         long start = System.nanoTime();
 
 
-        Set<String> docIdSet = retrieveDocIdSet(file);
+        Set<String> docIdSet = Collection.GOV2.equals(collection)?retrieveDocIdSetForLetor(file):retrieveDocIdSet(file);
 
         List<IDocFeature> features = new ArrayList<>();
+
+        features.add(new Contact());
+        features.add(new ContentLengthOver1800());
+        features.add(new Copyright());
+        features.add(new Description());
         features.add(new Favicon());
         features.add(new Https());
+        features.add(new Keyword());
+        features.add(new KeywordInDomain());
+        features.add(new KeywordInFirst100Words());
+        features.add(new KeywordInImgAltTag());
+        features.add(new KeywordInTitle());
+        features.add(new Robots());
+        features.add(new SocialMediaShare());
+        features.add(new Viewport());
+        
+        features.add(new AlttagToImg());
+        features.add(new ContentLengthToMax());
+        features.add(new HdensityToMax());
+        features.add(new ImgToMax());
+        features.add(new IndexOfKeywordInTitle());
+        features.add(new InOutlinkToAll());
+        features.add(new InversedUrlLength());
+        features.add(new MetaTagToMax());
+        features.add(new NoFollowToAll());
+        features.add(new SimDescriptionH());
+        features.add(new SimKeywordDescription());
+        features.add(new SimKeywordH());
+        features.add(new SimTitleDescription());
+        features.add(new SimTitleH());
+        features.add(new SimTitleKeyword());
+        features.add(new SimContentDescription());
+        features.add(new SimContentH());
+        features.add(new SimContentKeyword());
+        features.add(new SimContentTitle());
         features.add(new StopWordRatio());
+        features.add(new TextToDocRatio());
 
         Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
+
+//        int numThread = Integer.parseInt(props.getProperty("numThreads", "2"));
         traverser.traverseParallel(Paths.get(out));
+//        traverser.traverse(Paths.get(out),numThread);
         System.out.println("Document features are extracted in " + execution(start));
     }
 
@@ -109,6 +147,32 @@ public class SEOTool extends CmdLineTool {
             }
 
             String docId = line.substring(i + 1).trim();
+
+            docIdSet.add(docId);
+        }
+
+        lines.clear();
+
+        return docIdSet;
+    }
+
+    
+    private Set<String> retrieveDocIdSetForLetor(Path file) throws IOException {
+
+        Set<String> docIdSet = new HashSet<>();
+        List<String> lines = Files.readAllLines(file);
+
+        for (String line : lines) {
+
+            if (line.startsWith("#")) continue;
+
+            int i = line.indexOf("GX");
+
+            if (i == -1) {
+                throw new RuntimeException("cannot find # in " + line);
+            }
+
+            String docId = line.substring(i,line.indexOf(" ",i)).trim();
 
             docIdSet.add(docId);
         }

@@ -6,7 +6,6 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.clueweb09.WarcRecord;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -14,7 +13,7 @@ import java.io.StringReader;
 public class StopWordRatio implements IDocFeature {
 
     public String toString() {
-        return "StopWordRatio";
+        return this.getClass().getSimpleName();
     }
 
     @Override

@@ -266,5 +266,22 @@
             <scope>compile</scope>
         </dependency>
 
+        <dependency>
+            <groupId>ws4j</groupId>
+            <artifactId>ws4j</artifactId>
+            <version>1.0.1</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/ws4j-1.0.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>jawjaw</groupId>
+            <artifactId>jawjaw</artifactId>
+            <version>1.0.2</version>
+            <type>jar</type>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/jawjaw-1.0.2.jar</systemPath>
+        </dependency>
+
     </dependencies>
 </project>
