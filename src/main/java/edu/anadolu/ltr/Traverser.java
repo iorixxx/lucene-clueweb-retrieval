@@ -196,7 +196,7 @@ public class Traverser {
 
         final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
 
-        try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
+        try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
             stream.parallel().forEach(p -> new WorkerThread(p, out).run());
         }
