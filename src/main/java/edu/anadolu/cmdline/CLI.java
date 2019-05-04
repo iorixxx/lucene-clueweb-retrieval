@@ -144,6 +144,8 @@ public final class CLI {
 
         tools.add(new WikiTool());
 
+        tools.add(new CormakTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }

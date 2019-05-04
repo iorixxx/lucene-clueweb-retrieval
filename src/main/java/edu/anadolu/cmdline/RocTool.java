@@ -60,7 +60,7 @@ public class RocTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.spam paths.docs files.ids files.spam";
     }
 
-    private static HttpSolrClient getCW09Solr(Ranking ranking) {
+    static HttpSolrClient getCW09Solr(Ranking ranking) {
 
         if (fusion.equals(ranking))
             return getSpamSolr(Collection.CW09A);
