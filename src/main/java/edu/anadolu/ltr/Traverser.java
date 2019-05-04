@@ -17,25 +17,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static edu.anadolu.Indexer.BUFFER_SIZE;
-import static edu.anadolu.Indexer.discoverWarcFiles;
 
 /**
  * Traverses for ClueWeb{09|12} plus GOV2
  */
 public class Traverser {
 
-    private final class WorkerThread extends Thread{
+    private final class WorkerThread {
 
         private final Path inputWarcFile;
         private final AtomicReference<PrintWriter> out;
@@ -167,7 +163,7 @@ public class Traverser {
      * @return true if the document should be skipped
      */
     protected boolean skip(String docId) {
-        return "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || !docIdSet.contains(docId);
+        return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId) || !docIdSet.contains(docId);
     }
 
     private final Path docsPath;
@@ -202,9 +198,7 @@ public class Traverser {
 
         try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
 
-            stream.parallel().forEach(p -> {
-                new WorkerThread(p, out).run();
-            });
+            stream.parallel().forEach(p -> new WorkerThread(p, out).run());
         }
 
         out.get().flush();

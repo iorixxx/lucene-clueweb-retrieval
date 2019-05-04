@@ -6,7 +6,6 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.clueweb09.Gov2Record;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -82,7 +81,7 @@ public class SEOTool extends CmdLineTool {
         long start = System.nanoTime();
 
 
-        Set<String> docIdSet = Collection.GOV2.equals(collection)?retrieveDocIdSetForLetor(file):retrieveDocIdSet(file);
+        Set<String> docIdSet = Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(file) : retrieveDocIdSet(file);
 
         List<IDocFeature> features = new ArrayList<>();
 
@@ -100,7 +99,7 @@ public class SEOTool extends CmdLineTool {
         features.add(new Robots());
         features.add(new SocialMediaShare());
         features.add(new Viewport());
-        
+
         features.add(new AlttagToImg());
         features.add(new ContentLengthToMax());
         features.add(new HdensityToMax());
@@ -156,7 +155,7 @@ public class SEOTool extends CmdLineTool {
         return docIdSet;
     }
 
-    
+
     private Set<String> retrieveDocIdSetForLetor(Path file) throws IOException {
 
         Set<String> docIdSet = new HashSet<>();
@@ -172,7 +171,7 @@ public class SEOTool extends CmdLineTool {
                 throw new RuntimeException("cannot find # in " + line);
             }
 
-            String docId = line.substring(i,line.indexOf(" ",i)).trim();
+            String docId = line.substring(i, line.indexOf(" ", i)).trim();
 
             docIdSet.add(docId);
         }
