@@ -3,7 +3,6 @@ package edu.anadolu.cmdline;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.eval.Evaluator;
 import edu.anadolu.spam.SubmissionFile;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
@@ -19,8 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static edu.anadolu.cmdline.SpamTool.percentile;
 
@@ -29,10 +30,15 @@ import static edu.anadolu.cmdline.SpamTool.percentile;
  */
 public final class CormakTool extends CmdLineTool {
 
-    @Option(name = "-collection", required = true, usage = "Collection")
+    @Option(name = "-collection", usage = "Collection")
     private edu.anadolu.datasets.Collection collection = Collection.CW09A;
 
+    @Option(name = "-rank", usage = "Spam Ranking")
     private RocTool.Ranking ranking = RocTool.Ranking.fusion;
+
+    @Option(name = "-random", usage = "Random Filtering")
+    private boolean random = false;
+
 
     @Override
     public String getShortDescription() {
@@ -66,7 +72,7 @@ public final class CormakTool extends CmdLineTool {
         final HttpSolrClient solr = RocTool.getCW09Solr(ranking);
         if (solr == null) return;
 
-        List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("base_spam_runs"), ".txt");
+        List<Path> pathList = discoverSubmissions(dataset.collectionPath().resolve("base_spam_runs"));
 
         System.out.println("there are " + pathList.size() + " many TREC submission files found to be processed...");
 
@@ -76,10 +82,13 @@ public final class CormakTool extends CmdLineTool {
         long start = System.nanoTime();
 
         for (Path submission : pathList) {
-
             executor.execute(() -> {
                 try {
-                    filterTRECSubmissionFile(dataset, submission, solr, ranking);
+                    if (this.random) {
+                        for (int threshold = 10; threshold <= 90; threshold += 10)
+                            random(dataset, submission, threshold);
+                    } else
+                        filterTRECSubmissionFile(dataset, submission, solr, ranking);
                 } catch (SolrServerException | IOException ioe) {
                     System.out.println(Thread.currentThread().getName() + ": ERROR: unexpected IOException:");
                     ioe.printStackTrace();
@@ -94,7 +103,7 @@ public final class CormakTool extends CmdLineTool {
 
         try {
             // Wait for existing tasks to terminate
-            while (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+            while (!executor.awaitTermination(1, TimeUnit.MINUTES)) {
                 Thread.sleep(1000);
                 System.out.println(String.format("%.2f percentage completed in ", (double) executor.getCompletedTaskCount() / executor.getTaskCount() * 100.0d) + execution(start));
             }
@@ -109,6 +118,12 @@ public final class CormakTool extends CmdLineTool {
         solr.close();
     }
 
+    private static List<Path> discoverSubmissions(Path path) throws IOException {
+        return Files.walk(path)
+                .filter(Files::isRegularFile)
+                .filter(p -> p.getFileName().toString().startsWith("input"))
+                .collect(Collectors.toList());
+    }
 
     /**
      * Filter documents from a TREC submission file
@@ -195,6 +210,74 @@ public final class CormakTool extends CmdLineTool {
 
         writerMap.clear();
         submissionFile.clear();
+    }
+
+    /**
+     * Randomly Filter documents from a TREC submission file
+     */
+    private static void random(DataSet dataset, Path submission, int i) throws IOException {
+
+        final SubmissionFile submissionFile = new SubmissionFile(submission);
+
+        Path relPath = dataset.collectionPath().resolve("base_spam_runs").relativize(submission);
+
+        Map<Integer, List<SubmissionFile.Tuple>> submissionFileMap = submissionFile.entryMap();
+        String runTag = submissionFile.runTag();
+
+
+        Path parallel = dataset.collectionPath().resolve("spam_random_" + i + "_runs").resolve(relPath);
+
+        if (!Files.exists(parallel.getParent()))
+            Files.createDirectories(parallel.getParent());
+
+        PrintWriter out = new PrintWriter(Files.newBufferedWriter(parallel, StandardCharsets.US_ASCII));
+
+
+        for (Map.Entry<Integer, List<SubmissionFile.Tuple>> entry : submissionFileMap.entrySet()) {
+
+            Integer qID = entry.getKey();
+
+            int countMap = 0;
+
+
+            List<SubmissionFile.Tuple> list = entry.getValue();
+
+            for (SubmissionFile.Tuple tuple : list) {
+
+
+                boolean filter = ThreadLocalRandom.current().nextBoolean();
+
+                if (filter || countMap == 1000) {
+                    continue;
+                }
+
+                countMap++;
+
+                out.print(qID);
+                out.print("\tQ0\t");
+                out.print(tuple.docID);
+                out.print("\t");
+                out.print(countMap);
+                out.print("\t");
+                out.print(tuple.score);
+                out.print("\t");
+                out.print(runTag);
+                out.println();
+            }
+
+            /*
+             * TREC submission system requires you to submit documents for every topic.
+             * If there are no documents for a certain topic, please insert 'clueweb12-0000wb-00-00000' as DOC-ID with a dummy score.
+             * If you are returning zero documents for a query, instead return the single document "clueweb09-en0000-00-00000".
+             */
+
+            if (countMap == 0) {
+                out.println(qID + "\tQ0\t" + dataset.getNoDocumentsID() + "\t1\t0\t" + runTag);
+            }
+        }
+
+        out.flush();
+        out.close();
     }
 
 }
