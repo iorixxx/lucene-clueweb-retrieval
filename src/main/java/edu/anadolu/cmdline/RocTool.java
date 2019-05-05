@@ -9,6 +9,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 import org.kohsuke.args4j.Option;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,7 @@ public class RocTool extends CmdLineTool {
     private String task;
 
     @Option(name = "-uniq", required = false, usage = "work on unique documents")
-    private boolean uniq = false;
+    private boolean uniq = true;
 
     @Override
     public String getShortDescription() {
@@ -175,18 +176,13 @@ public class RocTool extends CmdLineTool {
             this.ranking = ranking;
         }
 
-        Confusion classify(int threshold) {
-            return classify(threshold, 100);
-
-        }
-
         /**
          * label those with percentile-score<70 to be spam
          *
          * @param threshold 70
          * @return elements of confusion matrix
          */
-        Confusion classify(int threshold, int size) {
+        Confusion classify(int threshold) {
 
             int tp = 0;
             int tn = 0;
@@ -202,12 +198,45 @@ public class RocTool extends CmdLineTool {
                 fp += relevant[i];
             }
 
-            for (int i = threshold; i < size; i++) {
+            for (int i = threshold; i < 100; i++) {
 
                 tn += relevant[i];
 
                 // false negative: when a spam document is incorrectly classified as non-spam
                 fn += spam[i];
+            }
+
+            return new Confusion(tp, tn, fp, fn);
+        }
+
+        /**
+         * label those with probability > 2.5 to be spam
+         *
+         * @param threshold index of the bin
+         * @return elements of confusion matrix
+         */
+        Confusion classifyOdds(int threshold, int size) {
+
+            int tp = 0;
+            int tn = 0;
+
+            int fp = 0;
+            int fn = 0;
+
+            for (int i = 0; i <= threshold; i++) {
+
+                tn += relevant[i];
+
+                // false negative: when a spam document is incorrectly classified as non-spam
+                fn += spam[i];
+            }
+
+            for (int i = threshold + 1; i < size; i++) {
+
+                tp += spam[i];
+
+                // false positive: when a relevant document is incorrectly classified as spam
+                fp += relevant[i];
             }
 
             return new Confusion(tp, tn, fp, fn);
@@ -447,6 +476,11 @@ public class RocTool extends CmdLineTool {
 
         if ("odds".equals(task) && Collection.CW09A.equals(collection)) {
             odds();
+            return;
+        }
+
+        if ("all".equals(task)) {
+            allOdds();
             return;
         }
 
@@ -1000,10 +1034,50 @@ public class RocTool extends CmdLineTool {
             System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i] + "," + struct.non[i]);
 
         for (int t = 0; t < size; t++) {
-            Confusion f = struct.classify(t, size);
+            Confusion f = struct.classifyOdds(t, size);
             if (sum != f.sum())
                 throw new RuntimeException("t=" + t + " " + sum + " does not equal " + f.sum() + " " + f.toString());
             System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.precision());
         }
+    }
+
+    /**
+     * The frequency distribution of all ClueWeb09's documents over log-odds version of the Fusion ranking.
+     */
+    private void allOdds() {
+
+        final int size = OddsBinning.intervals.length - 1;
+
+        int[] all = new int[size];
+        Arrays.fill(all, 0);
+
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get("/home/iorixxx/clueweb09spam.FusionLogOdds"))) {
+
+            for (; ; ) {
+                String line = reader.readLine();
+                if (line == null)
+                    break;
+
+                String[] parts = whiteSpaceSplitter.split(line);
+
+                if (parts.length != 2)
+                    throw new RuntimeException("clueweb09spam.FusionLogOdds file should contain 2 columns : " + line);
+
+                double d = Double.parseDouble(parts[0]);
+
+                if (!(d >= -10.42 && d <= 15.96))
+                    throw new RuntimeException("odd ratio is invalid " + d);
+
+                int bin = OddsBinning.bin(d);
+
+                all[bin]++;
+            }
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
+
+        System.out.println("bin,all");
+        for (int i = 0; i < size; i++)
+            System.out.println(i + "," + all[i]);
     }
 }
