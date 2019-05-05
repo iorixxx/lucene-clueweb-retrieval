@@ -68,9 +68,6 @@ public final class CLI {
         // LaTex Tool
         tools.add(new LatexTool());
 
-        // Result List Tool
-        tools.add(new ResultListTool());
-
         // Free-Parameter Determining Tool
         tools.add(new ParamTool());
 

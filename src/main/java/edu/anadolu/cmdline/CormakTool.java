@@ -1,11 +1,14 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.datasets.Collection;
-import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
+import edu.anadolu.eval.CormakEvaluator;
+import edu.anadolu.eval.ModelScore;
+import edu.anadolu.knn.Measure;
 import edu.anadolu.spam.SubmissionFile;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -13,10 +16,8 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,8 +31,6 @@ import static edu.anadolu.cmdline.SpamTool.percentile;
  */
 public final class CormakTool extends CmdLineTool {
 
-    @Option(name = "-collection", usage = "Collection")
-    private edu.anadolu.datasets.Collection collection = Collection.CW09A;
 
     @Option(name = "-rank", usage = "Spam Ranking")
     private RocTool.Ranking ranking = RocTool.Ranking.fusion;
@@ -39,6 +38,11 @@ public final class CormakTool extends CmdLineTool {
     @Option(name = "-random", usage = "Random Filtering")
     private boolean random = false;
 
+    @Option(name = "-task", required = false, usage = "task to be executed")
+    private String task;
+
+    @Option(name = "-catA", usage = "Use Category A submissions")
+    private boolean catA = false;
 
     @Override
     public String getShortDescription() {
@@ -48,6 +52,32 @@ public final class CormakTool extends CmdLineTool {
     @Override
     public String getHelp() {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.spam paths.docs files.ids files.spam";
+    }
+
+    private DataSet dataset;
+
+    class WT09 extends DataSet {
+
+        WT09(String tfd_home) {
+            super(Collection.MQ09, new Track[]{
+                    new org.clueweb09.tracks.WT09(tfd_home)
+            }, tfd_home);
+        }
+
+        @Override
+        public Path indexesPath() {
+            return Paths.get(tfd_home, Collection.CW09A.toString(), "indexes");
+        }
+
+        @Override
+        public String getNoDocumentsID() {
+            return "clueweb09-en0000-00-00000";
+        }
+
+        @Override
+        public boolean spamAvailable() {
+            return true;
+        }
     }
 
     @Override
@@ -62,17 +92,18 @@ public final class CormakTool extends CmdLineTool {
             return;
         }
 
-        DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
+        dataset = new WT09(tfd_home);
 
-        if (!dataset.spamAvailable()) {
-            System.out.println(dataset.toString() + " do not have spam filtering option!");
+        if ("spam".equals(task)) {
+            spam();
             return;
         }
+
 
         final HttpSolrClient solr = RocTool.getCW09Solr(ranking);
         if (solr == null) return;
 
-        List<Path> pathList = discoverSubmissions(dataset.collectionPath().resolve("base_spam_runs"));
+        List<Path> pathList = discoverSubmissions(Paths.get(tfd_home, Collection.MQ09.toString()).resolve("base_spam_runs"));
 
         System.out.println("there are " + pathList.size() + " many TREC submission files found to be processed...");
 
@@ -118,7 +149,7 @@ public final class CormakTool extends CmdLineTool {
         solr.close();
     }
 
-    private static List<Path> discoverSubmissions(Path path) throws IOException {
+    public static List<Path> discoverSubmissions(Path path) throws IOException {
         return Files.walk(path)
                 .filter(Files::isRegularFile)
                 .filter(p -> p.getFileName().toString().startsWith("input"))
@@ -278,6 +309,52 @@ public final class CormakTool extends CmdLineTool {
 
         out.flush();
         out.close();
+    }
+
+    public void spam() {
+        SortedMap<Integer, List<ModelScore>> map = new TreeMap<>();
+
+        CormakEvaluator evaluator = new CormakEvaluator(this.catA, dataset, "KStem", Measure.P10, "input*", "evals", "OR");
+
+
+        double[] scores = new double[10];
+        int maxSpam = 0;
+        double max = evaluator.averageOfAllModels(SpamEvalTool.AGG.M);
+
+        scores[0] = max;
+
+        System.out.print(String.format("%.5f", max) + "\tspamThreshold = 0\t");
+        evaluator.printMean();
+        map.put(0, evaluator.averageForAllModels());
+        System.out.println("=======================");
+
+        int c = 1;
+        for (int threshold = 10; threshold <= 90; threshold += 10) {
+
+
+            String evalDir = random ? "spam_random_" + threshold + "_evals" : "spam_" + ranking + "_" + threshold + "_evals";
+            evaluator = new CormakEvaluator(this.catA, dataset, "KStem", Measure.P10, "input*", evalDir, "OR");
+
+            double mean = evaluator.averageOfAllModels(SpamEvalTool.AGG.M);
+
+            scores[c++] = mean;
+
+            System.out.print(String.format("%.5f", mean) + "\tspamThreshold = " + threshold + "\t");
+            evaluator.printMean();
+            map.put(threshold, evaluator.averageForAllModels());
+            System.out.println("=======================");
+
+            if (mean > max) {
+                max = mean;
+                maxSpam = threshold;
+            }
+        }
+
+        System.out.println("================= Best threshold is " + maxSpam + " =======================" + "Aggregated with " + SpamEvalTool.AGG.M);
+
+        for (double d : scores)
+            System.out.print(d + "\t");
+
     }
 
 }

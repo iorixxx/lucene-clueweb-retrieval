@@ -50,6 +50,7 @@ public final class StatAP implements EvalTool {
         private String nDCG_100;
         String ap;
         String p30;
+        String p10;
 
         Element(String paragraph) {
 
@@ -85,6 +86,7 @@ public final class StatAP implements EvalTool {
                 if ("nDCG_100".equals(subParts[0])) nDCG_100 = subParts[1];
                 if ("AP".equals(subParts[0])) ap = subParts[1];
                 if ("Prec_at_30".equals(subParts[0])) p30 = subParts[1];
+                if ("Prec_at_10".equals(subParts[0])) p10 = subParts[1];
             }
 
             if ("0".equals(nDCG_20)) nDCG_20 = "0.00000";
@@ -95,8 +97,9 @@ public final class StatAP implements EvalTool {
         public String toString() {
             return "topic=" + topic + System.getProperty("line.separator") +
                     "nDCG_20=" + nDCG_20 + System.getProperty("line.separator") +
-                    "AP" + ap + System.getProperty("line.separator") +
-                    "Prec_at_30" + p30;
+                    "AP=" + ap + System.getProperty("line.separator") +
+                    "Prec_at_30=" + p30 + System.getProperty("line.separator") +
+                    "Prec_at_10=" + p10;
         }
 
     }
@@ -150,6 +153,8 @@ public final class StatAP implements EvalTool {
         if (Metric.MAP.equals(metric))
             return element.ap;
 
+        if (Metric.P.equals(metric) && k == 10)
+            return element.p10;
 
         if ((Metric.NDCG.equals(metric) || Metric.ERR.equals(metric)) && k == 20)
             return element.nDCG_20;
