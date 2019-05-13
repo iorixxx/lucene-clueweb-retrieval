@@ -6,6 +6,7 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -22,8 +23,8 @@ public class SEOTool extends CmdLineTool {
     @Option(name = "-collection", required = true, usage = "Collection")
     private Collection collection;
 
-    @Option(name = "-file", required = true, usage = "input file")
-    private String file;
+    @Argument
+    private List<String> files = new ArrayList<>();
 
     @Option(name = "-out", required = true, usage = "output file")
     private String out;
@@ -72,16 +73,15 @@ public class SEOTool extends CmdLineTool {
 
 
         Set<String> docIdSet = new HashSet<String>();
-        String[] tokens = this.file.split(",");
-        for(String token : tokens){
-            Path file = Paths.get(token.replaceAll("\\s+",""));
-            if (!(Files.exists(file) && Files.isRegularFile(file))) {
+
+        for (String file : files) {
+            System.out.println(file);
+            Path path = Paths.get(file);
+            if (!(Files.exists(path) && Files.isRegularFile(path))) {
                 System.out.println(getHelp());
                 return;
             }
-
-             docIdSet.addAll(Collection.GOV2.equals(collection)?retrieveDocIdSetForLetor(file):retrieveDocIdSet(file));
-
+            docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
         }
 
 
@@ -129,9 +129,8 @@ public class SEOTool extends CmdLineTool {
 
         Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
 
-//        int numThread = Integer.parseInt(props.getProperty("numThreads", "2"));
-        traverser.traverseParallel(Paths.get(out));
-//        traverser.traverse(Paths.get(out),numThread);
+        final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
+        traverser.traverseParallel(Paths.get(out), numThreads);
         System.out.println("Document features are extracted in " + execution(start));
     }
 

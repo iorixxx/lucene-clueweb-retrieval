@@ -647,9 +647,11 @@ public class Indexer {
      * @return number of indexed documents
      * @throws IOException if IO exception occurs
      */
-    public int indexParallel() throws IOException {
+    public int indexParallel(int numThreads) throws IOException {
 
         System.out.println("Parallel Indexing to directory '" + indexPath.toAbsolutePath() + "'...");
+
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + numThreads);
 
         final Directory dir = FSDirectory.open(indexPath);
 

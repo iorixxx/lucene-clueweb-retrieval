@@ -89,7 +89,7 @@ public final class IndexerTool extends CmdLineTool {
         }
 
 
-        final int numThreads = Integer.parseInt(props.getProperty("numThreads", "2"));
+        final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
 
         if (docsPath == null || indexPath == null) {
             System.out.println(getHelp());
