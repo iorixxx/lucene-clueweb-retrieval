@@ -70,18 +70,23 @@ public class SEOTool extends CmdLineTool {
             solr = null;
         }
 
-        Path file = Paths.get(this.file);
-        if (!(Files.exists(file) && Files.isRegularFile(file))) {
-            System.out.println(getHelp());
-            return;
+
+        Set<String> docIdSet = new HashSet<String>();
+        String[] tokens = this.file.split(",");
+        for(String token : tokens){
+            Path file = Paths.get(token.replaceAll("\\s+",""));
+            if (!(Files.exists(file) && Files.isRegularFile(file))) {
+                System.out.println(getHelp());
+                return;
+            }
+
+             docIdSet.addAll(Collection.GOV2.equals(collection)?retrieveDocIdSetForLetor(file):retrieveDocIdSet(file));
+
         }
 
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
-
-
-        Set<String> docIdSet = Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(file) : retrieveDocIdSet(file);
 
         List<IDocFeature> features = new ArrayList<>();
 
