@@ -15,7 +15,10 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.ConcurrentMergeScheduler;
+import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.SolrClient;
@@ -49,6 +52,7 @@ import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
+import static edu.anadolu.analysis.Analyzers.scripts;
 import static edu.anadolu.field.MetaTag.notEmpty;
 import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
 import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
@@ -57,11 +61,6 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
  * Indexer for ClueWeb{09|12} plus GOV2
  */
 public class Indexer {
-
-    /**
-     * artificial field and token: every document should have this
-     */
-    public static final IndexableField ARTIFICIAL = new NoPositionsTextField("all", "all");
 
     public static final class NoPositionsTextField extends Field {
 
@@ -91,7 +90,7 @@ public class Indexer {
         final private IndexWriter writer;
 
         IndexerThread(IndexWriter writer, Path inputWarcFile) {
-            super(inputWarcFile.getFileName().toString());
+            // super(inputWarcFile.getFileName().toString());
             this.writer = writer;
             this.inputWarcFile = inputWarcFile;
         }
@@ -107,9 +106,15 @@ public class Indexer {
             // entire document
             document.add(new NoPositionsTextField(FIELD_CONTENTS, contents));
 
-            // add artificial: every document should have this
-            if (!config.field && config.artificial)
-                document.add(ARTIFICIAL);
+            // handle script flag
+            if (!config.field && config.script) {
+
+                for (String script : scripts)
+                    document.add(new NoPositionsTextField(script, contents));
+
+                document.add(new NoPositionsTextField("ascii", contents));
+            }
+
 
             // URLs only
             // document.add(new NoPositionsTextField("url", contents));
@@ -158,6 +163,9 @@ public class Indexer {
             if (!RESPONSE.equals(warcRecord.type()))
                 return 0;
 
+            String id = warcRecord.id();
+            if (skip(id)) return 0;
+
             if (config.field) {
                 Document document = warc2LuceneDocument(warcRecord);
                 if (document != null)
@@ -174,17 +182,10 @@ public class Indexer {
                 return 1;
             }
 
-            String id = warcRecord.id();
-
-            if (skip(id)) return 0;
-
             org.jsoup.nodes.Document jDoc;
 
             try {
                 jDoc = Jsoup.parse(warcRecord.content());
-            } catch (java.lang.OutOfMemoryError oom) {
-                System.err.println("jdoc oom " + id);
-                return 1;
             } catch (Exception exception) {
                 System.err.println("jdoc exception " + id);
                 return 1;
@@ -270,7 +271,7 @@ public class Indexer {
             try {
 
                 Thread.currentThread().setName(inputWarcFile.toAbsolutePath().toString());
-                setName(inputWarcFile.getFileName().toString());
+                //setName(inputWarcFile.getFileName().toString());
 
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
                     int addCount = indexClueWeb09WarcFile();
@@ -291,13 +292,23 @@ public class Indexer {
     }
 
     /**
-     * Skip certain documents that hang Jsoup.parse method
+     * Skip certain documents that hang JSoup.parse method.
+     * Query relevance judgments of the ClueWeb12 dataset does not contain these documents, so skipping them is safe.
+     * See open ticket : https://github.com/jhy/jsoup/issues/1192
+     * Here are some binary files that hang JSoup.
+     *
+     * <p>
+     * clueweb12-1100wb-15-21376 http://csr.bu.edu/colortracking/data/test-sequences/sequence15.mv
+     * clueweb12-1100wb-15-21381 http://csr.bu.edu/colortracking/data/test-sequences/sequence4.mv
+     * clueweb12-1013wb-14-21356 http://www.geowall.org/data/3Dgeology/dem/helens.pfb
+     * clueweb12-0200wb-38-08218 http://www.innovative-dsp.com/ftp/MIT/x6_400m_lx240t-ff1156.bit 9229029
+     * clueweb12-0200wb-38-08219 http://www.innovative-dsp.com/ftp/MIT/x6_400m_sx315t-ff1156.bit 9975121
      *
      * @param docId document identifier
      * @return true if the document should be skipped
      */
     protected boolean skip(String docId) {
-        return "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId);
+        return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId);
     }
 
     protected Path indexPath;
@@ -443,7 +454,7 @@ public class Indexer {
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
 
-       // String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
+        // String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
 
         //   if (notEmpty.test(metaNames))
         //       document.add(new NoPositionsTextField("meta", metaNames));
@@ -618,7 +629,7 @@ public class Indexer {
 
         System.out.println("outside while pool size = " + executor.getPoolSize() + " activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
 
-        int numIndexed = writer.maxDoc();
+        int numIndexed = writer.getDocStats().maxDoc;
 
         try {
             writer.commit();
@@ -654,7 +665,7 @@ public class Indexer {
 
         final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
 
-        try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
+        try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
             stream.parallel().forEach(p -> {
                 new IndexerThread(writer, p).run();
@@ -662,7 +673,7 @@ public class Indexer {
 
         }
 
-        int numIndexed = writer.maxDoc();
+        int numIndexed = writer.getDocStats().maxDoc;
 
         try {
             writer.commit();
@@ -700,7 +711,7 @@ public class Indexer {
 
         boolean anchor = false;
         boolean field = false;
-        boolean artificial = false;
+        boolean script = false;
         boolean semantic = false;
 
         public IndexerConfig useAnchorText(boolean anchor) {
@@ -708,8 +719,8 @@ public class Indexer {
             return this;
         }
 
-        public IndexerConfig useArtificialField(boolean artificial) {
-            this.artificial = artificial;
+        public IndexerConfig useScripts(boolean script) {
+            this.script = script;
             return this;
         }
 

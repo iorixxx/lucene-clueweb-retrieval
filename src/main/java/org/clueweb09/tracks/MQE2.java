@@ -10,14 +10,16 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import static org.clueweb09.tracks.MQ09.escape;
+
 /**
- * Extensively judged topics from 20251 to 20750 of the
+ * Extensively judged topics from 20251 to 20708 of the
  * <p>
  * TREC 2009 Million Query (1MQ) Track
  * <p>
  * http://ir.cis.udel.edu/million/data.html
  */
-public class MQE2 extends MQE1 {
+public class MQE2 extends Track {
 
     /**
      * @param home tfd.home directory
@@ -29,7 +31,7 @@ public class MQE2 extends MQE1 {
 
     @Override
     protected void populateQRelsMap() throws Exception {
-        populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrels.mq.20251_20750.txt"));
+        populateQRelsMap(Paths.get(home, "topics-and-qrels", "09.mq.qrels.20251-20750.deep.judged.txt"));
     }
 
     @Override
@@ -43,18 +45,15 @@ public class MQE2 extends MQE1 {
             assert parts.length == 3 : "topic does not contain colon : " + line;
 
             int qID = Integer.parseInt(parts[0]);
-            checkQueryIDRange(qID);
+
             // P is the priority (a number 1-4, with 1 indicating highest priority)
             if (qID <= 20250) continue;
-            if (qID > 20750) break;
-            int priority = Integer.parseInt(parts[1]);
-            if (priority > P) break;
+            if (qID > 20708) break;
 
             String query = parts[2].trim();
 
-
             if (!isJudged(qID)) {
-                System.out.println(qID + ":" + query + " is not judged. Skipping...");
+                //System.out.println(qID + ":" + query + " is not judged. Skipping...");
                 continue;
             }
 
@@ -63,13 +62,11 @@ public class MQE2 extends MQE1 {
             InfoNeed need = new InfoNeed(qID, escape(query), this, innerMap);
 
             if (need.relevant() == 0) {
-                System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
+                //System.out.println(qID + ":" + query + " does not have relevant documents. Skipping...");
                 continue;
             }
             needs.add(need);
-
         }
         lines.clear();
     }
-
 }

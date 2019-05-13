@@ -68,9 +68,6 @@ public final class CLI {
         // LaTex Tool
         tools.add(new LatexTool());
 
-        // Result List Tool
-        tools.add(new ResultListTool());
-
         // Free-Parameter Determining Tool
         tools.add(new ParamTool());
 
@@ -102,17 +99,11 @@ public final class CLI {
         // Tool for Term2Term (T2T)
         tools.add(new T2TTool());
 
-        tools.add(new ExcelTool());
-
         tools.add(new AbsoluteTool());
 
         tools.add(new XTool());
 
         tools.add(new YTool());
-
-        tools.add(new IPTool());
-
-        tools.add(new TallyTool());
 
         tools.add(new BinaryTool());
 
@@ -121,8 +112,6 @@ public final class CLI {
         tools.add(new ExampleTool());
 
         tools.add(new TFTool());
-
-        tools.add(new SigTool());
 
         tools.add(new FieldTool());
 
@@ -149,6 +138,10 @@ public final class CLI {
         tools.add(new CustomTool());
 
         tools.add(new SEOTool());
+
+        tools.add(new WikiTool());
+
+        tools.add(new CormakTool());
 
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);

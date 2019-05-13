@@ -29,3 +29,8 @@ curl "http://localhost:8983/solr/britney/update/csv?commit=true&separator=%20&fi
 curl "http://localhost:8983/solr/uk2006/update?optimize=true"
 curl "http://localhost:8983/solr/groupx/update?optimize=true"
 curl "http://localhost:8983/solr/britney/update?optimize=true"
+
+# The log-odds version of the Fusion score set
+
+curl "http://localhost:8983/solr/odds/update/csv?commit=true&separator=%20&fieldnames=odds,id" -T clueweb09spam.FusionLogOdds -X POST -H 'Content-type:text/plain; charset=utf-8'
+curl "http://localhost:8983/solr/odds/update?optimize=true"

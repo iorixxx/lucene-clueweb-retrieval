@@ -101,9 +101,6 @@ public class ROB04 {
             // entire document
             document.add(new Indexer.NoPositionsTextField(Indexer.FIELD_CONTENTS, contents.toString().trim()));
 
-            // add artificial: every document should have this
-            document.add(Indexer.ARTIFICIAL);
-
             writer.addDocument(document);
 
         }
@@ -117,9 +114,10 @@ public class ROB04 {
             writer.forceMerge(1);
         } finally {
             writer.close();
+            dir.close();
         }
 
-        dir.close();
+
 
         return numIndexed;
     }

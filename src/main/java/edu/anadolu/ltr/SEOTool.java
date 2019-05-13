@@ -6,7 +6,6 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.clueweb09.Gov2Record;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -62,7 +61,7 @@ public class SEOTool extends CmdLineTool {
 
         final HttpSolrClient solr;
 
-        if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {
+        if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
             solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
         } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
             solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
@@ -89,8 +88,6 @@ public class SEOTool extends CmdLineTool {
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
 
-
-
         List<IDocFeature> features = new ArrayList<>();
 
         features.add(new Contact());
@@ -107,7 +104,7 @@ public class SEOTool extends CmdLineTool {
         features.add(new Robots());
         features.add(new SocialMediaShare());
         features.add(new Viewport());
-        
+
         features.add(new AlttagToImg());
         features.add(new ContentLengthToMax());
         features.add(new HdensityToMax());
@@ -163,7 +160,7 @@ public class SEOTool extends CmdLineTool {
         return docIdSet;
     }
 
-    
+
     private Set<String> retrieveDocIdSetForLetor(Path file) throws IOException {
 
         Set<String> docIdSet = new HashSet<>();
@@ -179,7 +176,7 @@ public class SEOTool extends CmdLineTool {
                 throw new RuntimeException("cannot find # in " + line);
             }
 
-            String docId = line.substring(i,line.indexOf(" ",i)).trim();
+            String docId = line.substring(i, line.indexOf(" ", i)).trim();
 
             docIdSet.add(docId);
         }

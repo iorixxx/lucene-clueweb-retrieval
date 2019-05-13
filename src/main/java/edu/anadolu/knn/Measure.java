@@ -11,10 +11,11 @@ public enum Measure {
     NDCG100(Metric.NDCG, 100),
     NDCG1000(Metric.NDCG, 1000),
 
-//    ERR20(Metric.ERR, 20),
+    ERR20(Metric.ERR, 20),
 //    ERR100(Metric.ERR, 100),
 //    ERR1000(Metric.ERR, 1000),
 
+    P10(Metric.P, 10),
     MAP(Metric.MAP, 1000);
 
     Measure(Metric metric, int k) {

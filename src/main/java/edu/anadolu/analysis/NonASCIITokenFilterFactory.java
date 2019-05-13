@@ -3,18 +3,17 @@ package edu.anadolu.analysis;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
+public class NonASCIITokenFilterFactory extends TokenFilterFactory {
 
     /**
-     * Creates a new BasicLatinTokenFilterFactory
+     * Creates a new NonASCIITokenFilterFactory
      */
-    public BasicLatinTokenFilterFactory(Map<String, String> args) {
+    public NonASCIITokenFilterFactory(Map<String, String> args) {
         super(args);
         if (!args.isEmpty()) {
             throw new IllegalArgumentException("Unknown parameters: " + args);
@@ -23,15 +22,14 @@ public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
 
     @Override
     public TokenFilter create(TokenStream input) {
-        return new BasicLatinTokenFilter(input);
+        return new NonASCIITokenFilter(input);
     }
 
-    private final class BasicLatinTokenFilter extends TokenFilter {
+    private final class NonASCIITokenFilter extends TokenFilter {
 
         private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-        private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
 
-        private BasicLatinTokenFilter(TokenStream input) {
+        private NonASCIITokenFilter(TokenStream input) {
             super(input);
         }
 
@@ -47,10 +45,12 @@ public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
 
                 final int codePoint = Character.codePointAt(buffer, i, length);
 
-                if (codePoint < 0 || codePoint >= 128)
+                if (codePoint < 0 || codePoint >= 128) {
+                    termAtt.setEmpty().append("non");
                     return true;
+                }
             }
-            typeAtt.setType("ASCII");
+            termAtt.setEmpty().append("ascii");
             return true;
         }
     }

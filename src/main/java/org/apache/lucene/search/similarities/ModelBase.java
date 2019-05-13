@@ -63,43 +63,38 @@ public abstract class ModelBase extends Similarity {
         return new BasicStats(field, boost);
     }
 
-    /** Fills all member fields defined in {@code BasicStats} in {@code stats}.
-     *  Subclasses can override this method to fill additional stats. */
+    /**
+     * Fills all member fields defined in {@code BasicStats} in {@code stats}.
+     * Subclasses can override this method to fill additional stats.
+     */
     protected void fillBasicStats(BasicStats stats, CollectionStatistics collectionStats, TermStatistics termStats) {
         // #positions(field) must be >= #positions(term)
         assert collectionStats.sumTotalTermFreq() == -1 || collectionStats.sumTotalTermFreq() >= termStats.totalTermFreq();
-        long numberOfDocuments = collectionStats.docCount() == -1 ? collectionStats.maxDoc() : collectionStats.docCount();
+
+        if (collectionStats.docCount() == -1) throw new RuntimeException("collectionStats.docCount() == -1");
+
+        long numberOfDocuments = collectionStats.docCount();
 
         long docFreq = termStats.docFreq();
         long totalTermFreq = termStats.totalTermFreq();
 
-        // frequencies are omitted, all postings have tf=1, so totalTermFreq = docFreq
         if (totalTermFreq == -1) {
-            totalTermFreq = docFreq;
+            throw new RuntimeException("totalTermFreq == -1");
         }
 
         final long numberOfFieldTokens;
-        final float avgFieldLength;
+
 
         if (collectionStats.sumTotalTermFreq() == -1) {
+            throw new RuntimeException("collectionStats.sumTotalTermFreq() == -1");
             // frequencies are omitted, so sumTotalTermFreq = # postings
-            if (collectionStats.sumDocFreq() == -1) {
-                // theoretical case only: remove!
-                numberOfFieldTokens = docFreq;
-                avgFieldLength = 1f;
-            } else {
-                numberOfFieldTokens = collectionStats.sumDocFreq();
-                avgFieldLength = (float) (collectionStats.sumDocFreq() / (double)numberOfDocuments);
-            }
         } else {
             numberOfFieldTokens = collectionStats.sumTotalTermFreq();
-            avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double)numberOfDocuments);
         }
 
         // TODO: add sumDocFreq for field (numberOfFieldPostings)
         stats.setNumberOfDocuments(numberOfDocuments);
         stats.setNumberOfFieldTokens(numberOfFieldTokens);
-        stats.setAvgFieldLength(avgFieldLength);
         stats.setDocFreq(docFreq);
         stats.setTotalTermFreq(totalTermFreq);
     }
@@ -115,8 +110,11 @@ public abstract class ModelBase extends Similarity {
      */
     protected float score(BasicStats stats, float freq, long docLen) {
 
+
+        // avgFieldLength = (float) (collectionStats.sumTotalTermFreq() / (double) numberOfDocuments);
+
         /** The average length of documents in the collection.*/
-        double averageDocumentLength = stats.getAvgFieldLength();
+        double averageDocumentLength = (double) stats.getNumberOfFieldTokens() / stats.getNumberOfDocuments();
 
         /** The term frequency in the query.*/
         double keyFrequency = 1;
@@ -282,12 +280,12 @@ public abstract class ModelBase extends Similarity {
 
         long getLengthValue(int doc) throws IOException {
             if (norms == null) {
-                return 1L;
+                throw new RuntimeException("document length norms is null!");
             }
             if (norms.advanceExact(doc)) {
                 return norms.longValue();
             } else {
-                return 0;
+                throw new RuntimeException("norms.advanceExact(doc) returns false!");
             }
         }
 

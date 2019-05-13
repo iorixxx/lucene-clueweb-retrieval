@@ -33,7 +33,7 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 ./run.sh Searcher -collection CW09A -task param
 ./run.sh Searcher -collection CW09B -task param
 ./run.sh Searcher -collection MQ09 -task param
-./run.sh Searcher -collection MQE1 -task param
+./run.sh Searcher -collection MQE2 -task param
 ./run.sh Searcher -collection CW12B -task param
 ./run.sh Searcher -collection GOV2 -task param
 
@@ -42,14 +42,14 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 
 ./eval.sh parameter
 ./mq.sh parameter
-./mqe1.sh parameter
+./mqe.sh parameter
 ./tt.sh parameter
 ./rob.sh parameter
 
 ./run.sh Searcher -collection CW09A
 ./run.sh Searcher -collection CW09B
 ./run.sh Searcher -collection MQ09
-./run.sh Searcher -collection MQE1
+./run.sh Searcher -collection MQE2
 ./run.sh Searcher -collection CW12B
 ./run.sh Searcher -collection GOV2
 
@@ -58,7 +58,7 @@ nohup ./run.sh Indexer -collection CW09B -tag Latin 2>emptyDocIDs.txt 1>nohup.ou
 
 ./eval.sh
 ./mq.sh
-./mqe1.sh
+./mqe.sh
 ./tt.sh
 ./rob.sh
 

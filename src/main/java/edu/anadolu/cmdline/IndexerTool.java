@@ -30,8 +30,8 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-field", usage = "Boolean switch to index different document representations")
     private boolean field = false;
 
-    @Option(name = "-artificial", usage = "Boolean switch to index artificial field and token")
-    private boolean artificial = false;
+    @Option(name = "-script", usage = "Boolean switch to index scripts as separate fields")
+    private boolean script = false;
 
     @Option(name = "-semantic", usage = "Boolean switch to index HTML5 semantic elements")
     private boolean semantic = false;
@@ -61,7 +61,7 @@ public final class IndexerTool extends CmdLineTool {
 
         if (parseArguments(props) == -1) return;
 
-        if (Collection.MQ07.equals(collection) || Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection) || Collection.MQE2.equals(collection)) {
+        if (Collection.MQ07.equals(collection) || Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
             System.out.println("No need to run separate indexer for Million Query!");
             return;
         }
@@ -98,7 +98,7 @@ public final class IndexerTool extends CmdLineTool {
 
         final HttpSolrClient solr;
         if (anchor) {
-            if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE1.equals(collection)) {
+            if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
                 solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
             } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
                 solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
@@ -115,11 +115,10 @@ public final class IndexerTool extends CmdLineTool {
         Indexer.IndexerConfig config = new Indexer.IndexerConfig()
                 .useAnchorText(anchor)
                 .useMetaFields(field)
-                .useArtificialField(artificial)
+                .useScripts(script)
                 .useSemanticElements(semantic);
         Indexer indexer = new Indexer(dataset, docsPath, indexPath, solr, tag, config);
         int numIndexed = indexer.indexWithThreads(numThreads);
-        if (semantic) SemanticStats.getSemanticObject().printSemanticStats();
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
     }
 }

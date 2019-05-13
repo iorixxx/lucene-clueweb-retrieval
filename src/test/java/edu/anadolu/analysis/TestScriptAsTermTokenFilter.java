@@ -7,9 +7,10 @@ import org.apache.lucene.analysis.standard.StandardTokenizer;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashMap;
 
 /**
- * Tests {@link ScriptAsTermTokenFilter}
+ * Tests {@link ScriptAsTermTokenFilterFactory}
  */
 public class TestScriptAsTermTokenFilter extends BaseTokenStreamTestCase {
 
@@ -27,7 +28,7 @@ public class TestScriptAsTermTokenFilter extends BaseTokenStreamTestCase {
 
         final StandardTokenizer input = new StandardTokenizer(newAttributeFactory());
         input.setReader(reader);
-        TokenStream stream = new ScriptAsTermTokenFilter(input);
+        TokenStream stream = new ScriptAsTermTokenFilterFactory(new HashMap<>()).create(input);
         assertTokenStreamContents(stream, new String[]{
                 "Number",
                 "Common", "Common",
@@ -52,7 +53,7 @@ public class TestScriptAsTermTokenFilter extends BaseTokenStreamTestCase {
 
         final ICUTokenizer input = new ICUTokenizer();
         input.setReader(reader);
-        TokenStream stream = new ScriptAsTermTokenFilter(input);
+        TokenStream stream = new ScriptAsTermTokenFilterFactory(new HashMap<>()).create(input);
         assertTokenStreamContents(stream, new String[]{
                 "Number",
                 "Latin", "Latin",
@@ -77,7 +78,7 @@ public class TestScriptAsTermTokenFilter extends BaseTokenStreamTestCase {
                         "მიყვარხარ \n" + // Georgian
                         "seni seviyorum 123\n");
 
-        TokenStream stream = new ScriptAsTermTokenFilter(whitespaceMockTokenizer(reader));
+        TokenStream stream = new ScriptAsTermTokenFilterFactory(new HashMap<>()).create(whitespaceMockTokenizer(reader));
         assertTokenStreamContents(stream, new String[]{
                 "Common",
                 "Common", "Common",

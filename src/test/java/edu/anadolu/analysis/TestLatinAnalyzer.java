@@ -47,4 +47,20 @@ public class TestLatinAnalyzer extends BaseTokenStreamTestCase {
 
                 new String[]{"321", "je", "t'aime", "te", "quiero", "ich", "liebe", "dich", "ผม", "รัก", "คุณ", "მიყვარხარ", "seni", "seviyorum", "123"});
     }
+
+
+    public void testAllWords2() throws Exception {
+
+        assertAnalyzesTo(
+                Analyzers.analyzer(Tag.Script),
+                "321\n" +
+                        "Je t'aime \n" +
+                        "Te quiero \n" +
+                        "\n Ich liebe dich \n" +
+                        "ผมรักคุณ \n" + // Thai
+                        "მიყვარხარ \n" + // Georgian
+                        "seni seviyorum 123 öküz\n",
+
+                new String[]{"ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "ASCII", "Thai", "Thai", "Thai", "Georgian", "ASCII", "ASCII", "ASCII", "Latin"});
+    }
 }

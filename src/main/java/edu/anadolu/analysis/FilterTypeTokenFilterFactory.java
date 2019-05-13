@@ -7,11 +7,10 @@ import org.apache.lucene.analysis.util.ResourceLoader;
 import org.apache.lucene.analysis.util.ResourceLoaderAware;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
-import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Factory class for {@link TypeTokenFilter}.
@@ -45,7 +44,7 @@ public class FilterTypeTokenFilterFactory extends TokenFilterFactory implements 
     public void inform(ResourceLoader loader) {
         List<String> files = splitFileNames(types);
         if (files.size() > 0) {
-            stopTypes = new HashSet<>(files);
+            stopTypes = files.stream().map(String::trim).collect(Collectors.toSet());
         }
     }
 

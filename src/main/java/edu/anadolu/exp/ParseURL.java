@@ -17,8 +17,7 @@ public class ParseURL {
             System.out.println(spamThreshold);
         }
 
-        URL aURL = new URL("http://example.com:80/docs/books/tutorial"
-                + "/index.html?name=networking&key=value#DOWNLOADING");
+        URL aURL = new URL("http://en.m.wikipedia.org/wiki/Asda");
 
         System.out.println("protocol = " + aURL.getProtocol());
         System.out.println("authority = " + aURL.getAuthority());

@@ -9,7 +9,6 @@ import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
-import edu.anadolu.exp.FullFactorial;
 import edu.anadolu.freq.Freq;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.stat.StatUtils;
@@ -1132,10 +1131,10 @@ public class KNNTool extends EvaluatorTool {
                 if (!print) continue;
 
                 System.out.println("run" + counter + "\t" + key + "\t" + counter + "\t" +
-                        FullFactorial.print(votersArray) + "\t" +
-                        FullFactorial.print(simsArray) + "\t" +
+                        print(votersArray) + "\t" +
+                        print(simsArray) + "\t" +
                         (querySimilarity.zero() ? 1 : 0) + "\t" +
-                        FullFactorial.print(boolArray(querySimilarity.chi().cdf)) + "\t" +
+                        print(boolArray(querySimilarity.chi().cdf)) + "\t" +
                         (querySimilarity.chi().divide ? 1 : 0) + "\t" +
                         (querySimilarity.chi() instanceof XChi ? 1 : 0)
                 );
@@ -1147,6 +1146,14 @@ public class KNNTool extends EvaluatorTool {
 
     }
 
+    public static String print(int[] arr) {
+        StringBuilder builder = new StringBuilder();
+
+        for (int i : arr) {
+            builder.append(i).append("\t");
+        }
+        return builder.toString().trim();
+    }
 
     Fold[] folds(DataSet dataset, List<InfoNeed> residualTFDAwareNeeds) {
 

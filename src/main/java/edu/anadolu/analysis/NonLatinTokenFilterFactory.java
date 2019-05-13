@@ -1,20 +1,21 @@
 package edu.anadolu.analysis;
 
+import com.ibm.icu.lang.UScript;
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.icu.tokenattributes.ScriptAttribute;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.analysis.util.TokenFilterFactory;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
+public class NonLatinTokenFilterFactory extends TokenFilterFactory {
 
     /**
-     * Creates a new BasicLatinTokenFilterFactory
+     * Creates a new NonLatinTokenFilterFactory
      */
-    public BasicLatinTokenFilterFactory(Map<String, String> args) {
+    public NonLatinTokenFilterFactory(Map<String, String> args) {
         super(args);
         if (!args.isEmpty()) {
             throw new IllegalArgumentException("Unknown parameters: " + args);
@@ -23,15 +24,16 @@ public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
 
     @Override
     public TokenFilter create(TokenStream input) {
-        return new BasicLatinTokenFilter(input);
+        return new NonLatinTokenFilter(input);
     }
 
-    private final class BasicLatinTokenFilter extends TokenFilter {
+    private final class NonLatinTokenFilter extends TokenFilter {
 
         private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);
-        private final TypeAttribute typeAtt = addAttribute(TypeAttribute.class);
 
-        private BasicLatinTokenFilter(TokenStream input) {
+        private final ScriptAttribute scriptAtt = addAttribute(ScriptAttribute.class);
+
+        private NonLatinTokenFilter(TokenStream input) {
             super(input);
         }
 
@@ -40,17 +42,14 @@ public class BasicLatinTokenFilterFactory extends TokenFilterFactory {
 
             if (!input.incrementToken()) return false;
 
-            char[] buffer = this.termAtt.buffer();
-            int length = this.termAtt.length();
+            int code = scriptAtt.getCode();
 
-            for (int i = 0; i < length; i++) {
+            if (code == UScript.LATIN /*|| code == UScript.COMMON*/) {
+                termAtt.setEmpty().append("latin");
+            } else {
+                termAtt.setEmpty().append("non");
 
-                final int codePoint = Character.codePointAt(buffer, i, length);
-
-                if (codePoint < 0 || codePoint >= 128)
-                    return true;
             }
-            typeAtt.setType("ASCII");
             return true;
         }
     }

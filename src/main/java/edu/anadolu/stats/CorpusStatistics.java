@@ -87,7 +87,7 @@ public final class CorpusStatistics implements Closeable {
                 }
 
             long remainingDocs = docCount - df;
-            double e = termFrequency / docCount;
+            double e = (double) termFrequency / docCount;
 
             cti += remainingDocs * e;
 
