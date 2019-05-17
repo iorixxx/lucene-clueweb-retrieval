@@ -187,7 +187,12 @@ public class DocFeatureBase {
         String[] words2 = str2.split("\\s+");
         words1 = StopWordRemover.getInstance().removeStopWords(words1);
         words2 = StopWordRemover.getInstance().removeStopWords(words2);
+
+        words1 = words1.length>100?Arrays.copyOfRange(words1,0,100):words1;
+        words2 = words2.length>100?Arrays.copyOfRange(words2,0,100):words2;
+
         double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
+
         double total = 0;
         int count = 0;
 
