@@ -34,6 +34,7 @@ public class DocFeatureBase {
 
     Document jDoc;
     String docId, url;
+    String rawHTML;
 
     /**
      * It is possible to find URL info in the headers of *.warc files for the ClueWeb datasets.
@@ -43,7 +44,8 @@ public class DocFeatureBase {
      */
     DocFeatureBase(WarcRecord warcRecord) {
         try {
-            jDoc = Jsoup.parse(warcRecord.content());
+            rawHTML = warcRecord.content();
+            jDoc = Jsoup.parse(rawHTML);
             docId = warcRecord.id();
             url = warcRecord.url() == null ? jDoc.baseUri() : warcRecord.url();
         } catch (Exception exception) {
@@ -188,8 +190,8 @@ public class DocFeatureBase {
         words1 = StopWordRemover.getInstance().removeStopWords(words1);
         words2 = StopWordRemover.getInstance().removeStopWords(words2);
 
-        words1 = words1.length>100?Arrays.copyOfRange(words1,0,100):words1;
-        words2 = words2.length>100?Arrays.copyOfRange(words2,0,100):words2;
+        words1 = words1.length > 100 ? Arrays.copyOfRange(words1, 0, 100) : words1;
+        words2 = words2.length > 100 ? Arrays.copyOfRange(words2, 0, 100) : words2;
 
         double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
 
@@ -208,17 +210,17 @@ public class DocFeatureBase {
     }
 
 
-    protected String getFirstWords(String text, int wordCount){
+    protected String getFirstWords(String text, int wordCount) {
 
-        if(StringUtils.isEmpty(text)) return text;
+        if (StringUtils.isEmpty(text)) return text;
 
         String updatedText = null;
 
         String[] tokens = text.split("\\s+");
-        if(tokens.length>wordCount)
-            updatedText = String.join(" ",Arrays.copyOfRange(text.split("\\s+"), 0, wordCount));
+        if (tokens.length > wordCount)
+            updatedText = String.join(" ", Arrays.copyOfRange(text.split("\\s+"), 0, wordCount));
         else
-            updatedText = String.join(" ",tokens);
+            updatedText = String.join(" ", tokens);
         return updatedText;
     }
 }

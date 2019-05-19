@@ -10,7 +10,7 @@ public class TextToDocRatio implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
         String text = base.jDoc.text().replaceAll("\\s+", " ");
-        String html = base.jDoc.html().replaceAll("\\s+", " ");
+        String html = base.rawHTML.replaceAll("\\s+", " ");
         return (double) (text.length()) / html.length();
     }
 }
