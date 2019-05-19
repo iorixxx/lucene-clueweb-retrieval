@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import static edu.anadolu.cmdline.SearcherTool.cValues;
+import static edu.anadolu.cmdline.SearcherTool.muValues;
+
 /**
  * Free-parameter tuning tool
  */
@@ -51,6 +54,9 @@ public final class ParamTool extends CmdLineTool {
 
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     private String tag = "KStem";
+
+    @Option(name = "-task", metaVar = "hyper", required = false, usage = "Task to be executed")
+    private String task;
 
     @Option(name = "-metric", required = false, usage = "Effectiveness measure")
     Measure measure = Measure.NDCG100;
@@ -167,8 +173,39 @@ public final class ParamTool extends CmdLineTool {
         return string2model(bestModel);
     }
 
+    private void hyper(DataSet dataset) {
+
+        Measure[] measures = new Measure[]{Measure.NDCG100, Measure.NDCG20, Measure.ERR20, Measure.MAP};
+        for (String model : new String[]{"PL2", "LGD"}) {
+
+            for (Measure measure : measures) {
+
+                Evaluator evaluator = new Evaluator(dataset, tag, measure, model + "c*", "parameter_evals", op);
+
+                System.out.print(model + measure);
+                for (double c : cValues) {
+                    double score = evaluator.averagePerModel(model + "c" + c).score;
+                    System.out.print("\t" + score);
+                }
+                System.out.println();
+            }
+        }
+
+        for (Measure measure : measures) {
+
+            Evaluator evaluator = new Evaluator(dataset, tag, measure, "DirichletLMc*", "parameter_evals", op);
+
+            System.out.print("DirichletLM" + measure);
+            for (double mu : muValues) {
+                double score = evaluator.averagePerModel("DirichletLMc" + mu).score;
+                System.out.print("\t" + score);
+            }
+            System.out.println();
+        }
+    }
+
     @Override
-    public void run(Properties props) throws Exception {
+    public void run(Properties props) {
 
         if (parseArguments(props) == -1) return;
 
@@ -180,6 +217,11 @@ public final class ParamTool extends CmdLineTool {
         }
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
+
+        if ("hyper".equals(task)) {
+            hyper(dataset);
+            return;
+        }
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, models, "parameter_evals", op);
 
@@ -225,6 +267,7 @@ public final class ParamTool extends CmdLineTool {
         public String toString() {
             return "k=" + k + ",b=" + b;
         }
+
     }
 
     private static KB handleKB(List<String> bestModelList) {

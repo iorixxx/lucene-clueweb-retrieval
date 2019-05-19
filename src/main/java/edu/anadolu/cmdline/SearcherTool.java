@@ -61,7 +61,7 @@ public final class SearcherTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.indexes tfd.home";
     }
 
-    public static List<ModelBase> parametricModelList() {
+    private static List<ModelBase> parametricModelList() {
 
         List<ModelBase> models = new ArrayList<>();
 
@@ -70,9 +70,9 @@ public final class SearcherTool extends CmdLineTool {
             models.add(new LGDc(c));
         }
 
-        for (double k : kValues)
-            for (double b : bValues)
-                models.add(new BM25c(k, b));
+//        for (double k : kValues)
+//            for (double b : bValues)
+//                models.add(new BM25c(k, b));
 
         for (double mu : muValues)
             models.add(new DirichletLM(mu));
