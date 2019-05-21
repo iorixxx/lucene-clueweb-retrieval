@@ -196,6 +196,11 @@ public final class ParamTool extends CmdLineTool {
 
                 System.out.println("Histogram " + model + " " + measure);
                 histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
+
+                if (best.containsKey("ALL_SAME"))
+                    System.out.println("ALL_SAME\t" + best.get("ALL_SAME").size());
+                if (best.containsKey("ALL_ZERO"))
+                    System.out.println("ALL_ZERO\t" + best.get("ALL_ZERO").size());
             }
         }
 
@@ -219,6 +224,11 @@ public final class ParamTool extends CmdLineTool {
 
             System.out.println("Histogram DirichletLM" + " " + measure);
             histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
+
+            if (best.containsKey("ALL_SAME"))
+                System.out.println("ALL_SAME\t" + best.get("ALL_SAME").size());
+            if (best.containsKey("ALL_ZERO"))
+                System.out.println("ALL_ZERO\t" + best.get("ALL_ZERO").size());
         }
     }
 
