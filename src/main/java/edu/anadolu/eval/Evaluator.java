@@ -240,7 +240,8 @@ public class Evaluator {
 
         populatePerformanceMap();
 
-        if (!models.endsWith("*")) {
+       // if (!models.endsWith("*"))
+        {
             fillBestModelMap();
             fillWorstModelMap();
         }
