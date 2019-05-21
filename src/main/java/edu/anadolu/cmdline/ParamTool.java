@@ -12,6 +12,7 @@ import edu.anadolu.similarities.LGDc;
 import edu.anadolu.similarities.PL2c;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.lucene.search.similarities.ModelBase;
+import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
@@ -22,10 +23,7 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static edu.anadolu.cmdline.SearcherTool.cValues;
 import static edu.anadolu.cmdline.SearcherTool.muValues;
@@ -188,6 +186,16 @@ public final class ParamTool extends CmdLineTool {
                     System.out.print("\t" + score);
                 }
                 System.out.println();
+
+                SortedMap<Double, Integer> histogram = new TreeMap<>();
+                Map<String, List<InfoNeed>> best = evaluator.bestModelMap();
+                for (double c : cValues) {
+                    if (best.containsKey(model + "c" + c))
+                        histogram.put(c, best.get(model + "c" + c).size());
+                }
+
+                System.out.println("Histogram " + model + " " + measure);
+                histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
             }
         }
 
@@ -201,6 +209,16 @@ public final class ParamTool extends CmdLineTool {
                 System.out.print("\t" + score);
             }
             System.out.println();
+
+            SortedMap<Double, Integer> histogram = new TreeMap<>();
+            Map<String, List<InfoNeed>> best = evaluator.bestModelMap();
+            for (double mu : muValues) {
+                if (best.containsKey("DirichletLMc" + mu))
+                    histogram.put(mu, best.get("DirichletLMc" + mu).size());
+            }
+
+            System.out.println("Histogram DirichletLM" + " " + measure);
+            histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
         }
     }
 
