@@ -3,8 +3,6 @@ package edu.anadolu.ltr;
 import edu.anadolu.Indexer;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
@@ -168,11 +166,10 @@ public class Traverser {
 
     private final Path docsPath;
     private final Collection collection;
-    private final SolrClient solr;
     private final Set<String> docIdSet;
     private final List<IDocFeature> featureList;
 
-    Traverser(DataSet dataset, String docsDir, HttpSolrClient solr, Set<String> docIdSet, List<IDocFeature> featureList) {
+    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList) {
         this.collection = dataset.collection();
         this.docIdSet = docIdSet;
         this.featureList = featureList;
@@ -182,8 +179,6 @@ public class Traverser {
             System.out.println("Document directory '" + docsPath.toString() + "' does not exist or is not readable, please check the path");
             System.exit(1);
         }
-        this.solr = solr;
-
     }
 
 

@@ -5,7 +5,6 @@ import edu.anadolu.cmdline.CmdLineTool;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -58,17 +57,6 @@ public class SEOTool extends CmdLineTool {
         if (docsPath == null) {
             System.out.println(getHelp());
             return;
-        }
-
-        final HttpSolrClient solr;
-
-        if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
-            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
-        } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
-            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
-        else {
-            System.out.println("anchor text is only available to ClueWeb09 and ClueWeb12 collections!");
-            solr = null;
         }
 
 
@@ -127,7 +115,7 @@ public class SEOTool extends CmdLineTool {
         features.add(new StopWordRatio());
         features.add(new TextToDocRatio());
 
-        Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
+        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features);
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         traverser.traverseParallel(Paths.get(out), numThreads);

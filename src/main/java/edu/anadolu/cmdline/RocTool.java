@@ -614,6 +614,7 @@ public class RocTool extends CmdLineTool {
         System.out.println("non-relevant = " + n + " unique_non_relevant = " + non.size());
 
         System.out.println("spam-wiki : " + spam.stream().filter(s1 -> s1.contains("enwp")).count());
+        spam.stream().filter(s1 -> s1.contains("enwp")).forEach(System.out::println);
 
         RSN rsn = new RSN();
         RSN rs = new RSN();
