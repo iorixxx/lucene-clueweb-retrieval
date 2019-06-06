@@ -5,6 +5,8 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
 import edu.anadolu.knn.Measure;
+import edu.anadolu.knn.TStats;
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.kohsuke.args4j.Option;
 
@@ -132,6 +134,7 @@ public final class SpamEvalTool extends EvaluatorTool {
         }
 
         SortedMap<Integer, List<ModelScore>> map = new TreeMap<>();
+        SortedMap<Integer, Struct> tRisk = new TreeMap<>();
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", "evals", op);
         final String models = evaluator.models();
@@ -142,6 +145,7 @@ public final class SpamEvalTool extends EvaluatorTool {
         System.out.print(String.format("%.5f", max) + "\tspamThreshold = 0\t");
         evaluator.printMean();
         map.put(0, evaluator.averageForAllModels());
+        tRisk.put(0, new Struct(evaluator.scoreArray("DPH"), evaluator.scoreArray("DFIC")));
         System.out.println("=======================");
 
         for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
@@ -149,6 +153,8 @@ public final class SpamEvalTool extends EvaluatorTool {
             evaluator = new Evaluator(dataset, tag, measure, models, "spam_" + spamThreshold + "_evals", op);
 
             double mean = evaluator.averageOfAllModels(agg);
+
+            tRisk.put(spamThreshold, new Struct(evaluator.scoreArray("DPH"), evaluator.scoreArray("DFIC")));
 
             System.out.print(String.format("%.5f", mean) + "\tspamThreshold = " + spamThreshold + "\t");
             evaluator.printMean();
@@ -163,8 +169,34 @@ public final class SpamEvalTool extends EvaluatorTool {
 
         System.out.println("================= Best threshold is " + maxSpam + " =======================" + "Aggregated with " + agg);
 
-        if ("bkk".equals(task))
+        if ("bkk".equals(task)) {
             display(map);
+
+            Struct base = tRisk.get(0);
+
+            for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
+
+                Struct struct = tRisk.get(spamThreshold);
+
+                double DPH = TStats.tRisk(base.DPH, struct.DPH, 5);
+                double DFI = TStats.tRisk(base.DFI, struct.DFI, 5);
+
+                System.out.println(spamThreshold + "\t" + String.format("%.5f", DPH) + "\t" + String.format("%.5f", DFI));
+            }
+        }
+    }
+
+
+
+    static class Struct {
+
+        final double[] DPH;
+        final double[] DFI;
+
+        Struct(double[] DPH, double[] DFI) {
+            this.DFI = DFI;
+            this.DPH = DPH;
+        }
     }
 
     static String cacheKey(String tag, Measure measure, String op) {

@@ -70,9 +70,9 @@ public final class SearcherTool extends CmdLineTool {
             models.add(new LGDc(c));
         }
 
-//        for (double k : kValues)
-//            for (double b : bValues)
-//                models.add(new BM25c(k, b));
+        for (double k : kValues)
+            for (double b : bValues)
+                models.add(new BM25c(k, b));
 
         for (double mu : muValues)
             models.add(new DirichletLM(mu));

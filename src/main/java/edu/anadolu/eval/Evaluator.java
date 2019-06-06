@@ -240,8 +240,7 @@ public class Evaluator {
 
         populatePerformanceMap();
 
-       // if (!models.endsWith("*"))
-        {
+        if (!models.endsWith("*")) {
             fillBestModelMap();
             fillWorstModelMap();
         }
@@ -483,7 +482,7 @@ public class Evaluator {
      *
      * @return Score array of the given model of rule based strategy
      */
-    private double[] scoreArray(String model) {
+    public double[] scoreArray(String model) {
         return scoreArray(model, this.needs);
     }
 
