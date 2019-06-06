@@ -6,7 +6,6 @@ import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
 import edu.anadolu.knn.Measure;
 import edu.anadolu.knn.TStats;
-import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.kohsuke.args4j.Option;
 
@@ -22,13 +21,16 @@ public final class SpamEvalTool extends EvaluatorTool {
     private int i = 5;
 
 
-    @Option(name = "-task", required = false, usage = "task to be executed")
+    @Option(name = "-task", usage = "task to be executed")
     private String task;
 
 
     @Option(name = "-agg", required = true, usage = "aggregation")
     private AGG agg;
 
+    @Option(name = "-alpha", usage = "risk aversion parameter: 1 5 10")
+
+    private double alpha = 5d;
 
     public enum AGG {
         M,
@@ -115,7 +117,7 @@ public final class SpamEvalTool extends EvaluatorTool {
     }
 
     @Override
-    public void run(Properties props) throws Exception {
+    public void run(Properties props) {
 
         if (parseArguments(props) == -1) return;
 
@@ -134,10 +136,11 @@ public final class SpamEvalTool extends EvaluatorTool {
         }
 
         SortedMap<Integer, List<ModelScore>> map = new TreeMap<>();
-        SortedMap<Integer, Struct> tRisk = new TreeMap<>();
+        SortedMap<Integer, Map<String, double[]>> tRisk = new TreeMap<>();
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", "evals", op);
         final String models = evaluator.models();
+        final Set<String> modelSet = evaluator.getModelSet();
 
         int maxSpam = 0;
         double max = evaluator.averageOfAllModels(agg);
@@ -145,7 +148,12 @@ public final class SpamEvalTool extends EvaluatorTool {
         System.out.print(String.format("%.5f", max) + "\tspamThreshold = 0\t");
         evaluator.printMean();
         map.put(0, evaluator.averageForAllModels());
-        tRisk.put(0, new Struct(evaluator.scoreArray("DPH"), evaluator.scoreArray("DFIC")));
+
+        Map<String, double[]> localMap = new HashMap<>();
+        for (String model : modelSet)
+            localMap.put(model, evaluator.scoreArray(model));
+        tRisk.put(0, localMap);
+
         System.out.println("=======================");
 
         for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
@@ -154,7 +162,11 @@ public final class SpamEvalTool extends EvaluatorTool {
 
             double mean = evaluator.averageOfAllModels(agg);
 
-            tRisk.put(spamThreshold, new Struct(evaluator.scoreArray("DPH"), evaluator.scoreArray("DFIC")));
+            Map<String, double[]> lMap = new HashMap<>();
+            for (String model : modelSet)
+                lMap.put(model, evaluator.scoreArray(model));
+            tRisk.put(spamThreshold, lMap);
+
 
             System.out.print(String.format("%.5f", mean) + "\tspamThreshold = " + spamThreshold + "\t");
             evaluator.printMean();
@@ -172,20 +184,25 @@ public final class SpamEvalTool extends EvaluatorTool {
         if ("bkk".equals(task)) {
             display(map);
 
-            Struct base = tRisk.get(0);
+            for (String model : modelSet) {
 
-            for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
+                System.out.print(model);
 
-                Struct struct = tRisk.get(spamThreshold);
+                final double base[] = tRisk.get(0).get(model);
 
-                double DPH = TStats.tRisk(base.DPH, struct.DPH, 5);
-                double DFI = TStats.tRisk(base.DFI, struct.DFI, 5);
+                for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
 
-                System.out.println(spamThreshold + "\t" + String.format("%.5f", DPH) + "\t" + String.format("%.5f", DFI));
+                    double run[] = tRisk.get(spamThreshold).get(model);
+
+                    double risk = TStats.tRisk(base, run, alpha);
+
+                    System.out.print("\t" + String.format("%.5f", risk));
+
+                }
+                System.out.println();
             }
         }
     }
-
 
 
     static class Struct {
