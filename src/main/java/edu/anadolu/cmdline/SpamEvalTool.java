@@ -20,6 +20,9 @@ public final class SpamEvalTool extends EvaluatorTool {
     @Option(name = "-i", required = false, usage = "increments of spam threshold", metaVar = "5 10 20")
     private int i = 5;
 
+    @Option(name = "-base", required = false, usage = "baseline spam threshold", metaVar = "0 10")
+    private int base = 10;
+
 
     @Option(name = "-task", usage = "task to be executed")
     private String task;
@@ -188,9 +191,9 @@ public final class SpamEvalTool extends EvaluatorTool {
 
                 System.out.print(model);
 
-                final double base[] = tRisk.get(0).get(model);
+                final double base[] = tRisk.get(this.base).get(model);
 
-                for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
+                for (int spamThreshold = this.base + this.i; spamThreshold < 100; spamThreshold += i) {
 
                     double run[] = tRisk.get(spamThreshold).get(model);
 

@@ -76,7 +76,7 @@ public class RocTool extends CmdLineTool {
 
         if (Collection.CW09A.equals(collection)) {
             qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt",
-                    "qrels.session.201-262.txt", "qrels.session.301-348.txt"};
+                    "qrels.session.201-262.txt", "qrels.session.301-348.txt" };
             solrURLs = new HttpSolrClient[5];
             solrURLs[0] = getCW09Solr(Ranking.fusion);
             solrURLs[1] = getCW09Solr(Ranking.britney);
@@ -86,7 +86,7 @@ public class RocTool extends CmdLineTool {
 
         } else if (Collection.CW12A.equals(collection)) {
             qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt",
-                    "qrels.session.401-469.txt", "qrels.session.501-560.txt"};
+                    "qrels.session.401-469.txt", "qrels.session.501-560.txt" };
             solrURLs = new HttpSolrClient[1];
             solrURLs[0] = getSpamSolr(Collection.CW12A);
         } else return;
@@ -613,8 +613,13 @@ public class RocTool extends CmdLineTool {
         System.out.println("relevant = " + r + " unique_relevant = " + relevant.size());
         System.out.println("non-relevant = " + n + " unique_non_relevant = " + non.size());
 
-        System.out.println("spam-wiki : " + spam.stream().filter(s1 -> s1.contains("enwp")).count());
+        System.out.println("cw09-spam-wiki : " + spam.stream().filter(s1 -> s1.contains("enwp")).count());
         spam.stream().filter(s1 -> s1.contains("enwp")).forEach(System.out::println);
+
+        final Set<String> set12 = new HashSet<>(Files.readAllLines(Paths.get("cw12_wiki.txt")));
+        System.out.println("cw12-spam-wiki : " + spam.stream().filter(set12::contains).count());
+        spam.stream().filter(set12::contains).forEach(System.out::println);
+
 
         RSN rsn = new RSN();
         RSN rs = new RSN();

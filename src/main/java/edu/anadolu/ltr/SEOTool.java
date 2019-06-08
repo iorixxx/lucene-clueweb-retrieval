@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Tool that compute SEO-based document features.
+ * Tool that computes SEO-based document features.
  */
 public class SEOTool extends CmdLineTool {
 
@@ -30,7 +30,7 @@ public class SEOTool extends CmdLineTool {
 
     @Override
     public String getShortDescription() {
-        return "Indexer Tool for ClueWeb09 ClueWeb12 Gov2 collections";
+        return "SEO Tool for ClueWeb09 ClueWeb12 Gov2 collections";
     }
 
     @Override
@@ -59,8 +59,27 @@ public class SEOTool extends CmdLineTool {
             return;
         }
 
+        String[] spamWiki = new String[]
+                {
+                        "clueweb09-enwp01-95-02016",
+                        "clueweb09-enwp01-90-17134",
+                        "clueweb09-enwp02-04-15021",
+                        "clueweb09-enwp01-35-03270",
+                        "clueweb09-enwp01-15-24594",
+                        "clueweb09-enwp03-36-01635",
+                        "clueweb09-enwp00-54-16573",
+                        "clueweb09-enwp01-76-17822",
+                        "clueweb09-enwp01-81-20329",
+                        "clueweb09-enwp03-37-21416",
+                        "clueweb09-enwp03-15-15563",
+                        "clueweb09-enwp01-92-08869",
+                        "clueweb09-enwp01-86-03020",
+                        "clueweb09-enwp01-84-21637",
+                        "clueweb09-enwp01-92-17846"
+                };
 
-        Set<String> docIdSet = new HashSet<String>();
+        Set<String> docIdSet = new HashSet<>();
+//        docIdSet.addAll(Arrays.asList(spamWiki));
 
         for (String file : files) {
             System.out.println(file);

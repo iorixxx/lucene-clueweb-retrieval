@@ -25,8 +25,7 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
 
-import static edu.anadolu.cmdline.SearcherTool.cValues;
-import static edu.anadolu.cmdline.SearcherTool.muValues;
+import static edu.anadolu.cmdline.SearcherTool.*;
 
 /**
  * Free-parameter tuning tool
@@ -223,6 +222,34 @@ public final class ParamTool extends CmdLineTool {
             }
 
             System.out.println("Histogram DirichletLM" + " " + measure);
+            histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
+
+            if (best.containsKey("ALL_SAME"))
+                System.out.println("ALL_SAME\t" + best.get("ALL_SAME").size());
+            if (best.containsKey("ALL_ZERO"))
+                System.out.println("ALL_ZERO\t" + best.get("ALL_ZERO").size());
+        }
+
+        for (Measure measure : measures) {
+
+            // Default values k=1.2 b=0.75
+            Evaluator evaluator = new Evaluator(dataset, tag, measure, "BM25*", "parameter_evals", op);
+
+            System.out.print("BM25" + measure);
+            for (double b : bValues) {
+                double score = evaluator.averagePerModel("BM25k1.2b" + b).score;
+                System.out.print("\t" + score);
+            }
+            System.out.println();
+
+            SortedMap<Double, Integer> histogram = new TreeMap<>();
+            Map<String, List<InfoNeed>> best = evaluator.bestModelMap();
+            for (double b : bValues) {
+                if (best.containsKey("BM25k1.2b" + b))
+                    histogram.put(b, best.get("BM25k1.2b" + b).size());
+            }
+
+            System.out.println("Histogram BM25" + " " + measure);
             histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
 
             if (best.containsKey("ALL_SAME"))

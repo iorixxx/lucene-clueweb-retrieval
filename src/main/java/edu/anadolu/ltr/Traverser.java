@@ -49,6 +49,14 @@ public class Traverser {
 
             if (skip(id)) return 0;
 
+//            System.out.println(id + "\t" + warcRecord.url());
+//
+//            try (BufferedWriter out = Files.newBufferedWriter(Paths.get("/home/iorixxx/" + id + ".html"), StandardCharsets.UTF_8)) {
+//                out.write(warcRecord.content());
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+
 
             DocFeatureBase base = new DocFeatureBase(warcRecord);
             try {
