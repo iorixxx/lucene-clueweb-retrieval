@@ -193,6 +193,11 @@ public final class SpamEvalTool extends EvaluatorTool {
 
                 final double base[] = tRisk.get(this.base).get(model);
 
+//                if (model.contains("BM25")) {
+//                    System.out.println(Arrays.toString(base));
+//                    System.out.println(Arrays.toString(tRisk.get(70).get(model)));
+//                }
+
                 for (int spamThreshold = this.base + this.i; spamThreshold < 100; spamThreshold += i) {
 
                     double run[] = tRisk.get(spamThreshold).get(model);
@@ -204,18 +209,6 @@ public final class SpamEvalTool extends EvaluatorTool {
                 }
                 System.out.println();
             }
-        }
-    }
-
-
-    static class Struct {
-
-        final double[] DPH;
-        final double[] DFI;
-
-        Struct(double[] DPH, double[] DFI) {
-            this.DFI = DFI;
-            this.DPH = DPH;
         }
     }
 

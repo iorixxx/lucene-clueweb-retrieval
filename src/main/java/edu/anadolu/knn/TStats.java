@@ -101,9 +101,8 @@ public class TStats extends TTest {
      * Kevyn Collins-Thompson. 2009.
      * DOI: https://doi.org/10.1145/1645953.1646059
      *
-     * @param base  baseline
-     * @param run   run
-
+     * @param base baseline
+     * @param run  run
      * @return URisk score.
      */
 
@@ -214,6 +213,5 @@ public class TStats extends TTest {
             throw new DimensionMismatchException(y.length, x.length);
         }
     }
-
 
 }
