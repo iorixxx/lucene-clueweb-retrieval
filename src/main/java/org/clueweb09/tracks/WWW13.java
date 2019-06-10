@@ -104,7 +104,7 @@ public class WWW13 extends Track {
                 number = line.substring(5, line.length() - 6).trim();
 
             if (line.startsWith("<content>") && line.endsWith("</content>"))
-                query = line.substring(8, line.length() - 9).trim();
+                query = line.substring(9, line.length() - 10).trim();
 
             if ("</query>".equals(line)) {
 
