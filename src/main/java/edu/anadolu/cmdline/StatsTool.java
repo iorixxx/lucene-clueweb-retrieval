@@ -3,6 +3,7 @@ package edu.anadolu.cmdline;
 import edu.anadolu.QueryBank;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
+import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.stats.CorpusStatistics;
@@ -34,6 +35,9 @@ final class StatsTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
 
+    @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
+    private String tag = null;
+
     @Override
     public void run(Properties props) throws Exception {
 
@@ -50,7 +54,12 @@ final class StatsTool extends CmdLineTool {
 
         final long start = System.nanoTime();
 
-        final String[] fields = props.getProperty("freq.fields", "description,keywords,title,contents").split(",");
+        final String ffff =
+                (collection.equals(Collection.MQ07) || collection.equals(Collection.MQ08) || collection.equals(Collection.GOV2)) ?
+                        "title,body,url,description,keywords" : "title,body,url,description,keywords,anchor";
+
+        // final String[] fields = props.getProperty("freq.fields", "description,keywords,title,contents").split(",");
+        final String[] fields = ffff.split(",");
 
         final Path statsPath = dataset.collectionPath().resolve("stats");
 
@@ -66,6 +75,8 @@ final class StatsTool extends CmdLineTool {
 
         for (Path indexPath : discoverIndexes(dataset)) {
             try (CorpusStatistics statistics = new CorpusStatistics(indexPath, statsPath)) {
+                // search for a specific tag, skip the rest
+                if (this.tag != null && !indexPath.getFileName().toString().equals(this.tag)) continue;
                 statistics.saveFieldStats(fields);
                 statistics.saveLaTexStats(fields);
                 Tag t = Tag.tag(indexPath.getFileName().toString());

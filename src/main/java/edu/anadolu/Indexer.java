@@ -454,15 +454,15 @@ public class Indexer {
                 document.add(new NoPositionsTextField("anchor", anchor));
         }
 
-        // String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
+        String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
 
-        //   if (notEmpty.test(metaNames))
-        //       document.add(new NoPositionsTextField("meta", metaNames));
+           if (notEmpty.test(metaNames))
+               document.add(new NoPositionsTextField("meta", metaNames));
 
-        //  document.add(new NoPositionsTextField("bt", body + " " + title));
-        //  document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
-        //  document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
-        //  document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
+          document.add(new NoPositionsTextField("bt", body + " " + title));
+          document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
+          document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
+          document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
 
 
         /*

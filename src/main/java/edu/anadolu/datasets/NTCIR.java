@@ -1,6 +1,8 @@
 package edu.anadolu.datasets;
 
 import org.clueweb09.tracks.Track;
+import org.clueweb09.tracks.WWW13;
+import org.clueweb09.tracks.WWW14;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,17 +11,17 @@ import java.nio.file.Paths;
  * The NTCIR-13  We Want Web-1 (WWW) Task!
  * http://www.thuir.cn/ntcirwww/
  * <p>
- * The NTCIR-14 NTCIR-13  We Want Web-2 (WWW) Task!
+ * The NTCIR-14 We Want Web-2 (WWW) Task!
  * http://www.thuir.cn/ntcirwww2/
  * <p>
- * The NTCIR-15 NTCIR-13  We Want Web-3 (WWW) Task!
+ * The NTCIR-15 We Want Web-3 (WWW) Task!
  */
 
 public class NTCIR extends DataSet {
 
     NTCIR(String tfd_home) {
         super(Collection.NTCIR, new Track[]{
-                new org.clueweb09.tracks.WWW13(tfd_home)
+                new WWW13(tfd_home), new WWW14(tfd_home)
         }, tfd_home);
     }
 

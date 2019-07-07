@@ -11,11 +11,17 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
+import static org.clueweb09.tracks.MQ09.escape;
+
 /**
  * The NTCIR-13  We Want Web-1 (WWW) Task!
  * http://www.thuir.cn/ntcirwww/
  */
 public class WWW13 extends Track {
+
+    protected int offset() {
+        return 0;
+    }
 
     @Override
     protected void populateInfoNeeds() throws IOException {
@@ -29,10 +35,9 @@ public class WWW13 extends Track {
 
     public WWW13(String home) {
         this(home, Paths.get(home, "topics-and-qrels", "qrels.www.1-100.txt"));
-
     }
 
-    private WWW13(String home, Path path) {
+    WWW13(String home, Path path) {
         super(home);
         try {
             saveQRelsMap(path);
@@ -42,13 +47,13 @@ public class WWW13 extends Track {
 
     }
 
-
+    @Override
     protected Triple processQRelLine(String line) {
         String[] parts = whiteSpaceSplitter.split(line);
 
         if (parts.length != 3) throw new RuntimeException("qrels file should contain three columns : " + line);
 
-        int queryID = Integer.parseInt(parts[0]);
+        int queryID = Integer.parseInt(parts[0]) + offset();
 
         String docID = parts[1];
 
@@ -77,12 +82,12 @@ public class WWW13 extends Track {
     }
 
     /**
-     * Reads topics file in the format of Web Track (WT)
+     * Reads topics file in the format of NTCIR's Web Want Web (Www) Track
      *
      * @param topicsPath topics file
      * @throws IOException exception
      */
-    private void populateInfoNeedsWWW(Path topicsPath) throws IOException {
+     void populateInfoNeedsWWW(Path topicsPath) throws IOException {
 
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
 
@@ -110,7 +115,7 @@ public class WWW13 extends Track {
 
                 if (number == null || query == null) throw new RuntimeException("quid or query is null!");
 
-                int qID = Integer.parseInt(number);
+                int qID = Integer.parseInt(number) + offset();
                 if (!isJudged(qID)) {
                     System.out.println(number + ":" + query + " is not judged. Skipping...");
                     continue;
@@ -118,7 +123,7 @@ public class WWW13 extends Track {
 
                 final Map<String, Integer> innerMap = map.get(qID);
 
-                InfoNeed need = new InfoNeed(qID, query, this, innerMap);
+                InfoNeed need = new InfoNeed(qID, escape(query), this, innerMap);
 
 
                 if (need.relevant() == 0) {

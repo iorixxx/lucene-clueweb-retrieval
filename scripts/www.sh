@@ -15,14 +15,15 @@ else
     EVALS="$1_evals"
 fi
 
-cut_off=(20 100 1000)
+cut_off=(10 20 100 1000)
 
 echo "starting evaluator with RUNS = $RUNS and EVALS = $EVALS ..."
 
  qrels[13]=qrels.www.1-100.txt
+ qrels[14]=qrels.www.101-180.txt
 
 
-for WWW in  13 ; do
+for WWW in 13 14; do
  printf "%s\n" ${qrels[${WWW#}]}
 done
 
@@ -37,7 +38,7 @@ if [[ ! -d ${tag} ]]; then
 fi
 tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
-for WWW in 13; do
+for WWW in 13 14; do
 
     if [ ! -d "${TFD_HOME}/${set}/${RUNS}/${tag}/WWW${WWW}" ]; then
         # Control will enter here if $DIRECTORY does not exist.

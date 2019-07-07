@@ -51,60 +51,58 @@ public final class QueryStatistics {
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(dataset.collectionPath().resolve("stats").resolve("query_stats.tex"), StandardCharsets.US_ASCII));
 
-
-        int r = 0, s = 0;
         for (Track track : dataset.tracks()) {
-
-
             List<InfoNeed> needs = track.getTopics();
-
-            DescriptiveStatistics spam = new DescriptiveStatistics();
-            DescriptiveStatistics relevant = new DescriptiveStatistics();
-            DescriptiveStatistics nonRelevant = new DescriptiveStatistics();
-
-            int queryLength = 0;
-
-            for (InfoNeed need : needs) {
-                queryLength += need.wordCount();
-                relevant.addValue(need.relevant());
-                nonRelevant.addValue(need.nonRelevant());
-                spam.addValue(need.spam());
-                s += need.spam();
-                r += need.relevant();
-            }
-
-            out.print(track.toString());
-            out.print(" & ");
-
-            out.print(needs.size());
-            out.print(" & ");
-
-            out.print(String.format("%.1f", (double) queryLength / needs.size()));
-            out.print(" & ");
-
-            out.print(averageAndStandardDeviation(relevant));
-            out.print(" & ");
-
-            out.print(averageAndStandardDeviation(spam));
-            out.print(" & ");
-
-            out.print(averageAndStandardDeviation(nonRelevant));
-            out.print(" & ");
-
-            out.print(track.getJudgeLevels().size());
-
-
-            out.print("\\\\");
-            out.println();
-
-            System.out.println(track + " s=" + spam.getSum() + " r=" + relevant.getSum());
+            printStats(track, needs, out);
         }
+
+        printStats(null, dataset.getTopics(), out);
 
         out.flush();
         out.close();
 
-        System.out.println("s=" + s + " r=" + r);
 
+    }
+
+    private void printStats(Track track, List<InfoNeed> needs, PrintWriter out) {
+
+        DescriptiveStatistics spam = new DescriptiveStatistics();
+        DescriptiveStatistics relevant = new DescriptiveStatistics();
+        DescriptiveStatistics nonRelevant = new DescriptiveStatistics();
+
+        int queryLength = 0;
+
+        for (InfoNeed need : needs) {
+            queryLength += need.wordCount();
+            relevant.addValue(need.relevant());
+            nonRelevant.addValue(need.nonRelevant());
+            spam.addValue(need.spam());
+        }
+
+        out.print(track == null ? "ALL" : track.toString());
+        out.print(" & ");
+
+        out.print(needs.size());
+        out.print(" & ");
+
+        out.print(String.format("%.1f", (double) queryLength / needs.size()));
+        out.print(" & ");
+
+        out.print(averageAndStandardDeviation(relevant));
+        out.print(" & ");
+
+        out.print(averageAndStandardDeviation(spam));
+        out.print(" & ");
+
+        out.print(averageAndStandardDeviation(nonRelevant));
+        out.print(" & ");
+
+        out.print(track == null ? -1 : track.getJudgeLevels().size());
+
+        out.print("\\\\");
+        out.println();
+
+        System.out.println((track == null ? "ALL" : track.toString()) + " s=" + spam.getSum() + " r=" + relevant.getSum());
     }
 
     /**

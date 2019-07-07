@@ -14,7 +14,7 @@ import org.kohsuke.args4j.Option;
 
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +34,7 @@ public class CustomTool extends CmdLineTool {
     protected Measure measure = Measure.NDCG20;
 
     @Option(name = "-collection", required = true, usage = "Collection")
-    private edu.anadolu.datasets.Collection collection;
+    protected edu.anadolu.datasets.Collection collection;
 
     //  @Option(name = "-spam", required = false, usage = "manuel spam threshold", metaVar = "10 20 30 .. 90")
     // private int spam = 0;
@@ -84,6 +84,12 @@ public class CustomTool extends CmdLineTool {
             modelBaseSet.add(new DLH13());
             modelBaseSet.add(new DFRee());
 
+            if (!props.containsKey(collection.toString() + ".fields"))
+                throw new RuntimeException("cannot find " + collection.toString() + ".fields property!");
+
+            final String[] fieldsArr = props.getProperty(collection.toString() + ".fields").split(",");
+
+            List<String> fields = Arrays.asList(fieldsArr);
             for (final Path path : discoverIndexes(dataset)) {
 
                 final String tag = path.getFileName().toString();
@@ -92,7 +98,7 @@ public class CustomTool extends CmdLineTool {
                 if (this.tag != null && !tag.equals(this.tag)) continue;
 
                 try (Searcher searcher = new Searcher(path, dataset, 1000)) {
-                    searcher.searchWithThreads(numThreads, modelBaseSet, Collections.singletonList("contents"), "runs");
+                    searcher.searchWithThreads(numThreads, modelBaseSet, /*Collections.singletonList("contents")*/ fields, "runs");
                 }
             }
             System.out.println("Search completed in " + execution(start));
@@ -105,8 +111,7 @@ public class CustomTool extends CmdLineTool {
             Evaluator evaluator = new Evaluator(dataset, tag, measure, models, "evals", "OR");
             evaluator.models();
 
-            int maxSpam = 0;
-            double max = evaluator.averageOfAllModels(SpamEvalTool.AGG.M);
+            double max = evaluator.averageOfAllModels();
 
             System.out.print(String.format("%.5f", max) + "\tspamThreshold = 0\t");
             evaluator.printMean();
