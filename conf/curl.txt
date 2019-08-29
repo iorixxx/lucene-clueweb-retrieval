@@ -15,6 +15,10 @@ curl "http://192.168.10.111:8983/solr/spam09A/update/csv?commit=true&separator=%
 # tar -xvf ClueWeb09-En-PRranked.tar.gz
 curl "http://192.168.10.111:8983/solr/rank09A/update/csv?commit=true&separator=%09&fieldnames=id,rank" --data-binary @ClueWeb09-En-PRranked.txt -H 'Content-type:text/plain; charset=utf-8'
 
+# wget http://lemurproject.org/clueweb12.php/ClueWeb12_PageRank/pagerank.prior.bz2
+# bzip2 -d pagerank.prior.bz2
+curl "http://localhost:8983/solr/rank12A/update/csv?commit=true&separator=%20&fieldnames=id,rank" -T pagerank.prior -X POST -H 'Content-type:text/plain; charset=utf-8'
+
 
 # for different spam rankings
 

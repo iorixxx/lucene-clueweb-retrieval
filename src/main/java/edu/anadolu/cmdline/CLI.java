@@ -143,6 +143,8 @@ public final class CLI {
 
         tools.add(new CormakTool());
 
+        tools.add(new DeepTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
