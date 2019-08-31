@@ -450,8 +450,11 @@ public class Indexer {
 
         if (config.anchor && solr != null) {
             String anchor = anchor(wDoc.id(), solr);
-            if (anchor != null)
-                document.add(new NoPositionsTextField("anchor", anchor));
+            if (anchor != null) {
+                StringBuilder builder = new StringBuilder();
+                stripHTMLAndAppend(anchor, builder);
+                document.add(new NoPositionsTextField("anchor", builder.toString().trim()));
+            }
         }
 
         String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
