@@ -14,9 +14,8 @@ public class DeepTool extends CmdLineTool {
     @Option(name = "-collection", required = true, usage = "Collection")
     private Collection collection;
 
-
-    @Option(name = "-out", required = true, usage = "output file")
-    private String out;
+    @Option(name = "-base", required = true, usage = "output file")
+    private String base;
 
     @Override
     public String getShortDescription() {
@@ -57,7 +56,7 @@ public class DeepTool extends CmdLineTool {
         Word2VecTraverser traverser = new Word2VecTraverser(dataset, docsPath);
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
-        traverser.traverseParallel(Paths.get(out), numThreads);
+        traverser.traverseParallel(Paths.get(base), numThreads);
         System.out.println("Document features are extracted in " + execution(start));
     }
 }

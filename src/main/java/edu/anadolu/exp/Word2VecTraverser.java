@@ -20,10 +20,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static edu.anadolu.Indexer.BUFFER_SIZE;
 import static edu.anadolu.analysis.Analyzers.FIELD;
@@ -37,11 +37,23 @@ public class Word2VecTraverser {
     private final class WorkerThread {
 
         private final Path inputWarcFile;
-        private final AtomicReference<PrintWriter> out;
+        private final PrintWriter out;
 
-        WorkerThread(Path inputWarcFile, AtomicReference<PrintWriter> out) {
+        WorkerThread(Path inputWarcFile, Path base) {
+
             this.inputWarcFile = inputWarcFile;
-            this.out = out;
+
+            Path absolute = inputWarcFile.toAbsolutePath();
+            // TODO /ClueWeb/ClueWeb09A/ClueWeb09_English_1/ is hardcoded at the moment.
+            Path outPath = base.resolve(Paths.get("/ClueWeb/ClueWeb09A/ClueWeb09_English_1/").relativize(absolute));
+
+            try {
+                Files.createDirectories(outPath.getParent());
+                OutputStream stream = new GZIPOutputStream(Files.newOutputStream(outPath, StandardOpenOption.WRITE, StandardOpenOption.CREATE), BUFFER_SIZE);
+                out = new PrintWriter(new OutputStreamWriter(stream, StandardCharsets.UTF_8));
+            } catch (IOException ioe) {
+                throw new RuntimeException(ioe);
+            }
         }
 
         /**
@@ -76,7 +88,7 @@ public class Word2VecTraverser {
             }
 
             // TODO do something with the content
-            out.get().println(getAnalyzedTokens(contents, Analyzers.analyzer(KStem)));
+            out.println(getAnalyzedTokens(contents, Analyzers.analyzer(KStem)));
 
             return 1;
         }
@@ -165,6 +177,9 @@ public class Word2VecTraverser {
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
                 }
 
+                out.flush();
+                out.close();
+
             } catch (IOException ioe) {
                 System.out.println(Thread.currentThread().getName() + ": ERROR: unexpected IOException:");
                 ioe.printStackTrace(System.out);
@@ -201,21 +216,15 @@ public class Word2VecTraverser {
     /**
      * Traverse based on Java8's parallel streams
      */
-    public void traverseParallel(Path resultPath, int numThreads) throws IOException {
+    public void traverseParallel(Path base, int numThreads) throws IOException {
 
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + numThreads);
 
         final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
 
-        final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.UTF_8)));
-
         try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
-
-            stream.parallel().forEach(p -> new WorkerThread(p, out).run());
+            stream.parallel().forEach(p -> new WorkerThread(p, base).run());
         }
-
-        out.get().flush();
-        out.get().close();
     }
 
     private final class WarcMatcher implements BiPredicate<Path, BasicFileAttributes> {
@@ -258,5 +267,4 @@ public class Word2VecTraverser {
         }
         return builder.toString().trim();
     }
-
 }
