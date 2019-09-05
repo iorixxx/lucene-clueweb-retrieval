@@ -51,6 +51,37 @@ public class TestBasicLatin extends BaseTokenStreamTestCase {
     }
 
     @Test
+    public void tesBasicLatin3() throws IOException {
+
+        Analyzer a = CustomAnalyzer.builder()
+                .withTokenizer("icu")
+                .addTokenFilter(BasicLatinTokenFilterFactory.class)
+                .build();
+
+
+        assertAnalyzesTo(a, "b3s Ulusal Bulut Bilişim ve Büyük Veri Sempozyumu", // Turkish
+                new String[]{"b3s", "Ulusal", "Bulut", "Bilişim", "ve", "Büyük", "Veri", "Sempozyumu"},
+                new String[]{"ASCII", "ASCII", "ASCII", "<ALPHANUM>", "ASCII", "<ALPHANUM>", "ASCII", "ASCII"});
+
+    }
+
+
+    @Test
+    public void tesFreqDistNonACSII() throws IOException {
+
+        Analyzer a = CustomAnalyzer.builder()
+                .withTokenizer("icu")
+                .addTokenFilter(NonASCIITokenFilterFactory.class)
+                .build();
+
+
+        assertAnalyzesTo(a, "b3s Ulusal Bulut Bilişim ve Büyük Veri Sempozyumu", // Turkish
+                new String[]{"ascii", "ascii", "ascii", "non", "ascii", "non", "ascii", "ascii"},
+                new String[]{"<ALPHANUM>", "<ALPHANUM>", "<ALPHANUM>", "<ALPHANUM>", "<ALPHANUM>", "<ALPHANUM>", "<ALPHANUM>", "<ALPHANUM>"});
+
+    }
+
+    @Test
     public void tesASCIIOnly() throws IOException {
 
         Analyzer a = Analyzers.analyzer(Tag.ASCII);

@@ -108,7 +108,7 @@ public class Evaluator {
     public Map<String, List<InfoNeed>> bestModelMap;
     public Map<String, List<InfoNeed>> worstModelMap;
 
-    private final Set<String> modelSet = new HashSet<>();
+    protected final Set<String> modelSet = new HashSet<>();
 
     private Set<String> bestParametricModels = null;
 
@@ -116,7 +116,7 @@ public class Evaluator {
     private final String op;
     private final String field;
 
-    private final Map<DataSet, String> evalDirectoryMap;
+    protected final Map<DataSet, String> evalDirectoryMap;
 
     public Evaluator(DataSet[] dataSets, String indexTag, Measure measure, String models, String[] evalDirs, String op) {
 
@@ -482,7 +482,7 @@ public class Evaluator {
      *
      * @return Score array of the given model of rule based strategy
      */
-    private double[] scoreArray(String model) {
+    public double[] scoreArray(String model) {
         return scoreArray(model, this.needs);
     }
 
@@ -964,7 +964,7 @@ public class Evaluator {
     }
 
 
-    private List<Path> getPathList(InfoNeed need, String k) throws IOException {
+    protected List<Path> getPathList(InfoNeed need, String k) throws IOException {
 
         Path thePath = Paths.get(need.dataSet().collectionPath().toString(), evalDirectoryMap.get(need.dataSet()), indexTag, need.getWT().toString(), k);
 
@@ -979,7 +979,7 @@ public class Evaluator {
         return percolate(paths);
     }
 
-    public static String getRunTag(Path path) {
+    protected String getRunTag(Path path) {
         String runTag = path.getFileName().toString().substring(0, path.getFileName().toString().length() - 4);
         runTag = runTag.replaceAll(",", ";");
         return runTag;

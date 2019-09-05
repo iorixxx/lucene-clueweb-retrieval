@@ -15,6 +15,7 @@ public enum Measure {
 //    ERR100(Metric.ERR, 100),
 //    ERR1000(Metric.ERR, 1000),
 
+    P10(Metric.P, 10),
     MAP(Metric.MAP, 1000);
 
     Measure(Metric metric, int k) {

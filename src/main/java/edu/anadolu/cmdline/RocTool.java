@@ -1,10 +1,15 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.spam.OddsBinning;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.kohsuke.args4j.Option;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -13,9 +18,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static edu.anadolu.cmdline.RocTool.Ranking.fusion;
 import static edu.anadolu.cmdline.SpamTool.getSpamSolr;
+import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
+import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 import static org.clueweb09.tracks.Track.whiteSpaceSplitter;
 
 /**
@@ -30,7 +38,7 @@ public class RocTool extends CmdLineTool {
     private String task;
 
     @Option(name = "-uniq", required = false, usage = "work on unique documents")
-    private boolean uniq = false;
+    private boolean uniq = true;
 
     @Override
     public String getShortDescription() {
@@ -44,7 +52,8 @@ public class RocTool extends CmdLineTool {
         fusion,
         britney,
         groupx,
-        uk2006
+        uk2006,
+        odds
     }
 
     @Override
@@ -52,7 +61,7 @@ public class RocTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.spam paths.docs files.ids files.spam";
     }
 
-    private static HttpSolrClient getCW09Solr(Ranking ranking) {
+    static HttpSolrClient getCW09Solr(Ranking ranking) {
 
         if (fusion.equals(ranking))
             return getSpamSolr(Collection.CW09A);
@@ -67,16 +76,17 @@ public class RocTool extends CmdLineTool {
 
         if (Collection.CW09A.equals(collection)) {
             qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt",
-                    "qrels.session.201-262.txt", "qrels.session.301-348.txt"};
-            solrURLs = new HttpSolrClient[4];
+                    "qrels.session.201-262.txt", "qrels.session.301-348.txt" };
+            solrURLs = new HttpSolrClient[5];
             solrURLs[0] = getCW09Solr(Ranking.fusion);
             solrURLs[1] = getCW09Solr(Ranking.britney);
             solrURLs[2] = getCW09Solr(Ranking.groupx);
             solrURLs[3] = getCW09Solr(Ranking.uk2006);
+            solrURLs[4] = getCW09Solr(Ranking.odds);
 
         } else if (Collection.CW12A.equals(collection)) {
             qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt",
-                    "qrels.session.401-469.txt", "qrels.session.501-560.txt"};
+                    "qrels.session.401-469.txt", "qrels.session.501-560.txt" };
             solrURLs = new HttpSolrClient[1];
             solrURLs[0] = getSpamSolr(Collection.CW12A);
         } else return;
@@ -108,9 +118,11 @@ public class RocTool extends CmdLineTool {
                 int grade = Integer.parseInt(parts[3]);
 
                 out.print(queryID + "," + docID + "," + grade);
-                for (HttpSolrClient client : solrURLs) {
+                for (int i = 0; i < 4; i++) {
+                    HttpSolrClient client = solrURLs[i];
                     out.print("," + SpamTool.percentile(client, docID));
                 }
+                out.print("," + odds(solrURLs[4], docID));
                 out.println();
             }
 
@@ -125,6 +137,34 @@ public class RocTool extends CmdLineTool {
 
     }
 
+    public static String odds(HttpSolrClient solr, String docID) throws IOException, SolrServerException {
+
+        SolrQuery query = new SolrQuery(docID).setFields("odds");
+        query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
+        query.set(OMIT_HEADER, true);
+        SolrDocumentList resp = solr.query(query).getResults();
+
+
+        if (resp.size() == 0) {
+            System.out.println("cannot find docID " + docID + " in " + solr.getBaseURL());
+        }
+
+        if (resp.size() != 1) {
+            System.out.println("docID " + docID + " returned " + resp.size() + " many hits!");
+        }
+
+        String odds = (String) resp.get(0).getFieldValue("odds");
+
+        resp.clear();
+        query.clear();
+
+        double d = Double.parseDouble(odds);
+
+        if (d >= -10.42 && d <= 15.96)
+            return odds;
+        else throw new RuntimeException("odd ratio is invalid " + odds);
+    }
+
     class Struct {
         final Ranking ranking;
         final int[] relevant, spam, non;
@@ -135,7 +175,6 @@ public class RocTool extends CmdLineTool {
             this.non = non;
             this.ranking = ranking;
         }
-
 
         /**
          * label those with percentile-score<70 to be spam
@@ -169,9 +208,46 @@ public class RocTool extends CmdLineTool {
 
             return new Confusion(tp, tn, fp, fn);
         }
+
+        /**
+         * label those with probability > 2.5 to be spam
+         *
+         * @param threshold index of the bin
+         * @return elements of confusion matrix
+         */
+        Confusion classifyOdds(int threshold, int size) {
+
+            int tp = 0;
+            int tn = 0;
+
+            int fp = 0;
+            int fn = 0;
+
+            for (int i = 0; i <= threshold; i++) {
+
+                tn += relevant[i];
+
+                // false negative: when a spam document is incorrectly classified as non-spam
+                fn += spam[i];
+            }
+
+            for (int i = threshold + 1; i < size; i++) {
+
+                tp += spam[i];
+
+                // false positive: when a relevant document is incorrectly classified as spam
+                fp += relevant[i];
+            }
+
+            return new Confusion(tp, tn, fp, fn);
+        }
     }
 
     class Confusion {
+
+        int sum() {
+            return tp + tn + fp + fn;
+        }
 
         final int tp, tn, fp, fn;
 
@@ -295,6 +371,44 @@ public class RocTool extends CmdLineTool {
             array[percentile]++;
     }
 
+    /**
+     * First, use ./run.sh Wiki -o cw12_wiki.txt to identify wikipedia pages of the ClueWeb12 dataset
+     */
+    private void wiki12() throws IOException, SolrServerException {
+
+        HttpSolrClient client = getSpamSolr(Collection.CW12A);
+
+        if (client == null) {
+            System.out.println("solr client is null!");
+            return;
+        }
+
+        int[] wiki = new int[100];
+        Arrays.fill(wiki, 0);
+
+        final List<String> lines = Files.readAllLines(Paths.get("cw12_wiki.txt"), StandardCharsets.US_ASCII);
+
+        for (String line : lines) {
+
+            String[] parts = line.split("\\s+");
+
+            if (parts.length != 2)
+                throw new RuntimeException("lines length not equal to 2 " + line + " " + line.length());
+
+            int percentile = SpamTool.percentile(client, parts[0]);
+
+            if (percentile >= 0 && percentile < 100)
+                wiki[percentile]++;
+            else throw new RuntimeException("percentile invalid " + percentile);
+        }
+
+        client.close();
+
+        System.out.println("percentile,fusionWiki");
+        for (int i = 0; i < 100; i++)
+            System.out.println(i + "," + wiki[i]);
+    }
+
     private void wiki() throws IOException {
 
         int[] fusion = wiki("wFusion.txt");
@@ -352,7 +466,21 @@ public class RocTool extends CmdLineTool {
         }
 
         if ("wiki".equals(task)) {
-            wiki();
+
+            if (Collection.CW12A.equals(collection))
+                wiki12();
+            else
+                wiki();
+            return;
+        }
+
+        if ("odds".equals(task) && Collection.CW09A.equals(collection)) {
+            odds();
+            return;
+        }
+
+        if ("all".equals(task)) {
+            allOdds();
             return;
         }
 
@@ -485,7 +613,13 @@ public class RocTool extends CmdLineTool {
         System.out.println("relevant = " + r + " unique_relevant = " + relevant.size());
         System.out.println("non-relevant = " + n + " unique_non_relevant = " + non.size());
 
-        System.out.println("spam-wiki : " + spam.stream().filter(s1 -> s1.contains("enwp")).count());
+        System.out.println("cw09-spam-wiki : " + spam.stream().filter(s1 -> s1.contains("enwp")).count());
+        spam.stream().filter(s1 -> s1.contains("enwp")).forEach(System.out::println);
+
+        final Set<String> set12 = new HashSet<>(Files.readAllLines(Paths.get("cw12_wiki.txt")));
+        System.out.println("cw12-spam-wiki : " + spam.stream().filter(set12::contains).count());
+        spam.stream().filter(set12::contains).forEach(System.out::println);
+
 
         RSN rsn = new RSN();
         RSN rs = new RSN();
@@ -765,5 +899,191 @@ public class RocTool extends CmdLineTool {
         output.close();
         System.out.println(judgeLevels + " num_queries " + queries.size());
         System.out.println("rel=" + rel + " spam=" + spam);
+    }
+
+    private void oddsMap() throws IOException {
+
+        TreeMap<String, Integer> relevant = new TreeMap<>();
+        TreeMap<String, Integer> spam = new TreeMap<>();
+        TreeMap<String, Integer> non = new TreeMap<>();
+
+        Set<String> set = new HashSet<>();
+
+        final List<String> lines = Files.readAllLines(Paths.get(collection.toString() + ".txt"), StandardCharsets.US_ASCII);
+
+        Set<String> uniqueSpam = new HashSet<>();
+        Set<String> uniqueRelevant = new HashSet<>();
+        Set<String> uniqueNon = new HashSet<>();
+
+        for (String line : lines) {
+
+            if (line.startsWith("queryID,docID,relevance,fusion"))
+                continue;
+
+            String[] parts = line.split(",");
+
+            if (parts.length != 8) throw new RuntimeException("raw file should contain 8 columns : " + line);
+
+            int queryID = Integer.parseInt(parts[0]);
+            String docID = parts[1];
+            int grade = Integer.parseInt(parts[2]);
+
+            String primaryKey = queryID + "_" + docID;
+            if (set.contains(primaryKey)) throw new RuntimeException("duplicate primary key " + primaryKey);
+            set.add(primaryKey);
+
+            String odds = parts[7];
+
+            double d = Double.parseDouble(odds);
+
+            if (!(d >= -10.42 && d <= 15.96))
+                throw new RuntimeException("odd ratio is invalid " + odds);
+
+            if (grade == -2)
+                increment(spam, uniqueSpam, docID, odds);
+
+
+            if (grade > 0)
+                increment(relevant, uniqueRelevant, docID, odds);
+
+
+            if (grade == 0)
+                increment(non, uniqueNon, docID, odds);
+
+        }
+
+        System.out.println("odds,relevant");
+        relevant.forEach((k, v) -> System.out.println(k + "," + v));
+
+        System.out.println("odds,spam");
+        spam.forEach((k, v) -> System.out.println(k + "," + v));
+
+    }
+
+    private void increment(TreeMap<String, Integer> map, Set<String> set, String docId, String odds) {
+        if (uniq) {
+            if (!set.contains(docId)) {
+                final int i = map.getOrDefault(odds, 0) + 1;
+                map.put(odds, i);
+                set.add(docId);
+            }
+        } else {
+            final int i = map.getOrDefault(odds, 0) + 1;
+            map.put(odds, i);
+        }
+    }
+
+    private void odds() throws IOException {
+
+        final int size = OddsBinning.intervals.length - 1;
+
+        int[] relevant = new int[size];
+        Arrays.fill(relevant, 0);
+
+        int[] spam = new int[size];
+        Arrays.fill(spam, 0);
+
+        int[] non = new int[size];
+        Arrays.fill(non, 0);
+
+        Set<String> set = new HashSet<>();
+
+        final List<String> lines = Files.readAllLines(Paths.get(collection.toString() + ".txt"), StandardCharsets.US_ASCII);
+
+        Set<String> uniqueSpam = new HashSet<>();
+        Set<String> uniqueRelevant = new HashSet<>();
+        Set<String> uniqueNon = new HashSet<>();
+
+        for (String line : lines) {
+
+            if (line.startsWith("queryID,docID,relevance,fusion"))
+                continue;
+
+            String[] parts = line.split(",");
+
+            if (parts.length != 8) throw new RuntimeException("raw file should contain 8 columns : " + line);
+
+            int queryID = Integer.parseInt(parts[0]);
+            String docID = parts[1];
+            int grade = Integer.parseInt(parts[2]);
+
+            String primaryKey = queryID + "_" + docID;
+            if (set.contains(primaryKey)) throw new RuntimeException("duplicate primary key " + primaryKey);
+            set.add(primaryKey);
+
+            double d = Double.parseDouble(parts[7]);
+
+            if (!(d >= -10.42 && d <= 15.96))
+                throw new RuntimeException("odd ratio is invalid " + d);
+
+            int bin = OddsBinning.bin(d);
+
+            if (grade == -2)
+                increment(spam, uniqueSpam, docID, bin);
+
+
+            if (grade > 0)
+                increment(relevant, uniqueRelevant, docID, bin);
+
+
+            if (grade == 0)
+                increment(non, uniqueNon, docID, bin);
+
+        }
+
+        int sum = IntStream.of(spam).sum() + IntStream.of(relevant).sum();
+
+        Struct struct = new Struct(relevant, spam, non, Ranking.odds);
+
+        System.out.println("bin,oddsSpam,oddsRel,oddsNon");
+        for (int i = 0; i < size; i++)
+            System.out.println(i + "," + struct.spam[i] + "," + struct.relevant[i] + "," + struct.non[i]);
+
+        for (int t = 0; t < size; t++) {
+            Confusion f = struct.classifyOdds(t, size);
+            if (sum != f.sum())
+                throw new RuntimeException("t=" + t + " " + sum + " does not equal " + f.sum() + " " + f.toString());
+            System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.precision());
+        }
+    }
+
+    /**
+     * The frequency distribution of all ClueWeb09's documents over log-odds version of the Fusion ranking.
+     */
+    private void allOdds() {
+
+        final int size = OddsBinning.intervals.length - 1;
+
+        int[] all = new int[size];
+        Arrays.fill(all, 0);
+
+        try (BufferedReader reader = Files.newBufferedReader(Paths.get("/home/iorixxx/clueweb09spam.FusionLogOdds"))) {
+
+            for (; ; ) {
+                String line = reader.readLine();
+                if (line == null)
+                    break;
+
+                String[] parts = whiteSpaceSplitter.split(line);
+
+                if (parts.length != 2)
+                    throw new RuntimeException("clueweb09spam.FusionLogOdds file should contain 2 columns : " + line);
+
+                double d = Double.parseDouble(parts[0]);
+
+                if (!(d >= -10.42 && d <= 15.96))
+                    throw new RuntimeException("odd ratio is invalid " + d);
+
+                int bin = OddsBinning.bin(d);
+
+                all[bin]++;
+            }
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
+
+        System.out.println("bin,all");
+        for (int i = 0; i < size; i++)
+            System.out.println(i + "," + all[i]);
     }
 }

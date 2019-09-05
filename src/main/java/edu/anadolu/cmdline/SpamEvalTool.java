@@ -5,6 +5,7 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
 import edu.anadolu.knn.Measure;
+import edu.anadolu.knn.TStats;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.kohsuke.args4j.Option;
 
@@ -19,14 +20,20 @@ public final class SpamEvalTool extends EvaluatorTool {
     @Option(name = "-i", required = false, usage = "increments of spam threshold", metaVar = "5 10 20")
     private int i = 5;
 
+    @Option(name = "-base", required = false, usage = "baseline spam threshold", metaVar = "0 10")
+    private int base = 10;
 
-    @Option(name = "-task", required = false, usage = "task to be executed")
+
+    @Option(name = "-task", usage = "task to be executed")
     private String task;
 
 
     @Option(name = "-agg", required = true, usage = "aggregation")
     private AGG agg;
 
+    @Option(name = "-alpha", usage = "risk aversion parameter: 1 5 10")
+
+    private double alpha = 5d;
 
     public enum AGG {
         M,
@@ -113,7 +120,7 @@ public final class SpamEvalTool extends EvaluatorTool {
     }
 
     @Override
-    public void run(Properties props) throws Exception {
+    public void run(Properties props) {
 
         if (parseArguments(props) == -1) return;
 
@@ -132,9 +139,11 @@ public final class SpamEvalTool extends EvaluatorTool {
         }
 
         SortedMap<Integer, List<ModelScore>> map = new TreeMap<>();
+        SortedMap<Integer, Map<String, double[]>> tRisk = new TreeMap<>();
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", "evals", op);
         final String models = evaluator.models();
+        final Set<String> modelSet = evaluator.getModelSet();
 
         int maxSpam = 0;
         double max = evaluator.averageOfAllModels(agg);
@@ -142,6 +151,12 @@ public final class SpamEvalTool extends EvaluatorTool {
         System.out.print(String.format("%.5f", max) + "\tspamThreshold = 0\t");
         evaluator.printMean();
         map.put(0, evaluator.averageForAllModels());
+
+        Map<String, double[]> localMap = new HashMap<>();
+        for (String model : modelSet)
+            localMap.put(model, evaluator.scoreArray(model));
+        tRisk.put(0, localMap);
+
         System.out.println("=======================");
 
         for (int spamThreshold = i; spamThreshold < 100; spamThreshold += i) {
@@ -149,6 +164,12 @@ public final class SpamEvalTool extends EvaluatorTool {
             evaluator = new Evaluator(dataset, tag, measure, models, "spam_" + spamThreshold + "_evals", op);
 
             double mean = evaluator.averageOfAllModels(agg);
+
+            Map<String, double[]> lMap = new HashMap<>();
+            for (String model : modelSet)
+                lMap.put(model, evaluator.scoreArray(model));
+            tRisk.put(spamThreshold, lMap);
+
 
             System.out.print(String.format("%.5f", mean) + "\tspamThreshold = " + spamThreshold + "\t");
             evaluator.printMean();
@@ -163,8 +184,32 @@ public final class SpamEvalTool extends EvaluatorTool {
 
         System.out.println("================= Best threshold is " + maxSpam + " =======================" + "Aggregated with " + agg);
 
-        if ("bkk".equals(task))
+        if ("bkk".equals(task)) {
             display(map);
+
+            for (String model : modelSet) {
+
+                System.out.print(model);
+
+                final double base[] = tRisk.get(this.base).get(model);
+
+//                if (model.contains("BM25")) {
+//                    System.out.println(Arrays.toString(base));
+//                    System.out.println(Arrays.toString(tRisk.get(70).get(model)));
+//                }
+
+                for (int spamThreshold = this.base + this.i; spamThreshold < 100; spamThreshold += i) {
+
+                    double run[] = tRisk.get(spamThreshold).get(model);
+
+                    double risk = TStats.tRisk(base, run, alpha);
+
+                    System.out.print("\t" + String.format("%.5f", risk));
+
+                }
+                System.out.println();
+            }
+        }
     }
 
     static String cacheKey(String tag, Measure measure, String op) {

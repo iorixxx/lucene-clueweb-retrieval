@@ -57,7 +57,7 @@ public final class SpamRemoveTool extends CmdLineTool {
         final String indexPath = Paths.get(tfd_home, collection.toString(), "indexes").toString();
 
 
-        final int numThreads = Integer.parseInt(props.getProperty("numThreads", "2"));
+        final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
 
         if (docsPath == null || indexPath == null) {
             System.out.println(getHelp());
@@ -76,7 +76,7 @@ public final class SpamRemoveTool extends CmdLineTool {
                 .useScripts(false)
                 .useSemanticElements(false);
         SpamRemovingIndexer indexer = new SpamRemovingIndexer(dataset, docsPath, indexPath, solr, KStem, config, spam);
-        int numIndexed = indexer.indexParallel();
+        int numIndexed = indexer.indexParallel(numThreads);
 
         System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
     }

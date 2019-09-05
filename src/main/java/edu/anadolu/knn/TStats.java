@@ -39,6 +39,95 @@ public class TStats extends TTest {
 
     }
 
+    /**
+     * TRisk implementation from
+     * <p>
+     * Hypothesis testing for the risk-sensitive evaluation of retrieval systems.
+     * B. Taner Dincer, Craig Macdonald, and Iadh Ounis. 2014.
+     * DOI: https://doi.org/10.1145/2600428.2609625
+     *
+     * @param base  baseline
+     * @param run   run
+     * @param alpha risk aversion parameter. Usually 1, 5, or 10.
+     * @return TRisk score. Values less than -2 means significant risk, values greater than +2 means significant gain.
+     */
+
+    public static double tRisk(final double[] base, final double[] run, double alpha) {
+
+        if (run.length != base.length)
+            throw new RuntimeException("array lengths are not equal!");
+
+        int n = base.length;
+        double meanDifference = 0d;
+
+        final double[] deltas = new double[base.length];
+
+        for (int i = 0; i < n; i++) {
+
+            double sdiff = run[i] - base[i];
+
+            if (sdiff >= 0)
+                deltas[i] = sdiff;
+            else
+                deltas[i] = (1d + alpha) * sdiff;
+
+            meanDifference += deltas[i];
+
+        }
+
+        // [h,p,~,stats] = ttest(deltas, 0, 0.05, 'both');
+        // return stats.tstats;
+
+        meanDifference /= n;
+
+        double sum1 = 0d;
+        double sum2 = 0d;
+
+        for (int i = 0; i < n; i++) {
+            double diff = deltas[i];
+            sum1 += (diff - meanDifference) * (diff - meanDifference);
+            sum2 += diff - meanDifference;
+        }
+        double varianceDifference = (sum1 - (sum2 * sum2 / n)) / (n - 1);
+
+        return meanDifference / Math.sqrt(varianceDifference / n);
+
+    }
+
+    /**
+     * URisk implementation from
+     * <p>
+     * Reducing the risk of query expansion via robust constrained optimization.
+     * Kevyn Collins-Thompson. 2009.
+     * DOI: https://doi.org/10.1145/1645953.1646059
+     *
+     * @param base baseline
+     * @param run  run
+     * @return URisk score.
+     */
+
+    public static double URisk(double[] base, double[] run, double alpha) {
+
+        if (run.length != base.length)
+            throw new RuntimeException("array lengths are not equal!");
+
+        final double[] win = new double[base.length];
+        final double[] loss = new double[base.length];
+
+
+        for (int i = 0; i < run.length; i++) {
+            win[i] = Math.max(0, run[i] - base[i]);
+            loss[i] = Math.max(0, base[i] - run[i]);
+        }
+
+        double reward = StatUtils.mean(win);
+        double risk = StatUtils.mean(loss);
+
+        return reward - (1 + alpha) * risk;
+
+
+    }
+
     static double[] calculateDifferences(final double[] x, final double[] y) {
 
         final double[] z = new double[x.length];
@@ -124,6 +213,5 @@ public class TStats extends TTest {
             throw new DimensionMismatchException(y.length, x.length);
         }
     }
-
 
 }

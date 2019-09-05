@@ -1,15 +1,15 @@
 package edu.anadolu.field;
 
 import edu.anadolu.cmdline.CLI;
-import edu.anadolu.cmdline.CmdLineTool;
+import edu.anadolu.cmdline.CustomTool;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.eval.ModelScore;
-import edu.anadolu.knn.Measure;
 import edu.anadolu.knn.Prediction;
 import edu.anadolu.knn.Solution;
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
@@ -20,10 +20,8 @@ import java.util.stream.Collectors;
 /**
  * Field based scoring tool
  */
-public class FieldTool extends CmdLineTool {
+public class FieldTool extends CustomTool {
 
-    @Option(name = "-collection", required = true, usage = "underscore separated collection values", metaVar = "CW09A_CW12B")
-    protected Collection collection;
 
     @Override
     public String getShortDescription() {
@@ -35,18 +33,8 @@ public class FieldTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " tfd.home";
     }
 
-    @Option(name = "-metric", required = false, usage = "Effectiveness measure")
-    protected Measure measure = Measure.NDCG100;
-
-    @Option(name = "-tag", metaVar = "[KStemField|KStem]", required = false, usage = "Index Tag")
-    protected String tag = "KStemField";
-
-
     @Option(name = "-op", metaVar = "[AND|OR]", required = false, usage = "query operator (q.op)")
     protected String op = "OR";
-
-    @Option(name = "-fields", metaVar = "[title|body|description|keywords|url]", required = false, usage = "field that you want to search on")
-    protected String fields = "title,body,url,description,keywords";
 
     @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
     protected int spam = 0;
@@ -82,6 +70,7 @@ public class FieldTool extends CmdLineTool {
 
         DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
 
+        this.models = this.models + "_DPH_DFIC";
         String evalDirectory = spam == 0 ? "evals" : "spam_" + spam + "_evals";
 
         if (catB && (Collection.CW09B.equals(collection) || Collection.CW12B.equals(collection)))
@@ -90,25 +79,23 @@ public class FieldTool extends CmdLineTool {
         List<InfoNeed> needs = new ArrayList<>();
         Map<String, Evaluator> evaluatorMap = new HashMap<>();
 
-        final String[] fieldsArr = props.getProperty(collection.toString() + ".fields", "description,keywords,title,body,anchor,url").split(",");
+        if (!props.containsKey(collection.toString() + ".fields"))
+            throw new RuntimeException("cannot find " + collection.toString() + ".fields property!");
 
-        Set<String> modelIntersection = new HashSet<>();
+        final String[] fieldsArr = props.getProperty(collection.toString() + ".fields").split(",");
+
+        Set<String> models = Arrays.stream(this.models.split("_")).collect(Collectors.toSet());
 
         for (int i = 0; i < fieldsArr.length; i++) {
             String field = fieldsArr[i];
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, "DPH_DFIC_DFRee_DLH13", evalDirectory, op, field);
+            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, this.models, evalDirectory, op, field);
             evaluatorMap.put(field, evaluator);
             needs = evaluator.getNeeds();
-
-            if (i == 0)
-                modelIntersection.addAll(evaluator.getModelSet());
-            else
-                modelIntersection.retainAll(evaluator.getModelSet());
         }
 
         Map<String, double[]> baselines = new HashMap<>();
 
-        for (String model : modelIntersection) {
+        for (String model : models) {
 
             double[] baseline = new double[needs.size()];
 
@@ -118,8 +105,8 @@ public class FieldTool extends CmdLineTool {
             baselines.put(model, baseline);
         }
 
-
-        for (String model : modelIntersection) {
+        for (String model : models) {
+            final double meanBaseLine = StatUtils.mean(baselines.get(model));
 
             List<ModelScore> list = new ArrayList<>();
 
@@ -134,12 +121,15 @@ public class FieldTool extends CmdLineTool {
 
                 ModelScore modelScore = evaluator.averagePerModel(model);
 
-                if (tTest.pairedTTest(baselines.get(model), scores, 0.05))
-                    list.add(new ModelScore(field + "*", modelScore.score));
-                else
+                if (tTest.pairedTTest(baselines.get(model), scores, 0.05)) {
+
+                    if (modelScore.score > meanBaseLine)
+                        list.add(new ModelScore(field + "*", modelScore.score));
+                    else
+                        list.add(new ModelScore(field + "+", modelScore.score));
+
+                } else
                     list.add(new ModelScore(field, modelScore.score));
-
-
             }
 
             Collections.sort(list);
@@ -154,12 +144,21 @@ public class FieldTool extends CmdLineTool {
 
             System.out.println();
 
+            for (String mode : new String[]{"bt", "btd", "btk", "btdk"})
+                for (ModelScore modelScore : list)
+                    if (modelScore.model.equals(mode) || modelScore.model.equals(mode + "*") || modelScore.model.equals(mode + "+"))
+                        System.err.println(collection + "," + measure + "," + Evaluator.prettyModel(model) + "," + modelScore.model + "," + String.format("%.5f", modelScore.score));
+
         }
 
         System.out.println("========= oracles ==============");
-        // if (!collection.equals(GOV2)) fields += ",anchor";
 
-        for (String model : modelIntersection) {
+        final String fields =
+                (collection.equals(Collection.MQ07) || collection.equals(Collection.MQ08) || collection.equals(Collection.GOV2)) ?
+                        "title,body,url,description,keywords" : "title,body,url,description,keywords,anchor";
+
+        for (
+                String model : models) {
 
             List<Prediction> list = new ArrayList<>(needs.size());
 

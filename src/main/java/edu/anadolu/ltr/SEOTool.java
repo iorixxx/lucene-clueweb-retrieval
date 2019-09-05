@@ -5,7 +5,7 @@ import edu.anadolu.cmdline.CmdLineTool;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -15,22 +15,22 @@ import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Tool that compute SEO-based document features.
+ * Tool that computes SEO-based document features.
  */
 public class SEOTool extends CmdLineTool {
 
     @Option(name = "-collection", required = true, usage = "Collection")
     private Collection collection;
 
-    @Option(name = "-file", required = true, usage = "input file")
-    private String file;
+    @Argument
+    private List<String> files = new ArrayList<>();
 
     @Option(name = "-out", required = true, usage = "output file")
     private String out;
 
     @Override
     public String getShortDescription() {
-        return "Indexer Tool for ClueWeb09 ClueWeb12 Gov2 collections";
+        return "SEO Tool for ClueWeb09 ClueWeb12 Gov2 collections";
     }
 
     @Override
@@ -59,37 +59,85 @@ public class SEOTool extends CmdLineTool {
             return;
         }
 
-        final HttpSolrClient solr;
+        String[] spamWiki = new String[]
+                {
+                        "clueweb09-enwp01-95-02016",
+                        "clueweb09-enwp01-90-17134",
+                        "clueweb09-enwp02-04-15021",
+                        "clueweb09-enwp01-35-03270",
+                        "clueweb09-enwp01-15-24594",
+                        "clueweb09-enwp03-36-01635",
+                        "clueweb09-enwp00-54-16573",
+                        "clueweb09-enwp01-76-17822",
+                        "clueweb09-enwp01-81-20329",
+                        "clueweb09-enwp03-37-21416",
+                        "clueweb09-enwp03-15-15563",
+                        "clueweb09-enwp01-92-08869",
+                        "clueweb09-enwp01-86-03020",
+                        "clueweb09-enwp01-84-21637",
+                        "clueweb09-enwp01-92-17846"
+                };
 
-        if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
-            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
-        } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
-            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
-        else {
-            System.out.println("anchor text is only available to ClueWeb09 and ClueWeb12 collections!");
-            solr = null;
-        }
+        Set<String> docIdSet = new HashSet<>();
+//        docIdSet.addAll(Arrays.asList(spamWiki));
 
-        Path file = Paths.get(this.file);
-        if (!(Files.exists(file) && Files.isRegularFile(file))) {
-            System.out.println(getHelp());
-            return;
+        for (String file : files) {
+            System.out.println(file);
+            Path path = Paths.get(file);
+            if (!(Files.exists(path) && Files.isRegularFile(path))) {
+                System.out.println(getHelp());
+                return;
+            }
+            docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
         }
 
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
 
-
-        Set<String> docIdSet = retrieveDocIdSet(file);
-
         List<IDocFeature> features = new ArrayList<>();
+
+        features.add(new Contact());
+        features.add(new ContentLengthOver1800());
+        features.add(new Copyright());
+        features.add(new Description());
         features.add(new Favicon());
         features.add(new Https());
-        features.add(new StopWordRatio());
+        features.add(new Keyword());
+        features.add(new KeywordInDomain());
+        features.add(new KeywordInFirst100Words());
+        features.add(new KeywordInImgAltTag());
+        features.add(new KeywordInTitle());
+        features.add(new Robots());
+        features.add(new SocialMediaShare());
+        features.add(new Viewport());
 
-        Traverser traverser = new Traverser(dataset, docsPath, solr, docIdSet, features);
-        traverser.traverseParallel(Paths.get(out));
+        features.add(new AlttagToImg());
+        features.add(new ContentLengthToMax());
+        features.add(new HdensityToMax());
+        features.add(new ImgToMax());
+        features.add(new IndexOfKeywordInTitle());
+        features.add(new InOutlinkToAll());
+        features.add(new InversedUrlLength());
+        features.add(new MetaTagToMax());
+        features.add(new NoFollowToAll());
+        features.add(new SimDescriptionH());
+        features.add(new SimKeywordDescription());
+        features.add(new SimKeywordH());
+        features.add(new SimTitleDescription());
+        features.add(new SimTitleH());
+        features.add(new SimTitleKeyword());
+        features.add(new SimContentDescription());
+        features.add(new SimContentH());
+        features.add(new SimContentKeyword());
+        features.add(new SimContentTitle());
+        features.add(new StopWordRatio());
+        features.add(new TextToDocRatio());
+
+        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features);
+
+        final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
+        traverser.traverseParallel(Paths.get(out), numThreads);
         System.out.println("Document features are extracted in " + execution(start));
     }
 
@@ -109,6 +157,32 @@ public class SEOTool extends CmdLineTool {
             }
 
             String docId = line.substring(i + 1).trim();
+
+            docIdSet.add(docId);
+        }
+
+        lines.clear();
+
+        return docIdSet;
+    }
+
+
+    private Set<String> retrieveDocIdSetForLetor(Path file) throws IOException {
+
+        Set<String> docIdSet = new HashSet<>();
+        List<String> lines = Files.readAllLines(file);
+
+        for (String line : lines) {
+
+            if (line.startsWith("#")) continue;
+
+            int i = line.indexOf("GX");
+
+            if (i == -1) {
+                throw new RuntimeException("cannot find # in " + line);
+            }
+
+            String docId = line.substring(i, line.indexOf(" ", i)).trim();
 
             docIdSet.add(docId);
         }

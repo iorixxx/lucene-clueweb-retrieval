@@ -68,9 +68,6 @@ public final class CLI {
         // LaTex Tool
         tools.add(new LatexTool());
 
-        // Result List Tool
-        tools.add(new ResultListTool());
-
         // Free-Parameter Determining Tool
         tools.add(new ParamTool());
 
@@ -141,6 +138,12 @@ public final class CLI {
         tools.add(new CustomTool());
 
         tools.add(new SEOTool());
+
+        tools.add(new WikiTool());
+
+        tools.add(new CormakTool());
+
+        tools.add(new DeepTool());
 
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);

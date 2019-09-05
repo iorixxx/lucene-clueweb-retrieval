@@ -77,4 +77,40 @@ public class MetaTest {
         Assert.assertNotNull(test);
         Assert.assertTrue(test.isEmpty());
     }
+
+
+    /**
+     * ON THE USEFULNESS OF HTML META ELEMENTS FOR WEB RETRIEVAL
+     */
+    @Test
+    public void testJDocGetText() {
+        String html = "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head>\n" +
+                "<title>Title of the document</title>\n" +
+                "\n" +
+                "  <meta charset=\"UTF-8\">\n" +
+                "  <meta name=\"description\" content=\"Free Web tutorials\">\n" +
+                "  <meta name=\"keywords\" content=\"HTML,CSS,XML,JavaScript\">\n" +
+                "  <meta name=\"author\" content=\"John Doe\">\n" +
+                "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "\n" +
+                "</head>\n" +
+                "\n" +
+                "<body>\n" +
+                "\n" +
+                "<h3>This is a Heading</h3>\n" +
+                "<p>This is a paragraph.</p>\n" +
+                "\n" +
+                "<a href=\"https://www.wikipedia.org/\">A link to Wikipedia!</a>\n" +
+                "\n" +
+                "<!-- This is a comment -->\n" +
+                "<br>\n" +
+                "\n" +
+                "The content of the document......\n" +
+                "\n" +
+                "</body>\n" +
+                "</html>";
+        Assert.assertEquals("Title of the document This is a Heading This is a paragraph. A link to Wikipedia! The content of the document......", Jsoup.parse(html).text());
+    }
 }

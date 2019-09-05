@@ -3,8 +3,6 @@ package edu.anadolu.ltr;
 import edu.anadolu.Indexer;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
@@ -48,13 +46,25 @@ public class Traverser {
 
             String id = warcRecord.id();
 
+
             if (skip(id)) return 0;
+
+//            System.out.println(id + "\t" + warcRecord.url());
+//
+//            try (BufferedWriter out = Files.newBufferedWriter(Paths.get("/home/iorixxx/" + id + ".html"), StandardCharsets.UTF_8)) {
+//                out.write(warcRecord.content());
+//            } catch (Exception e) {
+//                throw new RuntimeException(e);
+//            }
+
 
             DocFeatureBase base = new DocFeatureBase(warcRecord);
             try {
                 String line = base.calculate(featureList);
                 out.get().println(line);
             } catch (Exception ex) {
+                System.err.println("jdoc exception " + warcRecord.id());
+                System.err.println("Document : " + warcRecord.content());
                 throw new RuntimeException(ex);
             }
 
@@ -129,7 +139,6 @@ public class Traverser {
             return i;
         }
 
-
         public void run() {
             try {
 
@@ -160,16 +169,15 @@ public class Traverser {
      * @return true if the document should be skipped
      */
     protected boolean skip(String docId) {
-        return "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || !docIdSet.contains(docId);
+        return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId) || !docIdSet.contains(docId);
     }
 
     private final Path docsPath;
     private final Collection collection;
-    private final SolrClient solr;
     private final Set<String> docIdSet;
     private final List<IDocFeature> featureList;
 
-    Traverser(DataSet dataset, String docsDir, HttpSolrClient solr, Set<String> docIdSet, List<IDocFeature> featureList) {
+    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList) {
         this.collection = dataset.collection();
         this.docIdSet = docIdSet;
         this.featureList = featureList;
@@ -179,24 +187,23 @@ public class Traverser {
             System.out.println("Document directory '" + docsPath.toString() + "' does not exist or is not readable, please check the path");
             System.exit(1);
         }
-        this.solr = solr;
     }
 
 
     /**
      * Traverse based on Java8's parallel streams
      */
-    void traverseParallel(Path resultPath) throws IOException {
+    void traverseParallel(Path resultPath, int numThreads) throws IOException {
+
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + numThreads);
 
         final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
 
         final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
 
-        try (Stream<Path> stream = Files.find(docsPath, 3, new WarcMatcher(suffix))) {
+        try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
-            stream.parallel().forEach(p -> {
-                new WorkerThread(p, out).run();
-            });
+            stream.parallel().forEach(p -> new WorkerThread(p, out).run());
         }
 
         out.get().flush();

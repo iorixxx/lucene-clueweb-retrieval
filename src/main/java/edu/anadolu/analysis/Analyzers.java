@@ -96,6 +96,13 @@ public class Analyzers {
                         .addTokenFilter("kstem")
                         .build();
 
+            case Snowball:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("lowercase")
+                        .addTokenFilter("snowballporter", "language", "English")
+                        .build();
+
             case ICU:
                 return CustomAnalyzer.builder()
                         .withTokenizer("icu")

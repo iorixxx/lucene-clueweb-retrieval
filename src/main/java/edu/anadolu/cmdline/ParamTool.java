@@ -12,6 +12,7 @@ import edu.anadolu.similarities.LGDc;
 import edu.anadolu.similarities.PL2c;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.lucene.search.similarities.ModelBase;
+import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
@@ -22,10 +23,9 @@ import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+
+import static edu.anadolu.cmdline.SearcherTool.*;
 
 /**
  * Free-parameter tuning tool
@@ -51,6 +51,9 @@ public final class ParamTool extends CmdLineTool {
 
     @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
     private String tag = "KStem";
+
+    @Option(name = "-task", metaVar = "hyper", required = false, usage = "Task to be executed")
+    private String task;
 
     @Option(name = "-metric", required = false, usage = "Effectiveness measure")
     Measure measure = Measure.NDCG100;
@@ -167,8 +170,97 @@ public final class ParamTool extends CmdLineTool {
         return string2model(bestModel);
     }
 
+    private void hyper(DataSet dataset) {
+
+        Measure[] measures = new Measure[]{Measure.NDCG100, Measure.NDCG20, Measure.ERR20, Measure.MAP};
+        for (String model : new String[]{"PL2", "LGD"}) {
+
+            for (Measure measure : measures) {
+
+                Evaluator evaluator = new Evaluator(dataset, tag, measure, model + "c*", "parameter_evals", op);
+
+                System.out.print(model + measure);
+                for (double c : cValues) {
+                    double score = evaluator.averagePerModel(model + "c" + c).score;
+                    System.out.print("\t" + score);
+                }
+                System.out.println();
+
+                SortedMap<Double, Integer> histogram = new TreeMap<>();
+                Map<String, List<InfoNeed>> best = evaluator.bestModelMap();
+                for (double c : cValues) {
+                    if (best.containsKey(model + "c" + c))
+                        histogram.put(c, best.get(model + "c" + c).size());
+                }
+
+                System.out.println("Histogram " + model + " " + measure);
+                histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
+
+                if (best.containsKey("ALL_SAME"))
+                    System.out.println("ALL_SAME\t" + best.get("ALL_SAME").size());
+                if (best.containsKey("ALL_ZERO"))
+                    System.out.println("ALL_ZERO\t" + best.get("ALL_ZERO").size());
+            }
+        }
+
+        for (Measure measure : measures) {
+
+            Evaluator evaluator = new Evaluator(dataset, tag, measure, "DirichletLMc*", "parameter_evals", op);
+
+            System.out.print("DirichletLM" + measure);
+            for (double mu : muValues) {
+                double score = evaluator.averagePerModel("DirichletLMc" + mu).score;
+                System.out.print("\t" + score);
+            }
+            System.out.println();
+
+            SortedMap<Double, Integer> histogram = new TreeMap<>();
+            Map<String, List<InfoNeed>> best = evaluator.bestModelMap();
+            for (double mu : muValues) {
+                if (best.containsKey("DirichletLMc" + mu))
+                    histogram.put(mu, best.get("DirichletLMc" + mu).size());
+            }
+
+            System.out.println("Histogram DirichletLM" + " " + measure);
+            histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
+
+            if (best.containsKey("ALL_SAME"))
+                System.out.println("ALL_SAME\t" + best.get("ALL_SAME").size());
+            if (best.containsKey("ALL_ZERO"))
+                System.out.println("ALL_ZERO\t" + best.get("ALL_ZERO").size());
+        }
+
+        for (Measure measure : measures) {
+
+            // Default values k=1.2 b=0.75
+            Evaluator evaluator = new Evaluator(dataset, tag, measure, "BM25*", "parameter_evals", op);
+
+            System.out.print("BM25" + measure);
+            for (double b : bValues) {
+                double score = evaluator.averagePerModel("BM25k1.2b" + b).score;
+                System.out.print("\t" + score);
+            }
+            System.out.println();
+
+            SortedMap<Double, Integer> histogram = new TreeMap<>();
+            Map<String, List<InfoNeed>> best = evaluator.bestModelMap();
+            for (double b : bValues) {
+                if (best.containsKey("BM25k1.2b" + b))
+                    histogram.put(b, best.get("BM25k1.2b" + b).size());
+            }
+
+            System.out.println("Histogram BM25" + " " + measure);
+            histogram.forEach((key, value) -> System.out.println(key + "\t" + value));
+
+            if (best.containsKey("ALL_SAME"))
+                System.out.println("ALL_SAME\t" + best.get("ALL_SAME").size());
+            if (best.containsKey("ALL_ZERO"))
+                System.out.println("ALL_ZERO\t" + best.get("ALL_ZERO").size());
+        }
+    }
+
     @Override
-    public void run(Properties props) throws Exception {
+    public void run(Properties props) {
 
         if (parseArguments(props) == -1) return;
 
@@ -180,6 +272,11 @@ public final class ParamTool extends CmdLineTool {
         }
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
+
+        if ("hyper".equals(task)) {
+            hyper(dataset);
+            return;
+        }
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, models, "parameter_evals", op);
 
@@ -225,6 +322,7 @@ public final class ParamTool extends CmdLineTool {
         public String toString() {
             return "k=" + k + ",b=" + b;
         }
+
     }
 
     private static KB handleKB(List<String> bestModelList) {

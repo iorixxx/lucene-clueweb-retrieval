@@ -60,6 +60,11 @@ public final class Gov2Record {
             public String type() {
                 return Indexer.RESPONSE;
             }
+
+            @Override
+            public void free() {
+                builder.delete(0, builder.length());
+            }
         };
     }
 }
