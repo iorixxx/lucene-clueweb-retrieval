@@ -140,6 +140,10 @@ public class SEOTool extends CmdLineTool {
         features.add(new InLinkCount(solrClientFactory(collection, InLinkCount.class)));
         features.add(new PageRank(solrClientFactory(collection, PageRank.class)));
 
+        features.add(new Entropy());
+        features.add(new NumberOfSlashesInURL());
+        features.add(new OutLinkCount());
+
         Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features);
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
