@@ -24,7 +24,7 @@ public class InLinkCount extends SolrAwareFeatureBase {
     @Override
     public double calculate(DocFeatureBase base) throws IOException {
 
-        SolrQuery query = new SolrQuery(base.docId).setFields("count");
+        SolrQuery query = new SolrQuery(base.docId).setFields("count").setRows(1);
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
         query.set(OMIT_HEADER, true);
         query.set(DF, "id");
@@ -37,13 +37,12 @@ public class InLinkCount extends SolrAwareFeatureBase {
         }
 
 
-        if (resp.size() == 0) {
-            System.out.println("cannot find docID " + base.docId + " in " + solrClient.getBaseURL());
+        if (resp.getNumFound() == 0) {
             return 0.0;
         }
 
-        if (resp.size() != 1) {
-            System.out.println("docID " + base.docId + " returned " + resp.size() + " many hits!");
+        if (resp.getNumFound() != 1) {
+            System.out.println("docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
         }
 
         int count = 0;
