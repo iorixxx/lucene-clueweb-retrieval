@@ -24,7 +24,7 @@ public class PageRank extends SolrAwareFeatureBase {
     @Override
     public double calculate(DocFeatureBase base) throws IOException {
 
-        SolrQuery query = new SolrQuery(base.docId).setFields("rank");
+        SolrQuery query = new SolrQuery(base.docId).setFields("rank").setRows(1);
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
         query.set(OMIT_HEADER, true);
         query.set(DF, "id");
@@ -37,14 +37,14 @@ public class PageRank extends SolrAwareFeatureBase {
         }
 
 
-        if (resp.size() == 0) {
+        if (resp.getNumFound() == 0) {
             //TODO PageRank scores are not calculated for every document. Use default value or average for missing documents.
             System.out.println("cannot find docID " + base.docId + " in " + solrClient.getBaseURL());
             return 96176607.1109954 / 503903810d;
         }
 
-        if (resp.size() != 1) {
-            System.out.println("docID " + base.docId + " returned " + resp.size() + " many hits!");
+        if (resp.getNumFound() != 1) {
+            System.out.println("docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
         }
 
         double rank = 0;

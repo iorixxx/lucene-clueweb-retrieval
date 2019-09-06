@@ -24,7 +24,7 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
     @Override
     public double calculate(DocFeatureBase base) throws IOException {
 
-        SolrQuery query = new SolrQuery(base.docId).setFields("url");
+        SolrQuery query = new SolrQuery(base.docId).setFields("url").setRows(1);
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
         query.set(OMIT_HEADER, true);
         query.set(DF, "id");
@@ -38,13 +38,13 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
 
         String url;
 
-        if (resp.size() == 0) {
+        if (resp.getNumFound() == 0) {
             System.out.println("cannot find docID " + base.docId + " in " + solrClient.getBaseURL());
-            url = base.url;
+            throw new RuntimeException("cannot find docID " + base.docId + " in " + solrClient.getBaseURL());
         }
 
-        if (resp.size() != 1) {
-            System.out.println("docID " + base.docId + " returned " + resp.size() + " many hits!");
+        if (resp.getNumFound() != 1) {
+            System.out.println("docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
         }
 
         try {
@@ -57,7 +57,7 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
         resp.clear();
         query.clear();
 
-        query = new SolrQuery("{!prefix f=url}" + url.trim()).setFields("id");
+        query = new SolrQuery("{!prefix f=url}" + url.trim()).setFields("id").setRows(0);
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
         query.set(OMIT_HEADER, true);
         query.set(DF, "url");
@@ -70,8 +70,8 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
         }
 
 
-        if (resp.size() < 1) {
-            throw new RuntimeException("url " + url + " docID " + base.docId + " returned " + resp.size() + " many hits!");
+        if (resp.getNumFound() < 1) {
+            throw new RuntimeException("url " + url + " docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
         }
 
         query.clear();
