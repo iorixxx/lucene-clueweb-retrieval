@@ -7,6 +7,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import static org.apache.solr.common.params.CommonParams.*;
 
@@ -57,7 +58,7 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
         resp.clear();
         query.clear();
 
-        query = new SolrQuery("{!prefix f=url}" + url.trim()).setFields("id").setRows(0);
+        query = new SolrQuery("{!prefix f=url}" + url.trim().toLowerCase(Locale.ENGLISH)).setFields("id").setRows(0);
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
         query.set(OMIT_HEADER, true);
         query.set(DF, "url");
