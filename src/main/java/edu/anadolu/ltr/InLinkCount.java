@@ -1,8 +1,8 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.datasets.Collection;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 
@@ -12,8 +12,8 @@ import static org.apache.solr.common.params.CommonParams.*;
 
 public class InLinkCount extends SolrAwareFeatureBase {
 
-    InLinkCount(HttpSolrClient solr) {
-        super(solr);
+    InLinkCount(Collection collection) {
+        super(collection);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.datasets.Collection;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 
 import java.io.Closeable;
@@ -11,14 +12,15 @@ import java.io.IOException;
 abstract class SolrAwareFeatureBase implements IDocFeature, Closeable {
 
     final HttpSolrClient solrClient;
+    final Collection collection;
 
-    SolrAwareFeatureBase(HttpSolrClient solrClient) {
-        this.solrClient = solrClient;
+    SolrAwareFeatureBase(Collection collection) {
+        this.solrClient = SEOTool.solrClientFactory(collection, this.getClass());
+        this.collection = collection;
     }
 
     @Override
     public void close() throws IOException {
-        System.out.println("close is called");
         solrClient.close();
     }
 }
