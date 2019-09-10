@@ -3,10 +3,7 @@ package edu.anadolu.ltr;
 import edu.anadolu.Indexer;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
-import org.clueweb09.ClueWeb09WarcRecord;
-import org.clueweb09.ClueWeb12WarcRecord;
-import org.clueweb09.Gov2Record;
-import org.clueweb09.WarcRecord;
+import org.clueweb09.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -15,10 +12,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
@@ -27,7 +24,7 @@ import static edu.anadolu.Indexer.BUFFER_SIZE;
 /**
  * Traverses for ClueWeb{09|12} plus GOV2
  */
-public class Traverser {
+public class TraverserForQD {
 
     private final class WorkerThread {
 
@@ -49,25 +46,23 @@ public class Traverser {
 
             if (skip(id)) return 0;
 
-//            System.out.println(id + "\t" + warcRecord.url());
-//
-//            try (BufferedWriter out = Files.newBufferedWriter(Paths.get("/home/iorixxx/" + id + ".html"), StandardCharsets.UTF_8)) {
-//                out.write(warcRecord.content());
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
+            List<InfoNeed> queryList = new ArrayList<>();
+            for(AbstractMap.SimpleEntry<String,String> qdPair : qdPairs){
+                if(!qdPair.getValue().equals(id)) continue;
+                queryList.addAll(dataSet.getTopics().stream().filter(in -> qdPair.getKey().equals(in.id())).collect(Collectors.toList()));
+            }
 
-
-            DocFeatureBase base = new DocFeatureBase(warcRecord);
             try {
-                String line = base.calculate(featureList);
-                out.get().println(line);
+                for(InfoNeed query : queryList){
+                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord);
+                    String line = qdBase.calculate(qdFeatureList);
+                    out.get().println(line);
+                }
             } catch (Exception ex) {
                 System.err.println("jdoc exception " + warcRecord.id());
                 System.err.println("Document : " + warcRecord.content());
                 throw new RuntimeException(ex);
             }
-
             return 1;
         }
 
@@ -174,13 +169,18 @@ public class Traverser {
 
     private final Path docsPath;
     private final Collection collection;
-    private final Set<String> docIdSet;
-    private final List<IDocFeature> featureList;
+    private Set<String> docIdSet;
+    private List<AbstractMap.SimpleEntry<String,String>> qdPairs;
+    private List<IDocFeature> featureList;
+    private List<IQDFeature> qdFeatureList;
+    private DataSet dataSet;
 
-    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList) {
+
+    TraverserForQD(DataSet dataset, String docsDir, List<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList) {
         this.collection = dataset.collection();
-        this.docIdSet = docIdSet;
-        this.featureList = featureList;
+        this.qdPairs = qdPairs;
+        this.qdFeatureList = qdFeatureList;
+        this.dataSet = dataset;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
