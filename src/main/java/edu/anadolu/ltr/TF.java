@@ -12,6 +12,6 @@ public class TF implements IQDFeature {
 
     @Override
     public double calculate(QDFeatureBase base, String word, List<String> subParts) throws IOException {
-        return base.tf;
+        return base.qtf;
     }
 }

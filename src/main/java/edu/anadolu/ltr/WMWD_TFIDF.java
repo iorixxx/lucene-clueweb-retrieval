@@ -1,6 +1,5 @@
 package edu.anadolu.ltr;
 
-import edu.anadolu.similarities.BM25;
 import edu.anadolu.similarities.TFIDF;
 
 import java.io.IOException;
