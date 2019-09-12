@@ -1,23 +1,38 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.cmdline.CLI;
 import edu.anadolu.cmdline.CmdLineTool;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import edu.anadolu.similarities.DFIC;
+import edu.anadolu.similarities.DFRee;
+import edu.anadolu.similarities.DLH13;
+import edu.anadolu.similarities.DPH;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermContext;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
+import org.apache.lucene.store.FSDirectory;
+import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
 /**
- * Tool that computes SEO-based document features.
+ * Tool that computes QD Features .
  */
 public class QDFeatureTool extends CmdLineTool {
 
@@ -30,15 +45,24 @@ public class QDFeatureTool extends CmdLineTool {
     @Option(name = "-out", required = true, usage = "output file")
     private String out;
 
+    @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
+    private String tag = null;
+
     @Override
     public String getShortDescription() {
-        return "SEO Tool for ClueWeb09 ClueWeb12 Gov2 collections";
+        return "QD Feature Tool for ClueWeb09 ClueWeb12 Gov2 collections";
     }
 
     @Override
     public String getHelp() {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.docs paths.indexes paths.csv";
     }
+
+
+
+    private Tag analyzerTag;
+    private IndexReader reader;
+    private String indexTag;
 
     @Override
     public void run(Properties props) throws Exception {
@@ -61,28 +85,8 @@ public class QDFeatureTool extends CmdLineTool {
             return;
         }
 
-        String[] spamWiki = new String[]
-                {
-                        "clueweb09-enwp01-95-02016",
-                        "clueweb09-enwp01-90-17134",
-                        "clueweb09-enwp02-04-15021",
-                        "clueweb09-enwp01-35-03270",
-                        "clueweb09-enwp01-15-24594",
-                        "clueweb09-enwp03-36-01635",
-                        "clueweb09-enwp00-54-16573",
-                        "clueweb09-enwp01-76-17822",
-                        "clueweb09-enwp01-81-20329",
-                        "clueweb09-enwp03-37-21416",
-                        "clueweb09-enwp03-15-15563",
-                        "clueweb09-enwp01-92-08869",
-                        "clueweb09-enwp01-86-03020",
-                        "clueweb09-enwp01-84-21637",
-                        "clueweb09-enwp01-92-17846"
-                };
-
         Set<String> docIdSet = new HashSet<>();
         List<AbstractMap.SimpleEntry<String, String>> qdPair = new ArrayList<>();
-//        docIdSet.addAll(Arrays.asList(spamWiki));
 
         for (String file : files) {
             System.out.println(file);
@@ -99,13 +103,66 @@ public class QDFeatureTool extends CmdLineTool {
         }
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
+
+
+        ///////////////////////////// Index Reading for stats ///////////////////////////////////////////
+        Path indexPath=null;
+        if(this.tag == null)
+            indexPath = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory).iterator().next();
+        else {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory)) {
+                for (Path path : stream) {
+                    if(!tag.equals(path.getFileName().toString())) continue;
+                    indexPath = path;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(indexPath == null)
+            throw new RuntimeException(tag + " index not found");
+
+
+        this.indexTag = indexPath.getFileName().toString();
+        this.analyzerTag = Tag.tag(indexTag);
+
+        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+
+        IndexSearcher searcher = new IndexSearcher(reader);
+        CollectionStatistics collectionStatistics = searcher.collectionStatistics(Indexer.FIELD_CONTENTS);
+
+        Map<String, TermStatistics> termStatisticsMap = new HashMap<>();
+        for(InfoNeed need : dataset.getTopics()) {
+
+            List<String> subParts = Analyzers.getAnalyzedTokens(need.query(), Analyzers.analyzer(analyzerTag));
+
+            for (String word : subParts) {
+                if (termStatisticsMap.containsKey(word)) continue;
+                Term term = new Term(Indexer.FIELD_CONTENTS, word);
+                TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
+                termStatisticsMap.put(word, termStatistics);
+            }
+
+        }
+
+        ///////////////////////////// Index Reading for stats ///////////////////////////////////////////
         long start = System.nanoTime();
 
         List<IQDFeature> qdFeatures = new ArrayList<>();
-        //qdFeatures.add();
+        qdFeatures.add(new WMWD_BM25());
+        qdFeatures.add(new WMWD_LGD());
+        qdFeatures.add(new WMWD_PL2());
+        qdFeatures.add(new WMWD_DirichletLM());
+        qdFeatures.add(new WMWD_DFIC());
+        qdFeatures.add(new WMWD_DPH());
+        qdFeatures.add(new WMWD_DLH13());
+        qdFeatures.add(new WMWD_DFRee());
+
+
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
-        TraverserForQD traverserQD = new TraverserForQD(dataset, docsPath, qdPair, qdFeatures);
+        TraverserForQD traverserQD = new TraverserForQD(dataset, docsPath, qdPair, qdFeatures, collectionStatistics, termStatisticsMap, analyzerTag, docIdSet);
 
         traverserQD.traverseParallel(Paths.get(out), numThreads);
         System.out.println("Query Document features are extracted in " + execution(start));

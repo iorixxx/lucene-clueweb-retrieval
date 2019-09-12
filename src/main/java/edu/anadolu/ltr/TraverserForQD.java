@@ -1,8 +1,15 @@
 package edu.anadolu.ltr;
 
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermContext;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
 import org.clueweb09.*;
 
 import java.io.*;
@@ -49,15 +56,17 @@ public class TraverserForQD {
             List<InfoNeed> queryList = new ArrayList<>();
             for(AbstractMap.SimpleEntry<String,String> qdPair : qdPairs){
                 if(!qdPair.getValue().equals(id)) continue;
-                queryList.addAll(dataSet.getTopics().stream().filter(in -> qdPair.getKey().equals(in.id())).collect(Collectors.toList()));
+                queryList.addAll(dataSet.getTopics().stream().filter(in -> qdPair.getKey().equals(String.valueOf(in.id()))).collect(Collectors.toList()));
             }
 
             try {
                 for(InfoNeed query : queryList){
-                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord);
+                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord, collectionStatistics, termStatisticsMap, analyzerTag);
                     String line = qdBase.calculate(qdFeatureList);
                     out.get().println(line);
+                    out.get().flush();
                 }
+
             } catch (Exception ex) {
                 System.err.println("jdoc exception " + warcRecord.id());
                 System.err.println("Document : " + warcRecord.content());
@@ -171,16 +180,22 @@ public class TraverserForQD {
     private final Collection collection;
     private Set<String> docIdSet;
     private List<AbstractMap.SimpleEntry<String,String>> qdPairs;
-    private List<IDocFeature> featureList;
     private List<IQDFeature> qdFeatureList;
     private DataSet dataSet;
+    private CollectionStatistics collectionStatistics;
+    private Map<String,TermStatistics> termStatisticsMap;
+    private Tag analyzerTag;
 
 
-    TraverserForQD(DataSet dataset, String docsDir, List<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList) {
+    TraverserForQD(DataSet dataset, String docsDir, List<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList, CollectionStatistics collectionStatistics, Map<String,TermStatistics> termStatisticsMap, Tag analyzerTag, Set<String> docIdSet) {
         this.collection = dataset.collection();
         this.qdPairs = qdPairs;
         this.qdFeatureList = qdFeatureList;
         this.dataSet = dataset;
+        this.collectionStatistics = collectionStatistics;
+        this.termStatisticsMap = termStatisticsMap;
+        this.analyzerTag = analyzerTag;
+        this.docIdSet = docIdSet;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {

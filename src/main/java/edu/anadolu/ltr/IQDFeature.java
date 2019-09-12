@@ -1,6 +1,7 @@
 package edu.anadolu.ltr;
 
 import java.io.IOException;
+import java.util.List;
 
 @FunctionalInterface
 public interface IQDFeature {
@@ -10,5 +11,5 @@ public interface IQDFeature {
      * @param base input docFeatureBase
      * @return the value of the feature
      */
-    double calculate(QDFeatureBase base) throws IOException;
+    double calculate(QDFeatureBase base, String word, List<String> subParts) throws IOException;
 }
