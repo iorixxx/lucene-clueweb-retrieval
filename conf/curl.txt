@@ -44,3 +44,10 @@ curl "http://localhost:8983/solr/odds/update?optimize=true"
 # wget http://www.lemurproject.org/clueweb12/ClueWeb12_All_edocid2url.txt.bz2
 # bzip2 -d ClueWeb12_All_edocid2url.txt.bz2
 curl "http://localhost:8983/solr/url12/update/csv?commit=true&separator=%20&fieldnames=id,url" -T ClueWeb12_All_edocid2url.txt -X POST -H 'Content-type:text/plain; charset=utf-8'
+
+
+# URL ClueWeb09
+# wget http://ir.nist.gov/clueweb.urls-docid.bz2
+# bzip2 -d clueweb.urls-docid.bz2
+curl "http://localhost:8983/solr/url09/update/csv?commit=true&separator=%20&fieldnames=url,id" -T clueweb.urls-docid -X POST -H 'Content-type:text/plain; charset=utf-8'
+curl "http://localhost:8983/solr/url09/update?optimize=true"

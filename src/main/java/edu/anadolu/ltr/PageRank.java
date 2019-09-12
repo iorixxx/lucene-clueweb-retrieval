@@ -1,8 +1,8 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.datasets.Collection;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 
@@ -12,8 +12,8 @@ import static org.apache.solr.common.params.CommonParams.*;
 
 public class PageRank extends SolrAwareFeatureBase {
 
-    public PageRank(HttpSolrClient solr) {
-        super(solr);
+    public PageRank(Collection collection) {
+        super(collection);
     }
 
     @Override
@@ -38,9 +38,47 @@ public class PageRank extends SolrAwareFeatureBase {
 
 
         if (resp.getNumFound() == 0) {
-            //TODO PageRank scores are not calculated for every document. Use default value or average for missing documents.
+            //TODO PageRank scores are not calculated for every document. Use the default minimum pagerank value or the average for missing documents.
             System.out.println("cannot find docID " + base.docId + " in " + solrClient.getBaseURL());
-            return 96176607.1109954 / 503903810d;
+
+            if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
+
+                /*
+                 *  "stats":{
+                 *     "stats_fields":{
+                 *       "rank":{
+                 *         "min":0.15,
+                 *         "max":39694.290336,
+                 *         "count":502505807,
+                 *         "missing":0,
+                 *         "sum":9.615165129285386E7,
+                 *         "sumOfSquares":3.769931471784484E9,
+                 *         "mean":0.19134435851972922,
+                 *         "stddev":2.732334503888498}}}}
+                 */
+
+                return 0.15; // 96176607.1109954 / 503903810d;
+
+            } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
+
+                /*
+                 *   "stats":{
+                 *     "stats_fields":{
+                 *       "rank":{
+                 *         "min":-22.2287221840378,
+                 *         "max":-15.2896180719556,
+                 *         "count":733019372,
+                 *         "missing":0,
+                 *         "sum":-1.6198355689383139E10,
+                 *         "sumOfSquares":3.580651128059826E11,
+                 *         "mean":-22.098127700482024,
+                 *         "stddev":0.3905033835067088}}}}
+                 */
+
+                return -22.2287221840378;
+
+            } else throw new RuntimeException("PageRank is not available for " + collection);
+
         }
 
         if (resp.getNumFound() != 1) {

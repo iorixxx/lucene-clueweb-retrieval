@@ -56,11 +56,6 @@ public class FeatureSearcher extends Searcher {
         final long docCount = collectionStatistics.docCount();
         final long sumTotalTermFreq = collectionStatistics.sumTotalTermFreq();
 
-        final List<LeafReaderContext> leaves = reader.leaves();
-        if (leaves.size() == 1) {
-            NumericDocValues norms = leaves.get(0).reader().getNormValues(field);
-        }
-
         NumericDocValues norms = MultiDocValues.getNormValues(reader, field);
 
         PrintWriter out = new PrintWriter(Files.newBufferedWriter(path.resolve(Evaluator.prettyModel(similarity.toString()) + ".features"), StandardCharsets.US_ASCII));
@@ -295,7 +290,7 @@ public class FeatureSearcher extends Searcher {
 
     /**
      * @param models 8 term-weighting models
-     * @param fields list of fields e.g., title, anchor, body
+     * @param fields list of fields e.g., title, anchor, body, URL
      */
     public void searchF(Collection<ModelBase> models, Collection<String> fields) {
 

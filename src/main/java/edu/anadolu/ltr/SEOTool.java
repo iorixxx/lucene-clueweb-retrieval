@@ -136,9 +136,9 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new StopWordRatio());
 //        features.add(new TextToDocRatio());
 
-        features.add(new NumberOfChildPages(solrClientFactory(collection, NumberOfChildPages.class)));
-        features.add(new InLinkCount(solrClientFactory(collection, InLinkCount.class)));
-        features.add(new PageRank(solrClientFactory(collection, PageRank.class)));
+        features.add(new NumberOfChildPages(collection));
+        features.add(new InLinkCount(collection));
+        features.add(new PageRank(collection));
 
         features.add(new Entropy());
         features.add(new NumberOfSlashesInURL());
@@ -213,8 +213,7 @@ public class SEOTool extends CmdLineTool {
      * @param clazz      class of SolrAwareFeatureBase instances
      * @return HttpSolrClient
      */
-    private static HttpSolrClient solrClientFactory(Collection collection, Class<? extends SolrAwareFeatureBase> clazz) {
-
+    static HttpSolrClient solrClientFactory(Collection collection, Class<? extends SolrAwareFeatureBase> clazz) {
 
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
 
@@ -225,7 +224,7 @@ public class SEOTool extends CmdLineTool {
             else if (InLinkCount.class.equals(clazz))
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
 
-        } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection))
+        } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
 
             if (NumberOfChildPages.class.equals(clazz))
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/url12").build();
@@ -233,14 +232,8 @@ public class SEOTool extends CmdLineTool {
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/rank12A").build();
             else if (InLinkCount.class.equals(clazz))
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
-
-            else {
-                System.out.println("SolrAwareFeatures are only available for the ClueWeb09 and ClueWeb12 collections!");
-                return null;
-            }
+        }
 
         throw new RuntimeException("The factory cannot find appropriate SolrClient for " + collection + " and " + clazz);
-
     }
-
 }
