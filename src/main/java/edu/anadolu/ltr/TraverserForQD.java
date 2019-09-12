@@ -1,12 +1,16 @@
 package edu.anadolu.ltr;
 
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
-import org.clueweb09.ClueWeb09WarcRecord;
-import org.clueweb09.ClueWeb12WarcRecord;
-import org.clueweb09.Gov2Record;
-import org.clueweb09.WarcRecord;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermContext;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
+import org.clueweb09.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -15,10 +19,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
@@ -27,7 +31,7 @@ import static edu.anadolu.Indexer.BUFFER_SIZE;
 /**
  * Traverses for ClueWeb{09|12} plus GOV2
  */
-public class Traverser {
+public class TraverserForQD {
 
     private final class WorkerThread {
 
@@ -49,25 +53,25 @@ public class Traverser {
 
             if (skip(id)) return 0;
 
-//            System.out.println(id + "\t" + warcRecord.url());
-//
-//            try (BufferedWriter out = Files.newBufferedWriter(Paths.get("/home/iorixxx/" + id + ".html"), StandardCharsets.UTF_8)) {
-//                out.write(warcRecord.content());
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
+            List<InfoNeed> queryList = new ArrayList<>();
+            for(AbstractMap.SimpleEntry<String,String> qdPair : qdPairs){
+                if(!qdPair.getValue().equals(id)) continue;
+                queryList.addAll(dataSet.getTopics().stream().filter(in -> qdPair.getKey().equals(String.valueOf(in.id()))).collect(Collectors.toList()));
+            }
 
-
-            DocFeatureBase base = new DocFeatureBase(warcRecord);
             try {
-                String line = base.calculate(featureList);
-                out.get().println(line);
+                for(InfoNeed query : queryList){
+                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord, collectionStatistics, termStatisticsMap, analyzerTag);
+                    String line = qdBase.calculate(qdFeatureList);
+                    out.get().println(line);
+                    out.get().flush();
+                }
+
             } catch (Exception ex) {
                 System.err.println("jdoc exception " + warcRecord.id());
                 System.err.println("Document : " + warcRecord.content());
                 throw new RuntimeException(ex);
             }
-
             return 1;
         }
 
@@ -174,13 +178,24 @@ public class Traverser {
 
     private final Path docsPath;
     private final Collection collection;
-    private final Set<String> docIdSet;
-    private final List<IDocFeature> featureList;
+    private Set<String> docIdSet;
+    private List<AbstractMap.SimpleEntry<String,String>> qdPairs;
+    private List<IQDFeature> qdFeatureList;
+    private DataSet dataSet;
+    private CollectionStatistics collectionStatistics;
+    private Map<String,TermStatistics> termStatisticsMap;
+    private Tag analyzerTag;
 
-    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList) {
+
+    TraverserForQD(DataSet dataset, String docsDir, List<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList, CollectionStatistics collectionStatistics, Map<String,TermStatistics> termStatisticsMap, Tag analyzerTag, Set<String> docIdSet) {
         this.collection = dataset.collection();
+        this.qdPairs = qdPairs;
+        this.qdFeatureList = qdFeatureList;
+        this.dataSet = dataset;
+        this.collectionStatistics = collectionStatistics;
+        this.termStatisticsMap = termStatisticsMap;
+        this.analyzerTag = analyzerTag;
         this.docIdSet = docIdSet;
-        this.featureList = featureList;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
