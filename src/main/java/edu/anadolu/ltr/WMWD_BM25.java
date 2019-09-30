@@ -20,9 +20,7 @@ public class WMWD_BM25 implements IQDFeature {
         }
         long sumTotalTermFreq = base.collectionStatistics.sumTotalTermFreq();
         long docCount = base.collectionStatistics.docCount();
-        double tfForT = base.getTf(word,base.listContent);
-        System.out.println("Doc : " + base.docId + " QID : "+ base.query.id() + " TF : " + base.tf + " DL : " + base.dl);
-        return new BM25().score(tfForT,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
+        return new BM25().score(base.tf ,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
                 docCount,sumTotalTermFreq);
     }
 }

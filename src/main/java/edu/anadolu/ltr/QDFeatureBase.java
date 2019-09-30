@@ -1,41 +1,20 @@
 package edu.anadolu.ltr;
 
-import edu.anadolu.FeatureSearcher;
-import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
-import edu.anadolu.field.MetaTag;
-import edu.cmu.lti.lexical_db.ILexicalDatabase;
-import edu.cmu.lti.lexical_db.NictWordNet;
-import edu.cmu.lti.ws4j.RelatednessCalculator;
-import edu.cmu.lti.ws4j.impl.WuPalmer;
-import edu.cmu.lti.ws4j.util.MatrixCalculator;
-import edu.cmu.lti.ws4j.util.StopWordRemover;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.common.StringUtils;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static edu.anadolu.Indexer.FIELD_CONTENTS;
 import static edu.anadolu.Indexer.FIELD_ID;
 
 
@@ -48,6 +27,7 @@ public class QDFeatureBase {
     CollectionStatistics collectionStatistics;
     Map<String,TermStatistics> termStatisticsMap;
     Tag analyzerTag;
+    double qtf = 0.0;
     double tf = 0.0;
     long dl = 0;
     List<String> listContent;
@@ -75,7 +55,7 @@ public class QDFeatureBase {
             listContent = Analyzers.getAnalyzedTokens(jDoc.text(), Analyzers.analyzer(analyzerTag));
             dl = listContent.size();
             for (String word : subParts) {
-                tf += getTf(word, listContent);
+                qtf += getTf(word, listContent);
             }
         } catch (Exception exception) {
             System.err.println("jdoc exception at QDFeatureBase" + warcRecord.id());
@@ -98,6 +78,7 @@ public class QDFeatureBase {
             List<String> subParts = Analyzers.getAnalyzedTokens(query.query(), Analyzers.analyzer(analyzerTag));
             double score = 0.0;
             for (String word : subParts) {
+                tf = getTf(word,listContent);
                 score += iqd.calculate(this, word, subParts);
             }
             builder.append("\t").append(iqd.toString()).append(":").append(String.format("%.5f", score));

@@ -1,6 +1,5 @@
 package edu.anadolu.ltr;
 
-import edu.anadolu.similarities.BM25;
 import edu.anadolu.similarities.JelinekMercerLM;
 
 import java.io.IOException;
