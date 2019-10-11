@@ -1,6 +1,7 @@
 package edu.anadolu.ltr;
 
 import edu.anadolu.similarities.DirichletLM;
+import edu.anadolu.similarities.LMDIR;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,7 +21,7 @@ public class WMWD_DirichletLM implements IQDFeature {
         }
         long sumTotalTermFreq = base.collectionStatistics.sumTotalTermFreq();
         long docCount = base.collectionStatistics.docCount();
-        return new DirichletLM().score(base.tf,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
+        return new LMDIR().score(base.tf,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
                 docCount,sumTotalTermFreq);
     }
 }

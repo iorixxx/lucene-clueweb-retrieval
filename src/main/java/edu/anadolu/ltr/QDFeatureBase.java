@@ -30,6 +30,7 @@ public class QDFeatureBase {
     double qtf = 0.0;
     double tf = 0.0;
     long dl = 0;
+    long uniqueDl = 0;
     List<String> listContent;
 
 
@@ -54,6 +55,7 @@ public class QDFeatureBase {
 
             listContent = Analyzers.getAnalyzedTokens(jDoc.text(), Analyzers.analyzer(analyzerTag));
             dl = listContent.size();
+            uniqueDl = new HashSet<String>(listContent).size();
             for (String word : subParts) {
                 qtf += getTf(word, listContent);
             }
