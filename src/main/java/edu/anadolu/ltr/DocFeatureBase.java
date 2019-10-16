@@ -1,6 +1,9 @@
 package edu.anadolu.ltr;
 
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
+import edu.anadolu.datasets.Collection;
 import edu.anadolu.field.MetaTag;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
@@ -8,6 +11,10 @@ import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.impl.WuPalmer;
 import edu.cmu.lti.ws4j.util.MatrixCalculator;
 import edu.cmu.lti.ws4j.util.StopWordRemover;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.common.StringUtils;
 import org.clueweb09.WarcRecord;
@@ -22,10 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +39,11 @@ public class DocFeatureBase {
     Document jDoc;
     String docId, url;
     String rawHTML;
+    CollectionStatistics collectionStatistics;
+    Tag analyzerTag;
+    List<String> listContent;
+    IndexSearcher searcher;
+    IndexReader reader;
 
     /**
      * It is possible to find URL info in the headers of *.warc files for the ClueWeb datasets.
@@ -42,12 +51,17 @@ public class DocFeatureBase {
      *
      * @param warcRecord input warc record
      */
-    DocFeatureBase(WarcRecord warcRecord) {
+    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader) {
         try {
             rawHTML = warcRecord.content();
             jDoc = Jsoup.parse(rawHTML);
             docId = warcRecord.id();
             url = warcRecord.url() == null ? jDoc.baseUri() : warcRecord.url();
+            this.collectionStatistics = collectionStatistics;
+            this.analyzerTag = analyzerTag;
+            listContent = Analyzers.getAnalyzedTokens(jDoc.text(), Analyzers.analyzer(analyzerTag));
+            this.searcher = searcher;
+            this.reader = reader;
         } catch (Exception exception) {
             System.err.println("jdoc exception " + warcRecord.id());
             jDoc = null;
@@ -207,6 +221,10 @@ public class DocFeatureBase {
         }
         if (count == 0) return 0;
         return total / count;
+    }
+
+    protected double getTf(String word, List<String> listContent) {
+        return Collections.frequency(listContent, word);
     }
 
 
