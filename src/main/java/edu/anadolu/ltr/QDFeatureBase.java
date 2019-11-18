@@ -1,18 +1,26 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
+import edu.anadolu.field.MetaTag;
+import org.apache.commons.math3.stat.StatUtils;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
+import org.apache.solr.client.solrj.SolrClient;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 import static edu.anadolu.Indexer.FIELD_ID;
@@ -54,6 +62,7 @@ public class QDFeatureBase {
             List<String> subParts = Analyzers.getAnalyzedTokens(query.query(), Analyzers.analyzer(analyzerTag));
 
             listContent = Analyzers.getAnalyzedTokens(jDoc.text(), Analyzers.analyzer(analyzerTag));
+
             dl = listContent.size();
             uniqueDl = new HashSet<String>(listContent).size();
             for (String word : subParts) {
@@ -79,11 +88,30 @@ public class QDFeatureBase {
 
             List<String> subParts = Analyzers.getAnalyzedTokens(query.query(), Analyzers.analyzer(analyzerTag));
             double score = 0.0;
+            double[] termScore = new double[subParts.size()];
+            int i=0;
             for (String word : subParts) {
                 tf = getTf(word,listContent);
-                score += iqd.calculate(this, word, subParts);
+                termScore[i] = iqd.calculate(this, word, subParts);
+                i++;
             }
-            builder.append("\t").append(iqd.toString()).append(":").append(String.format("%.5f", score));
+
+            if(iqd.type() == QDFeatureType.ALL){
+                builder.append("\t").append(iqd.toString()+QDFeatureType.SUM).append(":").append(String.format("%.5f", Arrays.stream(termScore).sum()));
+                builder.append("\t").append(iqd.toString()+QDFeatureType.MIN).append(":").append(String.format("%.5f", Arrays.stream(termScore).min().getAsDouble()));
+                builder.append("\t").append(iqd.toString()+QDFeatureType.MAX).append(":").append(String.format("%.5f", Arrays.stream(termScore).max().getAsDouble()));
+                builder.append("\t").append(iqd.toString()+QDFeatureType.MEAN).append(":").append(String.format("%.5f", Arrays.stream(termScore).average().getAsDouble()));
+                builder.append("\t").append(iqd.toString()+QDFeatureType.VARIANCE).append(":").append(String.format("%.5f", StatUtils.variance(termScore)));
+                continue;
+            }
+
+            if(iqd.type() == QDFeatureType.SUM)    score = Arrays.stream(termScore).sum();
+            if(iqd.type() == QDFeatureType.MIN)    score = Arrays.stream(termScore).min().getAsDouble();
+            if(iqd.type() == QDFeatureType.MAX)    score = Arrays.stream(termScore).max().getAsDouble();
+            if(iqd.type() == QDFeatureType.MEAN)    score = Arrays.stream(termScore).average().getAsDouble();
+            if(iqd.type() == QDFeatureType.VARIANCE)  score = StatUtils.variance(termScore);
+
+            builder.append("\t").append(iqd.toString()+iqd.type()).append(":").append(String.format("%.5f", score));
 
 
         }
@@ -92,6 +120,75 @@ public class QDFeatureBase {
 
     protected double getTf(String word, List<String> listContent) {
         return Collections.frequency(listContent, word);
+    }
+
+
+    /**
+     * Different document representations (keywords, body, title, description, URL)
+     */
+    protected Map<String, String> parseFields(SolrClient solr) {
+
+        Map<String, String> fields = new HashMap<>();
+        String title = null;
+        String body = null;
+
+
+        // HTML <title> Tag
+        Element titleEl = jDoc.getElementsByTag("title").first();
+        if (titleEl != null) {
+            title = StringUtil.normaliseWhitespace(titleEl.text()).trim();
+        }
+
+        String keywords = MetaTag.enrich2(jDoc, "keywords");
+        String description = MetaTag.enrich2(jDoc, "description");
+
+
+        // HTML <body> Tag
+        Element bodyEl = jDoc.body();
+        if (bodyEl != null) {
+            body = bodyEl.text();
+        }
+
+
+        String anchor = Indexer.anchor(docId, solr);
+
+        /*
+         * Try to get useful parts of the URL
+         * https://docs.oracle.com/javase/tutorial/networking/urls/urlInfo.html
+         */
+
+        final String URLString = this.url;
+        String host = null;
+        if (URLString != null && URLString.length() > 5) {
+
+            String url;
+
+            try {
+
+                final URL aURL = new URL(URLString);
+
+                url = (aURL.getHost() + " " + aURL.getFile()).trim();
+
+                if (aURL.getRef() != null)
+                    url += " " + aURL.getRef();
+
+                host = aURL.getHost();
+
+            } catch (MalformedURLException me) {
+                System.out.println("Malformed URL = " + URLString);
+            }
+
+        }
+
+        fields.put("title", title);
+        fields.put("keywords", keywords);
+        fields.put("description", description);
+        fields.put("url", url);
+        fields.put("host", host);
+        fields.put("body", body);
+        fields.put("anchor", anchor);
+
+        return fields;
     }
 
     /*

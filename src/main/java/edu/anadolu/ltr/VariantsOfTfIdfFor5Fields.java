@@ -5,7 +5,12 @@ import edu.anadolu.similarities.TFIDF;
 import java.io.IOException;
 import java.util.List;
 
-public class WMWD_TFIDF implements IQDFeature {
+public class VariantsOfTfIdfFor5Fields implements IQDFeature {
+
+    @Override
+    public QDFeatureType type(){
+        return QDFeatureType.ALL;
+    }
 
     @Override
     public String toString() {
