@@ -3,14 +3,17 @@ package edu.anadolu.ltr;
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
+import edu.anadolu.datasets.Collection;
 import edu.anadolu.field.MetaTag;
 import org.apache.commons.math3.stat.StatUtils;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
@@ -40,6 +43,7 @@ public class QDFeatureBase {
     long dl = 0;
     long uniqueDl = 0;
     List<String> listContent;
+    Collection collection;
 
 
     /**
@@ -48,7 +52,7 @@ public class QDFeatureBase {
      *
      * @param warcRecord input warc record
      */
-    QDFeatureBase(InfoNeed query, WarcRecord warcRecord, CollectionStatistics collectionStatistics, Map<String, TermStatistics> termStatisticsMap, Tag analyzerTag) {
+    QDFeatureBase(InfoNeed query, WarcRecord warcRecord, CollectionStatistics collectionStatistics, Map<String, TermStatistics> termStatisticsMap, Tag analyzerTag, Collection collection) {
         try {
             rawHTML = warcRecord.content();
             jDoc = Jsoup.parse(rawHTML);
@@ -58,6 +62,7 @@ public class QDFeatureBase {
             this.collectionStatistics = collectionStatistics;
             this.termStatisticsMap = termStatisticsMap;
             this.analyzerTag = analyzerTag;
+            this.collection = collection;
 
             List<String> subParts = Analyzers.getAnalyzedTokens(query.query(), Analyzers.analyzer(analyzerTag));
 
@@ -87,32 +92,71 @@ public class QDFeatureBase {
         for (IQDFeature iqd : featureList) {
 
             List<String> subParts = Analyzers.getAnalyzedTokens(query.query(), Analyzers.analyzer(analyzerTag));
-            double score = 0.0;
-            double[] termScore = new double[subParts.size()];
-            int i=0;
-            for (String word : subParts) {
-                tf = getTf(word,listContent);
-                termScore[i] = iqd.calculate(this, word, subParts);
-                i++;
+            List<QDFeatureFields> fields = new ArrayList<>();
+            Map<String, String> fieldContents = null;
+
+            if(iqd.field() != QDFeatureFields.ALL){
+                fields.add(iqd.field());
+            }else{
+                fields.add(QDFeatureFields.TITLE);
+                fields.add(QDFeatureFields.BODY);
+                fields.add(QDFeatureFields.ANCHOR);
+                fields.add(QDFeatureFields.URL);
+                fields.add(QDFeatureFields.WHOLE);
             }
 
-            if(iqd.type() == QDFeatureType.ALL){
-                builder.append("\t").append(iqd.toString()+QDFeatureType.SUM).append(":").append(String.format("%.5f", Arrays.stream(termScore).sum()));
-                builder.append("\t").append(iqd.toString()+QDFeatureType.MIN).append(":").append(String.format("%.5f", Arrays.stream(termScore).min().getAsDouble()));
-                builder.append("\t").append(iqd.toString()+QDFeatureType.MAX).append(":").append(String.format("%.5f", Arrays.stream(termScore).max().getAsDouble()));
-                builder.append("\t").append(iqd.toString()+QDFeatureType.MEAN).append(":").append(String.format("%.5f", Arrays.stream(termScore).average().getAsDouble()));
-                builder.append("\t").append(iqd.toString()+QDFeatureType.VARIANCE).append(":").append(String.format("%.5f", StatUtils.variance(termScore)));
-                continue;
+            for(QDFeatureFields field : fields){
+
+                if(field != QDFeatureFields.TITLE_BODY){
+                    listContent.clear();
+                    fieldContents = parseFields();
+                    if(field == QDFeatureFields.TITLE)  listContent = Analyzers.getAnalyzedTokens(fieldContents.get("title"), Analyzers.analyzer(analyzerTag));
+                    if(field == QDFeatureFields.BODY)  listContent = Analyzers.getAnalyzedTokens(fieldContents.get("body"), Analyzers.analyzer(analyzerTag));
+                    if(field == QDFeatureFields.ANCHOR)  listContent = Analyzers.getAnalyzedTokens(fieldContents.get("anchor"), Analyzers.analyzer(analyzerTag));
+                    if(field == QDFeatureFields.URL)    listContent.addAll(Analyzers.getAnalyzedTokens(fieldContents.get("url"), new SimpleAnalyzer()));
+
+                    if(field == QDFeatureFields.WHOLE){
+                        listContent.addAll(Analyzers.getAnalyzedTokens(fieldContents.get("url"), new SimpleAnalyzer()));
+                        listContent.addAll(Analyzers.getAnalyzedTokens(fieldContents.get("title"), Analyzers.analyzer(analyzerTag)));
+                        listContent.addAll(Analyzers.getAnalyzedTokens(fieldContents.get("body"), Analyzers.analyzer(analyzerTag)));
+                        listContent.addAll(Analyzers.getAnalyzedTokens(fieldContents.get("anchor"), Analyzers.analyzer(analyzerTag)));
+                    }
+                }
+
+                double score = 0.0;
+                double[] termScore = new double[subParts.size()];
+                int i=0;
+                for (String word : subParts) {
+                    tf = getTf(word,listContent);
+                    termScore[i] = iqd.calculate(this, word, subParts);
+                    i++;
+                }
+
+                String fieldName = field==QDFeatureFields.TITLE_BODY?"":field+"";
+                
+                if(iqd.type() == QDFeatureType.ALL){
+                    builder.append("\t").append(iqd.toString()+QDFeatureType.SUM+fieldName).append(":").append(String.format("%.5f", Arrays.stream(termScore).sum()));
+                    builder.append("\t").append(iqd.toString()+QDFeatureType.MIN+fieldName).append(":").append(String.format("%.5f", Arrays.stream(termScore).min().getAsDouble()));
+                    builder.append("\t").append(iqd.toString()+QDFeatureType.MAX+fieldName).append(":").append(String.format("%.5f", Arrays.stream(termScore).max().getAsDouble()));
+                    builder.append("\t").append(iqd.toString()+QDFeatureType.MEAN+fieldName).append(":").append(String.format("%.5f", Arrays.stream(termScore).average().getAsDouble()));
+                    builder.append("\t").append(iqd.toString()+QDFeatureType.VARIANCE+fieldName).append(":").append(String.format("%.5f", StatUtils.variance(termScore)));
+                    continue;
+                }
+
+                if(iqd.type() == QDFeatureType.SUM)    score = Arrays.stream(termScore).sum();
+                if(iqd.type() == QDFeatureType.MIN)    score = Arrays.stream(termScore).min().getAsDouble();
+                if(iqd.type() == QDFeatureType.MAX)    score = Arrays.stream(termScore).max().getAsDouble();
+                if(iqd.type() == QDFeatureType.MEAN)    score = Arrays.stream(termScore).average().getAsDouble();
+                if(iqd.type() == QDFeatureType.VARIANCE)  score = StatUtils.variance(termScore);
+                //For minimum coverage features (exceptional case)
+                if(iqd.type() == QDFeatureType.DIFF){
+                    double max = Arrays.stream(termScore).max().getAsDouble();
+                    double min = Arrays.stream(termScore).min().getAsDouble();
+                    score = min==-1?0:(max-min);
+                }
+
+                builder.append("\t").append(iqd.toString()+iqd.type()+fieldName).append(":").append(String.format("%.5f", score));
             }
-
-            if(iqd.type() == QDFeatureType.SUM)    score = Arrays.stream(termScore).sum();
-            if(iqd.type() == QDFeatureType.MIN)    score = Arrays.stream(termScore).min().getAsDouble();
-            if(iqd.type() == QDFeatureType.MAX)    score = Arrays.stream(termScore).max().getAsDouble();
-            if(iqd.type() == QDFeatureType.MEAN)    score = Arrays.stream(termScore).average().getAsDouble();
-            if(iqd.type() == QDFeatureType.VARIANCE)  score = StatUtils.variance(termScore);
-
-            builder.append("\t").append(iqd.toString()+iqd.type()).append(":").append(String.format("%.5f", score));
-
 
         }
         return builder.toString();
@@ -126,7 +170,7 @@ public class QDFeatureBase {
     /**
      * Different document representations (keywords, body, title, description, URL)
      */
-    protected Map<String, String> parseFields(SolrClient solr) {
+    protected Map<String, String> parseFields() {
 
         Map<String, String> fields = new HashMap<>();
         String title = null;
@@ -149,6 +193,12 @@ public class QDFeatureBase {
             body = bodyEl.text();
         }
 
+        HttpSolrClient solr = null;
+        if (edu.anadolu.datasets.Collection.CW09A.equals(collection) || edu.anadolu.datasets.Collection.CW09B.equals(collection) || edu.anadolu.datasets.Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
+            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
+        }else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
+            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
+        }
 
         String anchor = Indexer.anchor(docId, solr);
 
@@ -156,7 +206,6 @@ public class QDFeatureBase {
          * Try to get useful parts of the URL
          * https://docs.oracle.com/javase/tutorial/networking/urls/urlInfo.html
          */
-
         final String URLString = this.url;
         String host = null;
         if (URLString != null && URLString.length() > 5) {

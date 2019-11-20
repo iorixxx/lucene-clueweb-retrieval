@@ -6,5 +6,6 @@ public enum QDFeatureType {
     MAX,
     MEAN,
     VARIANCE,
-    ALL
+    ALL,
+    DIFF //For minimum coverage features (exceptional case)
 }

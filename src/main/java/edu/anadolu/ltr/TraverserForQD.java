@@ -61,7 +61,7 @@ public class TraverserForQD {
 
             try {
                 for(InfoNeed query : queryList){
-                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord, collectionStatistics, termStatisticsMap, analyzerTag);
+                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord, collectionStatistics, termStatisticsMap, analyzerTag, collection);
                     String line = qdBase.calculate(qdFeatureList);
                     out.get().println(line);
                     out.get().flush();
@@ -246,4 +246,6 @@ public class TraverserForQD {
 
         }
     }
+
+    
 }

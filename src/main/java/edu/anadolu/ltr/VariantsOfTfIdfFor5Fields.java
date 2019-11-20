@@ -11,6 +11,11 @@ public class VariantsOfTfIdfFor5Fields implements IQDFeature {
     public QDFeatureType type(){
         return QDFeatureType.ALL;
     }
+    
+    @Override
+    public QDFeatureFields field(){
+        return QDFeatureFields.ALL;
+    }
 
     @Override
     public String toString() {
