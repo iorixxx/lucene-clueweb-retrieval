@@ -12,7 +12,6 @@ import org.apache.lucene.search.similarities.ModelBase;
  */
 public final class BM25 extends ModelBase {
 
-
     /**
      * The constant k_1.
      */

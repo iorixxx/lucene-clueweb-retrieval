@@ -20,6 +20,7 @@ import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -233,6 +234,6 @@ public class QDFeatureTool extends CmdLineTool {
 
         return qdPairList;
     }
-
+    
 
 }

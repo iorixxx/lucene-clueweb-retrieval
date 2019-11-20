@@ -1,11 +1,21 @@
 package edu.anadolu.ltr;
 
-import edu.anadolu.similarities.LMJM;
+import edu.anadolu.similarities.TFIDF;
 
 import java.io.IOException;
 import java.util.List;
 
-public class WMWD_LMIR_JM implements IQDFeature {
+public class VariantsOfTfIdfFor5Fields implements IQDFeature {
+
+    @Override
+    public QDFeatureType type(){
+        return QDFeatureType.ALL;
+    }
+    
+    @Override
+    public QDFeatureFields field(){
+        return QDFeatureFields.ALL;
+    }
 
     @Override
     public String toString() {
@@ -20,8 +30,7 @@ public class WMWD_LMIR_JM implements IQDFeature {
         }
         long sumTotalTermFreq = base.collectionStatistics.sumTotalTermFreq();
         long docCount = base.collectionStatistics.docCount();
-
-        return new LMJM().score(base.tf,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
+        return new TFIDF().score(base.tf,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
                 docCount,sumTotalTermFreq);
     }
 }

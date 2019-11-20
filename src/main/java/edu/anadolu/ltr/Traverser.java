@@ -1,8 +1,13 @@
 package edu.anadolu.ltr;
 
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
 import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
@@ -16,6 +21,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
@@ -58,7 +64,7 @@ public class Traverser {
 //            }
 
 
-            DocFeatureBase base = new DocFeatureBase(warcRecord);
+            DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader);
             try {
                 String line = base.calculate(featureList);
                 out.get().println(line);
@@ -176,11 +182,19 @@ public class Traverser {
     private final Collection collection;
     private final Set<String> docIdSet;
     private final List<IDocFeature> featureList;
+    private CollectionStatistics collectionStatistics;
+    private Tag analyzerTag;
+    private IndexSearcher searcher;
+    private IndexReader reader;
 
-    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList) {
+    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader) {
         this.collection = dataset.collection();
         this.docIdSet = docIdSet;
         this.featureList = featureList;
+        this.collectionStatistics = collectionStatistics;
+        this.analyzerTag = analyzerTag;
+        this.searcher = searcher;
+        this.reader = reader;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {

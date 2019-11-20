@@ -1,16 +1,29 @@
 package edu.anadolu.ltr;
 
+import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.cmdline.CLI;
 import edu.anadolu.cmdline.CmdLineTool;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermContext;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
+import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +43,9 @@ public class SEOTool extends CmdLineTool {
     @Option(name = "-out", required = true, usage = "output file")
     private String out;
 
+    @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
+    private String tag = null;
+
     @Override
     public String getShortDescription() {
         return "SEO Tool for ClueWeb09 ClueWeb12 Gov2 collections";
@@ -39,6 +55,10 @@ public class SEOTool extends CmdLineTool {
     public String getHelp() {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.docs paths.indexes paths.csv";
     }
+
+    private Tag analyzerTag;
+    private IndexReader reader;
+    private String indexTag;
 
     @Override
     public void run(Properties props) throws Exception {
@@ -97,6 +117,36 @@ public class SEOTool extends CmdLineTool {
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
 
+
+        ///////////////////////////// Index Reading for stats ///////////////////////////////////////////
+        Path indexPath=null;
+        if(this.tag == null)
+            indexPath = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory).iterator().next();
+        else {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory)) {
+                for (Path path : stream) {
+                    if(!tag.equals(path.getFileName().toString())) continue;
+                    indexPath = path;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(indexPath == null)
+            throw new RuntimeException(tag + " index not found");
+
+
+        this.indexTag = indexPath.getFileName().toString();
+        this.analyzerTag = Tag.tag(indexTag);
+
+        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+
+        IndexSearcher searcher = new IndexSearcher(reader);
+        CollectionStatistics collectionStatistics = searcher.collectionStatistics(Indexer.FIELD_CONTENTS);
+
+
+
         List<IDocFeature> features = new ArrayList<>();
 
 //        features.add(new Contact());
@@ -133,8 +183,6 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new SimContentH());
 //        features.add(new SimContentKeyword());
 //        features.add(new SimContentTitle());
-//        features.add(new StopWordRatio());
-//        features.add(new TextToDocRatio());
 
         features.add(new NumberOfChildPages(collection));
         features.add(new InLinkCount(collection));
@@ -144,7 +192,19 @@ public class SEOTool extends CmdLineTool {
         features.add(new NumberOfSlashesInURL());
         features.add(new OutLinkCount());
 
-        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features);
+        features.add(new AvgTermLength());
+        features.add(new FracAnchorText());
+        features.add(new FracTableText());
+        features.add(new NoOfTitleTerms());
+        features.add(new StopCover());
+        features.add(new StopWordRatio());
+        features.add(new TextToDocRatio());
+        
+        features.add(new URLWiki());
+        features.add(new CDD());
+
+
+        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader);
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         traverser.traverseParallel(Paths.get(out), numThreads);
