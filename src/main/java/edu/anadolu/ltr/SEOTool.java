@@ -183,8 +183,6 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new SimContentH());
 //        features.add(new SimContentKeyword());
 //        features.add(new SimContentTitle());
-//        features.add(new StopWordRatio());
-//        features.add(new TextToDocRatio());
 
         features.add(new NumberOfChildPages(collection));
         features.add(new InLinkCount(collection));
@@ -194,14 +192,17 @@ public class SEOTool extends CmdLineTool {
         features.add(new NumberOfSlashesInURL());
         features.add(new OutLinkCount());
 
-
         features.add(new AvgTermLength());
         features.add(new FracAnchorText());
         features.add(new FracTableText());
         features.add(new NoOfTitleTerms());
         features.add(new StopCover());
+        features.add(new StopWordRatio());
+        features.add(new TextToDocRatio());
+        
         features.add(new URLWiki());
         features.add(new CDD());
+
 
         Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader);
 
