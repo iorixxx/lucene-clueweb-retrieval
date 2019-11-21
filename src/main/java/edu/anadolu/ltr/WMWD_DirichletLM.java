@@ -9,6 +9,11 @@ import java.util.List;
 public class WMWD_DirichletLM implements IQDFeature {
 
     @Override
+    public QDFeatureFields field(){
+        return QDFeatureFields.ALL;
+    }
+
+    @Override
     public String toString() {
         return this.getClass().getSimpleName();
     }

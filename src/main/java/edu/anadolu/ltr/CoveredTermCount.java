@@ -6,6 +6,13 @@ import java.io.IOException;
 import java.util.List;
 
 public class CoveredTermCount implements IQDFeature {
+
+    @Override
+    public QDFeatureFields field(){
+        return QDFeatureFields.ALL;
+    }
+
+
     @Override
     public String toString() {
         return this.getClass().getSimpleName();

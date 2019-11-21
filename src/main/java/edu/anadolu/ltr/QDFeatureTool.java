@@ -160,6 +160,14 @@ public class QDFeatureTool extends CmdLineTool {
         qdFeatures.add(new WMWD_DLH13());
         qdFeatures.add(new WMWD_DFRee());
 
+        qdFeatures.add(new VariantsOfTfFor5Fields());
+        qdFeatures.add(new VariantsOfTfIdfFor5Fields());
+        qdFeatures.add(new VariantsOfTermCountLengthNormFor5Fields());
+        qdFeatures.add(new CoveredTermCount());
+        qdFeatures.add(new CoveredTermRatio());
+        qdFeatures.add(new MinCoverageForTitle());
+        qdFeatures.add(new MinCoverageForBody());
+
 
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();

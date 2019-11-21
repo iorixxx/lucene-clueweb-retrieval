@@ -14,7 +14,8 @@ public class AvgTermLength implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        List<String> terms = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(Tag.NoStem));
+        List<String> terms = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(base.analyzerTag));
+        if(terms.size()==0) return 0;
         return terms.stream().mapToInt(w -> w.length()).average().getAsDouble();
     }
 }

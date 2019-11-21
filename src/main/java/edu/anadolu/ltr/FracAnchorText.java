@@ -18,12 +18,13 @@ public class FracAnchorText implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        int docLength = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(Tag.NoStem)).size();
+        int docLength = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(base.analyzerTag)).size();
+        if(docLength==0) return 0;
         Elements links = base.jDoc.select("a");
         List<String> anchor = new ArrayList<>();
 
         for(Element element : links){
-            anchor.addAll(Analyzers.getAnalyzedTokens(element.text(), Analyzers.analyzer(Tag.NoStem)));
+            anchor.addAll(Analyzers.getAnalyzedTokens(element.text(), Analyzers.analyzer(base.analyzerTag)));
         }
 
         return ((double)(anchor.size())/docLength);

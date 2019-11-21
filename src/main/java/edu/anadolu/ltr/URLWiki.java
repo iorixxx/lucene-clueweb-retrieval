@@ -27,6 +27,8 @@ public class URLWiki implements IDocFeature {
             return host.contains("wikipedia")?1.0:0.0;
         } catch (URISyntaxException e) {
             e.printStackTrace();
+        } catch (NullPointerException e1){
+            e1.printStackTrace();
         }
 
         return 0.0;

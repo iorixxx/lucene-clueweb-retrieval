@@ -40,7 +40,7 @@ public class StopWordRatio implements IDocFeature {
             throw new RuntimeException("happened during string analysis", ioe);
         }
 
-        if (docLength == 0) return -1.0;
+        if (docLength == 0) return 0;
 
         return (double) stopCount / docLength;
     }
