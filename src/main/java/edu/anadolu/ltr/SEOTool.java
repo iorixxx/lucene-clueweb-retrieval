@@ -187,24 +187,24 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new InLinkCount(collection));
 //        features.add(new PageRank(collection));
 
-        features.add(new Entropy());
-
-        features.add(new NumberOfSlashesInURL());
-        features.add(new UrlLength());
-        features.add(new OutLinkCount());
-        features.add(new AvgTermLength());
+//        features.add(new Entropy());
+//
+//        features.add(new NumberOfSlashesInURL());
+//        features.add(new UrlLength());
+//        features.add(new OutLinkCount());
+//        features.add(new AvgTermLength());
 
 
         features.add(new FracAnchorText());
-        features.add(new FracTableText());
-        features.add(new NoOfTitleTerms());
-        features.add(new StopCover());
-        features.add(new StopWordRatio());
-
-        features.add(new URLWiki());
-
-        features.add(new TextToDocRatio());
-        features.add(new CDD());
+//        features.add(new FracTableText());
+//        features.add(new NoOfTitleTerms());
+//        features.add(new StopCover());
+//        features.add(new StopWordRatio());
+//
+//        features.add(new URLWiki());
+//
+//        features.add(new TextToDocRatio());
+//        features.add(new CDD());
 
 
 
