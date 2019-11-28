@@ -52,6 +52,7 @@ public class Traverser {
 
             String id = warcRecord.id();
 
+//            if(!id.equals("clueweb09-en0071-34-07135")) return 0;
 
             if (skip(id)) return 0;
 
@@ -62,7 +63,6 @@ public class Traverser {
 //            } catch (Exception e) {
 //                throw new RuntimeException(e);
 //            }
-
 
             DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader);
             try {

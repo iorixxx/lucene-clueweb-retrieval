@@ -10,6 +10,7 @@ import org.apache.lucene.index.TermContext;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.*;
 
 import java.io.*;
@@ -61,7 +62,7 @@ public class TraverserForQD {
 
             try {
                 for(InfoNeed query : queryList){
-                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord, collectionStatistics, termStatisticsMap, analyzerTag, collection);
+                    QDFeatureBase qdBase = new QDFeatureBase(query, warcRecord, collectionStatistics, termStatisticsMap, analyzerTag, collection, solrClient);
                     String line = qdBase.calculate(qdFeatureList);
                     out.get().println(line);
                     out.get().flush();
@@ -185,6 +186,7 @@ public class TraverserForQD {
     private CollectionStatistics collectionStatistics;
     private Map<String,TermStatistics> termStatisticsMap;
     private Tag analyzerTag;
+    private HttpSolrClient solrClient;
 
 
     TraverserForQD(DataSet dataset, String docsDir, List<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList, CollectionStatistics collectionStatistics, Map<String,TermStatistics> termStatisticsMap, Tag analyzerTag, Set<String> docIdSet) {
@@ -196,6 +198,7 @@ public class TraverserForQD {
         this.termStatisticsMap = termStatisticsMap;
         this.analyzerTag = analyzerTag;
         this.docIdSet = docIdSet;
+        this.solrClient = QDFeatureTool.solrClientFactory(this.collection);
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {

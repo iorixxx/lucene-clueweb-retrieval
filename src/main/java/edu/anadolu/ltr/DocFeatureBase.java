@@ -22,6 +22,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.safety.Cleaner;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
@@ -53,7 +55,7 @@ public class DocFeatureBase {
      */
     DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader) {
         try {
-            rawHTML = warcRecord.content();
+            rawHTML = warcRecord.content().replace("<a","<br><a");
             jDoc = Jsoup.parse(rawHTML);
             docId = warcRecord.id();
             url = warcRecord.url() == null ? jDoc.baseUri() : warcRecord.url();

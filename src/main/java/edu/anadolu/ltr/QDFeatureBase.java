@@ -44,6 +44,7 @@ public class QDFeatureBase {
     long uniqueDl = 0;
     List<String> listContent;
     Collection collection;
+    HttpSolrClient solrClient;
 
 
     /**
@@ -52,7 +53,7 @@ public class QDFeatureBase {
      *
      * @param warcRecord input warc record
      */
-    QDFeatureBase(InfoNeed query, WarcRecord warcRecord, CollectionStatistics collectionStatistics, Map<String, TermStatistics> termStatisticsMap, Tag analyzerTag, Collection collection) {
+    QDFeatureBase(InfoNeed query, WarcRecord warcRecord, CollectionStatistics collectionStatistics, Map<String, TermStatistics> termStatisticsMap, Tag analyzerTag, Collection collection, HttpSolrClient solrClient) {
         try {
             rawHTML = warcRecord.content();
             jDoc = Jsoup.parse(rawHTML);
@@ -63,6 +64,7 @@ public class QDFeatureBase {
             this.termStatisticsMap = termStatisticsMap;
             this.analyzerTag = analyzerTag;
             this.collection = collection;
+            this.solrClient = solrClient;
 
             List<String> subParts = Analyzers.getAnalyzedTokens(query.query(), Analyzers.analyzer(analyzerTag));
 
@@ -193,16 +195,9 @@ public class QDFeatureBase {
             body = bodyEl.text();
         }
 
-        HttpSolrClient solr = null;
-        if (edu.anadolu.datasets.Collection.CW09A.equals(collection) || edu.anadolu.datasets.Collection.CW09B.equals(collection) || edu.anadolu.datasets.Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
-            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
-        }else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
-            solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
-        }
-
-        String anchor = Indexer.anchor(docId, solr);
+        String anchor = Indexer.anchor(docId, this.solrClient);
         if(anchor==null) anchor="";
-
+        
         /*
          * Try to get useful parts of the URL
          * https://docs.oracle.com/javase/tutorial/networking/urls/urlInfo.html

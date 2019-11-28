@@ -21,19 +21,22 @@ public class FracTableText implements IDocFeature {
         if(docLength==0) return 0;
 
         String tableText = "";
-        Elements tables = base.jDoc.select("table");
-
-        for(Element table : tables){
-            Elements rows = table.select("tr");
-            for(Element row : rows){
-                Elements cols = row.select("td");
-                for(Element col : cols){
-                    tableText+=col.text();
-                }
-            }
+        Elements tds = base.jDoc.select("body > table > tbody > tr > td");
+        for(Element td : tds){
+            tableText += td.text() + " ";
         }
 
-        return ((double)(Analyzers.getAnalyzedTokens(tableText, Analyzers.analyzer(base.analyzerTag)).size())/docLength);
+        List<String> table = Analyzers.getAnalyzedTokens(tableText, Analyzers.analyzer(base.analyzerTag));
+
+        if((double)(table.size())/docLength>0.99){
+            System.out.println("********************************************************************");
+            System.out.println("Doc Id = " + base.docId + " Table Size : " + table.size() + " Doc Len : " + docLength);
+            System.out.println("********************************************************************");
+            System.out.println(base.jDoc.html());
+            System.out.println("********************************************************************");
+        }
+
+        return (double)(table.size())/docLength;
     }
 
 }
