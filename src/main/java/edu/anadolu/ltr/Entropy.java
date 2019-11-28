@@ -22,7 +22,7 @@ public class Entropy implements IDocFeature {
         if (base.jDoc.body() == null) return 0;
         String text = base.jDoc.body().text();
 
-        List<String> listContent = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(Tag.KStem));
+        List<String> listContent = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(base.analyzerTag));
         Set<String> setContent = new HashSet<>(listContent);
 
 

@@ -23,7 +23,7 @@ public class StopCover implements IDocFeature {
 
         String text = base.jDoc.text();
 
-        Analyzer analyzer = Analyzers.analyzer(Tag.NoStem);
+        Analyzer analyzer = Analyzers.analyzer(base.analyzerTag);
 
         Set<String> stop = new HashSet<>();
 

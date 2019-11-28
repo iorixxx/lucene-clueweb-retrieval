@@ -161,7 +161,6 @@ public class QDFeatureTool extends CmdLineTool {
         qdFeatures.add(new WMWD_DFRee());
 
 
-
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         TraverserForQD traverserQD = new TraverserForQD(dataset, docsPath, qdPair, qdFeatures, collectionStatistics, termStatisticsMap, analyzerTag, docIdSet);
 

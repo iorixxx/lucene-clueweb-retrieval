@@ -173,8 +173,8 @@ public class QDFeatureBase {
     protected Map<String, String> parseFields() {
 
         Map<String, String> fields = new HashMap<>();
-        String title = null;
-        String body = null;
+        String title = "";
+        String body = "";
 
 
         // HTML <title> Tag
@@ -201,6 +201,7 @@ public class QDFeatureBase {
         }
 
         String anchor = Indexer.anchor(docId, solr);
+        if(anchor==null) anchor="";
 
         /*
          * Try to get useful parts of the URL

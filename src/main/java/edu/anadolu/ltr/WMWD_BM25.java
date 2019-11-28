@@ -8,6 +8,11 @@ import java.util.List;
 public class WMWD_BM25 implements IQDFeature {
 
     @Override
+    public QDFeatureFields field(){
+        return QDFeatureFields.ALL;
+    }
+
+    @Override
     public String toString() {
         return this.getClass().getSimpleName();
     }
@@ -20,6 +25,8 @@ public class WMWD_BM25 implements IQDFeature {
         }
         long sumTotalTermFreq = base.collectionStatistics.sumTotalTermFreq();
         long docCount = base.collectionStatistics.docCount();
+
+        if(base.tf <= 0) return 0;
         return new BM25().score(base.tf ,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
                 docCount,sumTotalTermFreq);
     }

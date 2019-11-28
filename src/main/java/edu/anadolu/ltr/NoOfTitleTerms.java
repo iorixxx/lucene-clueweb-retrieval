@@ -15,6 +15,6 @@ public class NoOfTitleTerms implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        return Analyzers.getAnalyzedTokens(base.jDoc.title(), Analyzers.analyzer(Tag.KStem)).size();
+        return Analyzers.getAnalyzedTokens(base.jDoc.title(), Analyzers.analyzer(base.analyzerTag)).size();
     }
 }

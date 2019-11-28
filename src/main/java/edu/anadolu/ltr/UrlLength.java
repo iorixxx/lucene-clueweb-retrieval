@@ -2,7 +2,7 @@ package edu.anadolu.ltr;
 
 import org.apache.solr.common.StringUtils;
 
-public class InversedUrlLength implements IDocFeature {
+public class UrlLength implements IDocFeature {
 
     @Override
     public String toString() {
@@ -15,6 +15,6 @@ public class InversedUrlLength implements IDocFeature {
         //TODO think how to handle
         if (StringUtils.isEmpty(base.url))
             return 0;
-        return (double) 1 / base.url.length();
+        return (double) base.url.length();
     }
 }

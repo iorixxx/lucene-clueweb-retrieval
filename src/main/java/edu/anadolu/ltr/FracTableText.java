@@ -17,7 +17,8 @@ public class FracTableText implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        int docLength = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(Tag.NoStem)).size();
+        int docLength = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(base.analyzerTag)).size();
+        if(docLength==0) return 0;
 
         String tableText = "";
         Elements tables = base.jDoc.select("table");
@@ -32,7 +33,7 @@ public class FracTableText implements IDocFeature {
             }
         }
 
-        return ((double)(Analyzers.getAnalyzedTokens(tableText, Analyzers.analyzer(Tag.NoStem)).size())/docLength);
+        return ((double)(Analyzers.getAnalyzedTokens(tableText, Analyzers.analyzer(base.analyzerTag)).size())/docLength);
     }
 
 }

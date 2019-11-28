@@ -6,6 +6,11 @@ import java.util.List;
 public class TF implements IQDFeature {
 
     @Override
+    public QDFeatureType type(){
+        return QDFeatureType.ALL;
+    }
+
+    @Override
     public String toString() {
         return this.getClass().getSimpleName();
     }

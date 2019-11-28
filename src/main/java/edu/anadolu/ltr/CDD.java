@@ -23,7 +23,7 @@ public class CDD implements IDocFeature {
         for(String word : base.listContent){
             Term term = new Term(Indexer.FIELD_CONTENTS, word);
             TermStatistics termStatistics = base.searcher.termStatistics(term, TermContext.build(base.reader.getContext(), term));
-            double pColl = termStatistics.totalTermFreq()/base.collectionStatistics.sumTotalTermFreq();
+            double pColl = (double) termStatistics.totalTermFreq()/base.collectionStatistics.sumTotalTermFreq();
             double pDoc = base.getTf(word,base.listContent)/base.listContent.size();
             double pwd = (lambda * pDoc) + ((1-lambda) * pColl);
             cdd += pColl * Math.log(pColl/pwd);

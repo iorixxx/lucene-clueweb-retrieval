@@ -11,6 +11,7 @@ import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
 import org.clueweb09.*;
+import sun.tools.jconsole.Worker;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +21,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
@@ -246,6 +249,4 @@ public class TraverserForQD {
 
         }
     }
-
-    
 }
