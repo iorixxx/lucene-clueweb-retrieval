@@ -2,6 +2,7 @@ package edu.anadolu.mc;
 
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
+import edu.anadolu.similarities.BM25c;
 import edu.anadolu.similarities.MetaTerm;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
@@ -22,7 +23,7 @@ import java.sql.*;
 public class MCIndexer {
 
     public static int index(String dataDir, final String indexPath, Tag tag) throws IOException, ClassNotFoundException, SQLException {
-        Class.forName("org.h2.Driver");
+        Class.forName("com.mysql.jdbc.Driver");
         Path iPath = Paths.get(indexPath, tag.toString());
 
         if (!Files.exists(iPath))
@@ -33,16 +34,16 @@ public class MCIndexer {
         final Directory dir = FSDirectory.open(iPath);
 
         final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer(tag));
-        iwc.setSimilarity(new MetaTerm());
+        iwc.setSimilarity(new BM25c(0.7,1.2));
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         iwc.setRAMBufferSizeMB(256.0);
         iwc.setUseCompoundFile(false);
         iwc.setMergeScheduler(new ConcurrentMergeScheduler());
 
         final IndexWriter writer = new IndexWriter(dir, iwc);
-        final Connection conn = DriverManager.getConnection("jdbc:h2:file:" + dataDir, "", "");
+        final Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mc","root","");
         Statement statement = conn.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT docno, headline, \"text\" from documents");
+        ResultSet rs = statement.executeQuery("SELECT docno, headline, text from documents");
 
         while (rs.next()) {
             int id = rs.getInt(1);
@@ -58,16 +59,15 @@ public class MCIndexer {
         rs.close();
         statement.close();
 
-        int numIndexed = writer.maxDoc();
+        int numIndexed = writer.getDocStats().maxDoc;
         try {
             writer.commit();
             writer.forceMerge(1);
         } finally {
             writer.close();
+            dir.close();
+            conn.close();
         }
-
-        dir.close();
-        conn.close();
         return numIndexed;
     }
 }

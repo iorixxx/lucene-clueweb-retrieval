@@ -7,6 +7,7 @@ import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.UAX29URLEmailTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.apache.lucene.analysis.tr.Zemberek3StemFilterFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static edu.anadolu.analysis.Tag.KStem;
+import static edu.anadolu.analysis.Tag.*;
 
 /**
  * Utility to hold {@link Analyzer} implementation used in this work.
@@ -134,7 +135,23 @@ public class Analyzers {
                         .withTokenizer("standard")
                         .addTokenFilter("apostrophe")
                         .addTokenFilter("turkishlowercase")
-                        //   .addTokenFilter(Zemberek3StemFilterFactory.class, "strategy", "maxLength")
+                        .addTokenFilter(Zemberek3StemFilterFactory.class, "strategy", "maxLength")
+                        .build();
+
+            case SnowballTurkish:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("apostrophe")
+                        .addTokenFilter("turkishlowercase")
+                        .addTokenFilter("snowballporter", "language", "Turkish")
+                        .build();
+
+            case F5:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("apostrophe")
+                        .addTokenFilter("turkishlowercase")
+                        .addTokenFilter("truncate", "prefixLength", "5")
                         .build();
 
             case NoStemTurkish:
