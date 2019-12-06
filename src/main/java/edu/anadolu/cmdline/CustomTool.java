@@ -36,10 +36,6 @@ public class CustomTool extends CmdLineTool {
     @Option(name = "-collection", required = true, usage = "Collection")
     protected edu.anadolu.datasets.Collection collection;
 
-    //  @Option(name = "-spam", required = false, usage = "manuel spam threshold", metaVar = "10 20 30 .. 90")
-    // private int spam = 0;
-
-
     @Option(name = "-task", required = false, usage = "task to be executed: search or eval")
     private String task;
 
@@ -107,17 +103,9 @@ public class CustomTool extends CmdLineTool {
 
         if ("eval".equals(task)) {
 
-
-            Evaluator evaluator = new Evaluator(dataset, tag, measure, models, "evals", "OR");
-            evaluator.models();
-
-            double max = evaluator.averageOfAllModels();
-
-            System.out.print(String.format("%.5f", max) + "\tspamThreshold = 0\t");
+            Evaluator evaluator = new Evaluator(dataset, tag, measure, models + "_DFIC_DPH_DFRee_DLH13", "evals", "OR");
             evaluator.printMean();
-
             System.out.println("=======================");
-
 
         }
 

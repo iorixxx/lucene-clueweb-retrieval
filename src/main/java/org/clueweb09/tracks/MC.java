@@ -6,36 +6,28 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
 public class MC extends Track {
 
-
-    public MC (String home) {
+    public MC(String home) {
         super(home);
     }
 
     @Override
     protected void populateInfoNeeds() throws Exception {
-        Path topicsPath=Paths.get(home, "topics-and-qrels", "mctopics.txt");
+
+        Path topicsPath = Paths.get(home, "topics-and-qrels", "queriesMC.csv");
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
 
-        Iterator<String> iterator = lines.iterator();
 
-        while (iterator.hasNext()) {
+        for (String line : lines) {
 
-            final String line = iterator.next().trim();
-            String[] parts = line.split(":");
-            int qID = Integer.parseInt(parts[0]);
+            String[] parts = line.split("\",\"");
+            int qID = Integer.parseInt(parts[0].substring(1));
             String query = parts[1];
+
             if (!isJudged(qID)) {
                 System.out.println(qID + ":" + query + " is not judged. Skipping...");
                 continue;
@@ -52,34 +44,26 @@ public class MC extends Track {
             needs.add(need);
         }
 
-
         lines.clear();
 
     }
 
     @Override
     protected void populateQRelsMap() throws Exception {
-        Path qrelsPath=Paths.get(home, "topics-and-qrels", "mcqrels.txt");
-        final List<String> qrels = Files.readAllLines(qrelsPath, StandardCharsets.UTF_8);
+        populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrelsMC.txt"));
+    }
 
-        for (String l : qrels) {
-            String[] parts = whiteSpaceSplitter.split(l);
-            assert parts.length == 4 : "qrels file should contain four columns : " + l;
-            int queryID = Integer.parseInt(parts[0]);
+    public static void main(String[] args) {
+        String line = "\"235\",\"Kuş Gribi\",\"Kuş gribi nedir, nasıl bulaşır, belirtileri nelerdir sorularına cevap olabilecek dokümanlar.\",\"Kuş gribi ile alakalı her türlü bilginin elde edilebileceği bir doküman olmalı. Hastalığının tanımını, bulaşma yollarını, belirtilerini, varsa tedavi yollarını ve buna benzer birçok konuyu okuyucuya açıklayan nitelikte bir doküman.\"";
+        String[] parts = line.split("\",\"");
 
-            String docID = parts[2];
-            int judge = Integer.parseInt(parts[3]);
-
-            final Triple t= new Triple(queryID, docID, judge);
-            judgeLevels.add(t.judge);
-            if (map.containsKey(t.queryID)) {
-                Map<String, Integer> innerMap = map.get(t.queryID);
-                innerMap.put(t.docID, t.judge);
-            } else {
-                map.put(t.queryID, new HashMap<>());
-            }
+        System.out.println(parts[0].substring(1));
+        System.out.println("--" + parts[1] + "--");
+        for (String p : parts) {
+            System.out.println(p);
         }
 
-        qrels.clear();
     }
+
+
 }
