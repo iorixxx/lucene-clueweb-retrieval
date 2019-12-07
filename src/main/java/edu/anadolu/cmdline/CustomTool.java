@@ -104,9 +104,9 @@ public class CustomTool extends CmdLineTool {
         if ("eval".equals(task)) {
 
             Evaluator evaluator = new Evaluator(dataset, tag, measure, models + "_DFIC_DPH_DFRee_DLH13", "evals", "OR");
+            evaluator.printMeanWT();
             evaluator.printMean();
             System.out.println("=======================");
-
         }
 
     }

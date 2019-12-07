@@ -2,6 +2,7 @@ package org.clueweb09.tracks;
 
 import org.clueweb09.InfoNeed;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,10 +18,18 @@ public class MC extends Track {
 
     @Override
     protected void populateInfoNeeds() throws Exception {
+        populateInfoNeeds("queriesMC.csv");
+    }
 
-        Path topicsPath = Paths.get(home, "topics-and-qrels", "queriesMC.csv");
+    @Override
+    protected void populateQRelsMap() throws IOException {
+        populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrelsMC.txt"));
+    }
+
+    protected void populateInfoNeeds(String qRels) throws Exception {
+
+        Path topicsPath = Paths.get(home, "topics-and-qrels", qRels);
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
-
 
         for (String line : lines) {
 
@@ -43,27 +52,6 @@ public class MC extends Track {
             }
             needs.add(need);
         }
-
         lines.clear();
-
     }
-
-    @Override
-    protected void populateQRelsMap() throws Exception {
-        populateQRelsMap(Paths.get(home, "topics-and-qrels", "qrelsMC.txt"));
-    }
-
-    public static void main(String[] args) {
-        String line = "\"235\",\"Kuş Gribi\",\"Kuş gribi nedir, nasıl bulaşır, belirtileri nelerdir sorularına cevap olabilecek dokümanlar.\",\"Kuş gribi ile alakalı her türlü bilginin elde edilebileceği bir doküman olmalı. Hastalığının tanımını, bulaşma yollarını, belirtilerini, varsa tedavi yollarını ve buna benzer birçok konuyu okuyucuya açıklayan nitelikte bir doküman.\"";
-        String[] parts = line.split("\",\"");
-
-        System.out.println(parts[0].substring(1));
-        System.out.println("--" + parts[1] + "--");
-        for (String p : parts) {
-            System.out.println(p);
-        }
-
-    }
-
-
 }

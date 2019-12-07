@@ -34,14 +34,14 @@ public class MCIndexer {
         final Directory dir = FSDirectory.open(iPath);
 
         final IndexWriterConfig iwc = new IndexWriterConfig(Analyzers.analyzer(tag));
-        iwc.setSimilarity(new BM25c(0.7, 1.2));
+        iwc.setSimilarity(new BM25c(1.2, 0.75));
         iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         iwc.setRAMBufferSizeMB(256.0);
         iwc.setUseCompoundFile(false);
         iwc.setMergeScheduler(new ConcurrentMergeScheduler());
 
         final IndexWriter writer = new IndexWriter(dir, iwc);
-        final Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mc", "root", "");
+        final Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mc?serverTimezone=UTC", "root", "");
         Statement statement = conn.createStatement();
         ResultSet rs = statement.executeQuery("SELECT docno, headline, text from documents");
 
