@@ -195,11 +195,11 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new AvgTermLength());
 
 
-                features.add(new FracAnchorText());
+//                features.add(new FracAnchorText());
 //       features.add(new FracTableText());
 //        features.add(new NoOfTitleTerms());
-//        features.add(new StopCover());
-//        features.add(new StopWordRatio());
+        features.add(new StopCover());
+        features.add(new StopWordRatio());
 //
 //        features.add(new URLWiki());
 //

@@ -41,7 +41,7 @@ public class FracAnchorText implements IDocFeature {
 
         List<String> anchor = Analyzers.getAnalyzedTokens(anchorText, Analyzers.analyzer(base.analyzerTag));
 
-        if(anchor.size()>text.size()){
+        if(((double)(anchor.size())/text.size())>1.0){
             System.out.println("****************************************************************************************************************************************");
             System.out.println("Doc Id = " + base.docId + " Anchor Size : " + anchor.size() + " Doc Len : " + text.size());
             System.out.println("********************************************************************");

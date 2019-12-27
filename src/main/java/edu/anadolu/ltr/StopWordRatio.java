@@ -42,6 +42,14 @@ public class StopWordRatio implements IDocFeature {
 
         if (docLength == 0) return 0;
 
+        if(((double) stopCount / docLength)>0.8 || ((double) stopCount / docLength)<0.2){
+            System.out.println("****************************************************************************************************************************************");
+            System.out.println("Doc Id = " + base.docId + " StopWordRatio : " + (double) stopCount / docLength);
+            System.out.println("********************************************************************");
+            System.out.println(base.jDoc.html());
+            System.out.println("****************************************************************************************************************************************");
+        }
+
         return (double) stopCount / docLength;
     }
 }

@@ -40,6 +40,14 @@ public class StopCover implements IDocFeature {
             throw new RuntimeException("happened during string analysis", ioe);
         }
 
+        if((double) stop.size() / EnglishAnalyzer.ENGLISH_STOP_WORDS_SET.size()<0.3){
+            System.out.println("****************************************************************************************************************************************");
+            System.out.println("Doc Id = " + base.docId + " StopCover : " + (double) stop.size() / EnglishAnalyzer.ENGLISH_STOP_WORDS_SET.size());
+            System.out.println("********************************************************************");
+            System.out.println(base.jDoc.html());
+            System.out.println("****************************************************************************************************************************************");
+        }
+
         return (double) stop.size() / EnglishAnalyzer.ENGLISH_STOP_WORDS_SET.size();
     }
 }

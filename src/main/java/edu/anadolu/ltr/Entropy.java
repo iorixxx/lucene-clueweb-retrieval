@@ -40,6 +40,14 @@ public class Entropy implements IDocFeature {
 
         }
 
+        if(entropy<0 || entropy>10){
+            System.out.println("****************************************************************************************************************************************");
+            System.out.println("Doc Id = " + base.docId + " Entropy : " + entropy);
+            System.out.println("********************************************************************");
+            System.out.println(base.jDoc.html());
+            System.out.println("****************************************************************************************************************************************");
+        }
+
         return entropy;
     }
 }

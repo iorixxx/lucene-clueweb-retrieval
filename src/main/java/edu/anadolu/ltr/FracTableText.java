@@ -28,7 +28,7 @@ public class FracTableText implements IDocFeature {
 
         List<String> table = Analyzers.getAnalyzedTokens(tableText, Analyzers.analyzer(base.analyzerTag));
 
-        if((double)(table.size())/docLength>0.99){
+        if((double)(table.size())/docLength>1.0){
             System.out.println("********************************************************************");
             System.out.println("Doc Id = " + base.docId + " Table Size : " + table.size() + " Doc Len : " + docLength);
             System.out.println("********************************************************************");
