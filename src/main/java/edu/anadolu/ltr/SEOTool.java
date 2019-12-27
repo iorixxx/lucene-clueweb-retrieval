@@ -170,6 +170,7 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new ImgToMax());
 //        features.add(new IndexOfKeywordInTitle());
 //        features.add(new InOutlinkToAll());
+//        features.add(new InversedUrlLength());
 //        features.add(new MetaTagToMax());
 //        features.add(new NoFollowToAll());
 //        features.add(new SimDescriptionH());
@@ -183,31 +184,28 @@ public class SEOTool extends CmdLineTool {
 //        features.add(new SimContentKeyword());
 //        features.add(new SimContentTitle());
 
-//        features.add(new NumberOfChildPages(collection));
-//        features.add(new InLinkCount(collection));
-//        features.add(new PageRank(collection));
+        features.add(new NumberOfChildPages(collection));
+        features.add(new InLinkCount(collection));
+        features.add(new PageRank(collection));
 
-//        features.add(new Entropy());
-//
-//        features.add(new NumberOfSlashesInURL());
-//        features.add(new UrlLength());
-//        features.add(new OutLinkCount());
-//        features.add(new AvgTermLength());
+        features.add(new Entropy());
+        features.add(new NumberOfSlashesInURL());
+        features.add(new OutLinkCount());
 
-
-//                features.add(new FracAnchorText());
-//       features.add(new FracTableText());
-//        features.add(new NoOfTitleTerms());
+        features.add(new AvgTermLength());
+        features.add(new FracAnchorText());
+        features.add(new FracTableText());
+        features.add(new NoOfTitleTerms());
         features.add(new StopCover());
         features.add(new StopWordRatio());
-//
-//        features.add(new URLWiki());
-//
-//        features.add(new TextToDocRatio());
-//        features.add(new CDD());
+        features.add(new TextToDocRatio());
+        
+        features.add(new URLWiki());
+        features.add(new CDD());
 
 
         Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader);
+
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         traverser.traverseParallel(Paths.get(out), numThreads);
         System.out.println("Document features are extracted in " + execution(start));

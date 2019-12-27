@@ -25,7 +25,9 @@ public class WMWD_PL2 implements IQDFeature {
         }
         long sumTotalTermFreq = base.collectionStatistics.sumTotalTermFreq();
         long docCount = base.collectionStatistics.docCount();
-        return new PL2().score(base.tf,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
-                docCount,sumTotalTermFreq);
+
+        if(base.tf <= 0) return 0;
+        return new PL2().score(base.tf==0?-1:base.tf, base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
+                docCount, sumTotalTermFreq);
     }
 }

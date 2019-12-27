@@ -21,6 +21,8 @@ public class WMWD_DFRee implements IQDFeature {
         }
         long sumTotalTermFreq = base.collectionStatistics.sumTotalTermFreq();
         long docCount = base.collectionStatistics.docCount();
+
+        if(base.tf <= 0) return 0;
         return new DFRee().score(base.tf,base.dl,(double) sumTotalTermFreq / docCount, keyFreq, base.termStatisticsMap.get(word).docFreq(), base.termStatisticsMap.get(word).totalTermFreq(),
                 docCount,sumTotalTermFreq);
     }
