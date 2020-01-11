@@ -13,7 +13,7 @@ public class TextToDocRatio implements IDocFeature {
         String html = base.rawHTML.replaceAll("\\s+", " ");
         if(html.length()==0) return 0;
 
-        if((double) (text.length()) / html.length()>0.95){
+        if((double) (text.length()) / html.length()>1.0){
             System.out.println("****************************************************************************************************************************************");
             System.out.println("Doc Id = " + base.docId + " TextToDocRatio : " + (double) (text.length()) / html.length());
             System.out.println("********************************************************************");

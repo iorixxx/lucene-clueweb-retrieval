@@ -46,6 +46,9 @@ public class SEOTool extends CmdLineTool {
     @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
     private String tag = null;
 
+    @Option(name = "-type", usage = "seo or doc")
+    private String type = null;
+
     @Override
     public String getShortDescription() {
         return "SEO Tool for ClueWeb09 ClueWeb12 Gov2 collections";
@@ -148,61 +151,61 @@ public class SEOTool extends CmdLineTool {
 
 
         List<IDocFeature> features = new ArrayList<>();
+        if(type.equals("seo")){
+            features.add(new Contact());
+            features.add(new ContentLengthOver1800());
+            features.add(new Copyright());
+            features.add(new Description());
+            features.add(new Favicon());
+            features.add(new Https());
+            features.add(new Keyword());
+            features.add(new KeywordInDomain());
+            features.add(new KeywordInFirst100Words());
+            features.add(new KeywordInImgAltTag());
+            features.add(new KeywordInTitle());
+            features.add(new Robots());
+            features.add(new SocialMediaShare());
+            features.add(new Viewport());
 
-//        features.add(new Contact());
-//        features.add(new ContentLengthOver1800());
-//        features.add(new Copyright());
-//        features.add(new Description());
-//        features.add(new Favicon());
-//        features.add(new Https());
-//        features.add(new Keyword());
-//        features.add(new KeywordInDomain());
-//        features.add(new KeywordInFirst100Words());
-//        features.add(new KeywordInImgAltTag());
-//        features.add(new KeywordInTitle());
-//        features.add(new Robots());
-//        features.add(new SocialMediaShare());
-//        features.add(new Viewport());
-//
-//        features.add(new AlttagToImg());
-//        features.add(new ContentLengthToMax());
-//        features.add(new HdensityToMax());
-//        features.add(new ImgToMax());
-//        features.add(new IndexOfKeywordInTitle());
-//        features.add(new InOutlinkToAll());
-//        features.add(new InversedUrlLength());
-//        features.add(new MetaTagToMax());
-//        features.add(new NoFollowToAll());
-//        features.add(new SimDescriptionH());
-//        features.add(new SimKeywordDescription());
-//        features.add(new SimKeywordH());
-//        features.add(new SimTitleDescription());
-//        features.add(new SimTitleH());
-//        features.add(new SimTitleKeyword());
-//        features.add(new SimContentDescription());
-//        features.add(new SimContentH());
-//        features.add(new SimContentKeyword());
-//        features.add(new SimContentTitle());
+            features.add(new AlttagToImg());
+            features.add(new ContentLengthToMax());
+            features.add(new HdensityToMax());
+            features.add(new ImgToMax());
+            features.add(new IndexOfKeywordInTitle());
+            features.add(new InOutlinkToAll());
+            features.add(new UrlLength());
+            features.add(new MetaTagToMax());
+            features.add(new NoFollowToAll());
+            features.add(new SimDescriptionH());
+            features.add(new SimKeywordDescription());
+            features.add(new SimKeywordH());
+            features.add(new SimTitleDescription());
+            features.add(new SimTitleH());
+            features.add(new SimTitleKeyword());
+            features.add(new SimContentDescription());
+            features.add(new SimContentH());
+            features.add(new SimContentKeyword());
+            features.add(new SimContentTitle());
+        }else if(type.equals("doc")){
+            features.add(new NumberOfChildPages(collection));
+            features.add(new InLinkCount(collection));
+            features.add(new PageRank(collection));
 
-        features.add(new NumberOfChildPages(collection));
-        features.add(new InLinkCount(collection));
-        features.add(new PageRank(collection));
+            features.add(new Entropy());
+            features.add(new NumberOfSlashesInURL());
+            features.add(new OutLinkCount());
 
-        features.add(new Entropy());
-        features.add(new NumberOfSlashesInURL());
-        features.add(new OutLinkCount());
+            features.add(new AvgTermLength());
+            features.add(new FracAnchorText());
+            features.add(new FracTableText());
+            features.add(new NoOfTitleTerms());
+            features.add(new StopCover());
+            features.add(new StopWordRatio());
+            features.add(new TextToDocRatio());
 
-        features.add(new AvgTermLength());
-        features.add(new FracAnchorText());
-        features.add(new FracTableText());
-        features.add(new NoOfTitleTerms());
-        features.add(new StopCover());
-        features.add(new StopWordRatio());
-        features.add(new TextToDocRatio());
-        
-        features.add(new URLWiki());
-        features.add(new CDD());
-
+            features.add(new URLWiki());
+            features.add(new CDD());
+        }
 
         Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader);
 
@@ -278,20 +281,20 @@ public class SEOTool extends CmdLineTool {
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
 
             if (NumberOfChildPages.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://10.10.100.58:8983/solr/url09").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/url09").build();
             else if (PageRank.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://10.10.100.58:8983/solr/rank09A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank09A").build();
             else if (InLinkCount.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://10.10.100.58:8983/solr/anchor09A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor09A").build();
 
         } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
 
             if (NumberOfChildPages.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/url12").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/url12").build();
             else if (PageRank.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/rank12A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank12A").build();
             else if (InLinkCount.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor12A").build();
         }
 
         throw new RuntimeException("The factory cannot find appropriate SolrClient for " + collection + " and " + clazz);
