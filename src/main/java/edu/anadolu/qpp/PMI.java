@@ -11,8 +11,10 @@ import org.clueweb09.InfoNeed;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
 
 import static edu.anadolu.analysis.Analyzers.getAnalyzedToken;
+import static edu.anadolu.analysis.Analyzers.getAnalyzedTokens;
 import static org.apache.lucene.search.similarities.ModelBase.log2;
 
 /**
@@ -80,7 +82,8 @@ public class PMI extends Base {
         double pmi = 0.0;
         int counter = 0;
 
-        String[] distinctTerms = need.distinctSet.toArray(new String[0]);
+        // hip-hop contains more than one tokens : [hip, hop]
+        String[] distinctTerms = (new LinkedHashSet<>(getAnalyzedTokens(need.query(), analyzer))).toArray(new String[0]);
 
         if (distinctTerms.length == 1) {
             // TODO what is the value of average PMI for one term query?
