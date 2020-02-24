@@ -15,10 +15,7 @@ public class ContentLengthOver1800 implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException {
-        if(base.jDoc.body()==null) return 0;
-        String text = base.jDoc.body().text();
-        List<String> content = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(Tag.KStem));
-        if (content.size() > 1800) return 1;
+        if (base.listContent.size() > 1800) return 1;
         return 0;
     }
 }

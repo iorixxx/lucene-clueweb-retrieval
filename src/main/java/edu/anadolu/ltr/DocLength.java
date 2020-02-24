@@ -13,6 +13,6 @@ public class DocLength implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        return Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(Tag.KStem)).size();
+        return base.listContent.size();
     }
 }

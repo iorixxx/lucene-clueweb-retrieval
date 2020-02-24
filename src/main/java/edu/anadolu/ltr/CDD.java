@@ -4,9 +4,9 @@ package edu.anadolu.ltr;
 import edu.anadolu.Indexer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermContext;
-import org.apache.lucene.search.TermStatistics;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class CDD implements IDocFeature {
 
@@ -20,11 +20,14 @@ public class CDD implements IDocFeature {
         double cdd = 0.0;
         double lambda = 0.8;
 
-        for(String word : base.listContent){
-            Term term = new Term(Indexer.FIELD_CONTENTS, word);
-            TermStatistics termStatistics = base.searcher.termStatistics(term, TermContext.build(base.reader.getContext(), term));
-            double pColl = (double) termStatistics.totalTermFreq()/base.collectionStatistics.sumTotalTermFreq();
-            double pDoc = base.getTf(word,base.listContent)/base.listContent.size();
+
+        
+        int contentsize = base.listContent.size();
+        long totalTerm = base.collectionStatistics.sumTotalTermFreq();
+        for(Map.Entry<String,Integer> word : base.mapTf.entrySet()){
+            Term term = new Term(Indexer.FIELD_CONTENTS, word.getKey());
+            double pColl = (double) TermContext.build(base.reader.getContext(), term).totalTermFreq()/totalTerm;
+            double pDoc = (double) word.getValue()/ contentsize;
             double pwd = (lambda * pDoc) + ((1-lambda) * pColl);
             cdd += pColl * Math.log(pColl/pwd);
         }

@@ -14,8 +14,6 @@ public class SimTitleDescription implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-        String title = base.jDoc.title();
-        String description = MetaTag.enrich3(base.jDoc, "description");
-        return base.textSimilarity(title, description);
+        return base.textSimilarity(base.title, base.description);
     }
 }

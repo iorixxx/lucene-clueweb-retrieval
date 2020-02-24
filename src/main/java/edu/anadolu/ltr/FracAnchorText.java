@@ -23,33 +23,27 @@ public class FracAnchorText implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
 
-//        Cleaner cleaner = new Cleaner(Whitelist.basic());
-//        if(!cleaner.isValid(base.jDoc)) {
-//            System.out.println(base.docId + " is invalid");
-//            return 0;
-//        }
-//        System.out.println(base.docId + " is valid");
-        List<String> text = Analyzers.getAnalyzedTokens(base.jDoc.text(), Analyzers.analyzer(base.analyzerTag));
-        if(text.size()==0) return 0;
+        int textlen = base.jDoc.text().replaceAll("\\s+","").length();
+        if(textlen==0) return 0;
         Elements links = base.jDoc.select("a[href]");
-        String anchorText = "";
+        int anchorlen = 0;
 
         for(Element element : links){
             if(Jsoup.parse(element.html()).select("a[href]").size()>0) continue;
-            anchorText+=element.text() + " ";
+            anchorlen+=element.text().replaceAll("\\s+","").length();
         }
 
-        List<String> anchor = Analyzers.getAnalyzedTokens(anchorText, Analyzers.analyzer(base.analyzerTag));
 
-        if(((double)(anchor.size())/text.size())>1.0){
+        if(((double)(anchorlen)/textlen)>1.0){
             System.out.println("****************************************************************************************************************************************");
-            System.out.println("Doc Id = " + base.docId + " Anchor Size : " + anchor.size() + " Doc Len : " + text.size());
+            System.out.println("Doc Id = " + base.docId + " Anchor Size : " + anchorlen + " Doc Len : " + textlen);
             System.out.println("********************************************************************");
             System.out.println(base.jDoc.html());
             System.out.println("****************************************************************************************************************************************");
+            return 0;
         }
         
-        return ((double)(anchor.size())/text.size());
+        return ((double)(anchorlen)/textlen);
     }
 
 }

@@ -8,10 +8,7 @@ import edu.anadolu.cmdline.CmdLineTool;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
-import edu.anadolu.similarities.DFIC;
-import edu.anadolu.similarities.DFRee;
-import edu.anadolu.similarities.DLH13;
-import edu.anadolu.similarities.DPH;
+import edu.anadolu.similarities.*;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -22,6 +19,7 @@ import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.InfoNeed;
+import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -48,6 +46,9 @@ public class QDFeatureTool extends CmdLineTool {
 
     @Option(name = "-tag", usage = "If you want to search specific tag, e.g. KStemField")
     private String tag = null;
+
+    @Option(name = "-resultsettype", usage = "resultset of featureset")
+    private String resultsettype = null;
 
     @Override
     public String getShortDescription() {
@@ -87,7 +88,7 @@ public class QDFeatureTool extends CmdLineTool {
         }
 
         Set<String> docIdSet = new HashSet<>();
-        List<AbstractMap.SimpleEntry<String, String>> qdPair = new ArrayList<>();
+        Set<AbstractMap.SimpleEntry<String, String>> qdPair = new LinkedHashSet<>();
 
         for (String file : files) {
             System.out.println(file);
@@ -96,12 +97,19 @@ public class QDFeatureTool extends CmdLineTool {
                 System.out.println(getHelp());
                 return;
             }
-            qdPair.addAll(Collection.GOV2.equals(collection) ? retrieveQDPairsForLetor(path) : retrieveQDPairs(path));
+
+            if(resultsettype.equals("resultset"))
+                qdPair.addAll(Collection.GOV2.equals(collection) ? retrieveQDPairsForLetor(path) : retrieveQDPairsFromResultset(path));
+            if(resultsettype.equals("featureset"))
+                qdPair.addAll(Collection.GOV2.equals(collection) ? retrieveQDPairsForLetor(path) : retrieveQDPairs(path));
+
 
             for (AbstractMap.SimpleEntry<String, String> entry : qdPair) {
                 docIdSet.add(entry.getValue());
             }
         }
+
+        System.out.println(qdPair.size() + " QD pair will be processed.");
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
@@ -151,6 +159,8 @@ public class QDFeatureTool extends CmdLineTool {
         long start = System.nanoTime();
 
         List<IQDFeature> qdFeatures = new ArrayList<>();
+        qdFeatures.add(new VariantsOfTfFor5Fields());
+        qdFeatures.add(new VariantsOfTfIdfFor5Fields());
         qdFeatures.add(new WMWD_BM25());
         qdFeatures.add(new WMWD_LGD());
         qdFeatures.add(new WMWD_PL2());
@@ -159,6 +169,13 @@ public class QDFeatureTool extends CmdLineTool {
         qdFeatures.add(new WMWD_DPH());
         qdFeatures.add(new WMWD_DLH13());
         qdFeatures.add(new WMWD_DFRee());
+        qdFeatures.add(new WMWD_LMIR_JM());
+        qdFeatures.add(new WMWD_LMIRABS());
+        qdFeatures.add(new CoveredTermCount());
+        qdFeatures.add(new CoveredTermRatio());
+        qdFeatures.add(new VariantsOfTermCountLengthNormFor5Fields());
+        qdFeatures.add(new MinCoverageForTitle());
+        qdFeatures.add(new MinCoverageForBody());
 
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
@@ -169,9 +186,9 @@ public class QDFeatureTool extends CmdLineTool {
 
     }
 
-    private List<AbstractMap.SimpleEntry<String, String>> retrieveQDPairs (Path file) throws IOException {
+    private Set<AbstractMap.SimpleEntry<String, String>> retrieveQDPairs (Path file) throws IOException {
 
-        List<AbstractMap.SimpleEntry<String, String>> qdPairList = new ArrayList<>();
+        Set<AbstractMap.SimpleEntry<String, String>> qdPairList = new LinkedHashSet<>();
         List<String> lines = Files.readAllLines(file);
 
         for (String line : lines) {
@@ -201,10 +218,30 @@ public class QDFeatureTool extends CmdLineTool {
         return qdPairList;
     }
 
+    private Set<AbstractMap.SimpleEntry<String, String>> retrieveQDPairsFromResultset (Path file) throws IOException {
 
-    private List<AbstractMap.SimpleEntry<String, String>> retrieveQDPairsForLetor (Path file) throws IOException {
+        Set<AbstractMap.SimpleEntry<String, String>> qdPairList = new LinkedHashSet<>();
+        List<String> lines = Files.readAllLines(file);
 
-        List<AbstractMap.SimpleEntry<String, String>> qdPairList = new ArrayList<>();
+        for (String line : lines) {
+
+            if (line.startsWith("#")) continue;
+            String qid = Track.whiteSpaceSplitter.split(line)[0];
+
+            String docId = Track.whiteSpaceSplitter.split(line)[2];
+
+            qdPairList.add(new AbstractMap.SimpleEntry<String, String>(qid, docId));
+        }
+
+        lines.clear();
+
+        return qdPairList;
+    }
+
+
+    private Set<AbstractMap.SimpleEntry<String, String>> retrieveQDPairsForLetor (Path file) throws IOException {
+
+        Set<AbstractMap.SimpleEntry<String, String>> qdPairList = new LinkedHashSet<>();
         List<String> lines = Files.readAllLines(file);
 
         for (String line : lines) {

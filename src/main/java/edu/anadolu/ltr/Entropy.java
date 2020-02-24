@@ -1,13 +1,8 @@
 package edu.anadolu.ltr;
 
-import edu.anadolu.analysis.Analyzers;
-import edu.anadolu.analysis.Tag;
 import org.apache.lucene.search.similarities.ModelBase;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Entropy implements IDocFeature {
 
@@ -19,22 +14,14 @@ public class Entropy implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
 
-        if (base.jDoc.body() == null) return 0;
-        String text = base.jDoc.body().text();
-
-        List<String> listContent = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(base.analyzerTag));
-        Set<String> setContent = new HashSet<>(listContent);
-
+        if (base.listContent.size()==0) return 0;
 
         double entropy = 0.0;
+        int contentSize = base.listContent.size();
 
-        for (String term : setContent) {
+        for (Map.Entry<String,Integer> term : base.mapTf.entrySet()) {
 
-            int tf = Collections.frequency(listContent, term);
-
-            assert tf < 0 : "within document frequency should be greater than zero";
-
-            double p = (double) tf / listContent.size();
+            double p = (double) term.getValue() / contentSize;
 
             entropy += p * -ModelBase.log2(p);
 

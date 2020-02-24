@@ -14,8 +14,6 @@ public class SimTitleKeyword implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-        String title = base.jDoc.title();
-        String keyword = MetaTag.enrich3(base.jDoc, "keywords");
-        return base.textSimilarity(title, keyword);
+        return base.textSimilarity(base.title, base.keyword);
     }
 }

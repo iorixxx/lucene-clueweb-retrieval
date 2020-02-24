@@ -1,5 +1,6 @@
 package edu.anadolu.analysis;
 
+import com.google.common.base.Strings;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
@@ -57,6 +58,7 @@ public class Analyzers {
     public static List<String> getAnalyzedTokens(String text, Analyzer analyzer) {
 
         final List<String> list = new ArrayList<>();
+        if(Strings.isNullOrEmpty(text)) return list;
         try (TokenStream ts = analyzer.tokenStream(FIELD, new StringReader(text))) {
 
             final CharTermAttribute termAtt = ts.addAttribute(CharTermAttribute.class);

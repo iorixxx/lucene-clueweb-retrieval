@@ -11,13 +11,6 @@ public class NoOfTitleTerms implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-//        if(Analyzers.getAnalyzedTokens(base.jDoc.title(), Analyzers.analyzer(base.analyzerTag)).size()>30){
-//            System.out.println("****************************************************************************************************************************************");
-//            System.out.println("Doc Id = " + base.docId + " NoofTitleTerms : " + Analyzers.getAnalyzedTokens(base.jDoc.title(), Analyzers.analyzer(base.analyzerTag)).size());
-//            System.out.println("********************************************************************");
-//            System.out.println(base.jDoc.html());
-//            System.out.println("****************************************************************************************************************************************");
-//        }
-        return Analyzers.getAnalyzedTokens(base.jDoc.title(), Analyzers.analyzer(base.analyzerTag)).size();
+        return base.title.size();
     }
 }

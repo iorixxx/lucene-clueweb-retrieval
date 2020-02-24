@@ -47,7 +47,6 @@ public class TraverserForQD {
 
             String id = warcRecord.id();
 
-
             if (skip(id)) return 0;
 
             List<InfoNeed> queryList = new ArrayList<>();
@@ -148,7 +147,7 @@ public class TraverserForQD {
                 if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
                     int addCount = processClueWeb09WarcFile();
                     //System.out.println("*./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "  " + addCount);
-                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection)) {
+                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
                     int addCount = processClueWeb12WarcFile();
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
                 } else if (Collection.GOV2.equals(collection)) {
@@ -176,7 +175,7 @@ public class TraverserForQD {
     private final Path docsPath;
     private final Collection collection;
     private Set<String> docIdSet;
-    private List<AbstractMap.SimpleEntry<String,String>> qdPairs;
+    private Set<AbstractMap.SimpleEntry<String,String>> qdPairs;
     private List<IQDFeature> qdFeatureList;
     private DataSet dataSet;
     private CollectionStatistics collectionStatistics;
@@ -185,7 +184,7 @@ public class TraverserForQD {
     private HttpSolrClient solrClient;
 
 
-    TraverserForQD(DataSet dataset, String docsDir, List<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList, CollectionStatistics collectionStatistics, Map<String,TermStatistics> termStatisticsMap, Tag analyzerTag, Set<String> docIdSet) {
+    TraverserForQD(DataSet dataset, String docsDir, Set<AbstractMap.SimpleEntry<String,String>> qdPairs, List<IQDFeature> qdFeatureList, CollectionStatistics collectionStatistics, Map<String,TermStatistics> termStatisticsMap, Tag analyzerTag, Set<String> docIdSet) {
         this.collection = dataset.collection();
         this.qdPairs = qdPairs;
         this.qdFeatureList = qdFeatureList;

@@ -133,7 +133,7 @@ public class Indexer {
 
             // don't index empty documents
             if (contents.length() == 0) {
-                System.err.println(id);
+                System.err.println(id + " empty");
                 return 1;
             }
 

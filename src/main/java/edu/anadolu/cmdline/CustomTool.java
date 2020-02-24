@@ -93,7 +93,7 @@ public class CustomTool extends CmdLineTool {
                 // search for a specific tag, skip the rest
                 if (this.tag != null && !tag.equals(this.tag)) continue;
 
-                try (Searcher searcher = new Searcher(path, dataset, 1000)) {
+                try (Searcher searcher = new Searcher(path, dataset, 5000)) {
                     searcher.searchWithThreads(numThreads, modelBaseSet, /*Collections.singletonList("contents")*/ fields, "runs");
                 }
             }

@@ -7,6 +7,10 @@ import java.util.List;
 
 public class WMWD_DFRee implements IQDFeature {
 
+    @Override
+    public QDFeatureFields field(){
+        return QDFeatureFields.ALL;
+    }
 
     @Override
     public String toString() {

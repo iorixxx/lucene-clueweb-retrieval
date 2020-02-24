@@ -15,6 +15,11 @@ import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
+import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -32,6 +37,8 @@ public final class FeatureTool extends CmdLineTool {
     protected Measure measure = Measure.NDCG100;
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
+    @Option(name = "-out", required = true, usage = "output file")
+    private String out;
 
     @Override
     public String getShortDescription() {
@@ -90,40 +97,66 @@ public final class FeatureTool extends CmdLineTool {
         QuerySelector querySelector = new QuerySelector(dataset, tag);
         boolean term = "term".equals(task);
 
-        // Print header
-        System.out.println("QueryID\tWordCount\tGamma\tOmega\tAvgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt\tMeanSCQ\tVarSCQ");
-        for (InfoNeed need : querySelector.allQueries) {
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(out), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
 
-            Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");
+            // Print header
+            System.out.println("QueryID\tWordCount\tGamma\tOmega\tAvgPMI\tSCS\tMeanIDF\tVarIDF\tMeanCTI\tVarCTI\tMeanSkew\tVarSkew\tMeanKurt\tVarKurt\tMeanSCQ\tVarSCQ");
+            for (InfoNeed need : querySelector.allQueries) {
 
-            List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), analyzer);
+                Map<String, String> map = querySelector.getFrequencyDistributionList(need, "contents_all_freq_1000.csv");
 
-            double[] idfs = new double[analyzedTokens.size()];
-            double[] ctis = new double[analyzedTokens.size()];
-            double[] skew = new double[analyzedTokens.size()];
-            double[] kurt = new double[analyzedTokens.size()];
-            double[] scqs = new double[analyzedTokens.size()];
+                List<String> analyzedTokens = Analyzers.getAnalyzedTokens(need.query(), analyzer);
 
-            for (int c = 0; c < analyzedTokens.size(); c++) {
-                String word = analyzedTokens.get(c);
-                String freqLine = map.get(word);
-                DescriptiveStatistics descriptiveStatistics = querySelector.toDescriptiveStatistics(freqLine);
+                double[] idfs = new double[analyzedTokens.size()];
+                double[] ctis = new double[analyzedTokens.size()];
+                double[] skew = new double[analyzedTokens.size()];
+                double[] kurt = new double[analyzedTokens.size()];
+                double[] scqs = new double[analyzedTokens.size()];
 
-                idfs[c] = idf.value(word);
-                ctis[c] = cti.value(word);
-                skew[c] = descriptiveStatistics.getSkewness();
-                kurt[c] = descriptiveStatistics.getKurtosis();
-                scqs[c] = scq.value(word);
-                if (term)
-                    System.out.println(need.id() + ":" + word + "\t" + idfs[c] + "\t" + ctis[c] + "\t" + skew[c] + "\t" + kurt[c]);
+                for (int c = 0; c < analyzedTokens.size(); c++) {
+                    String word = analyzedTokens.get(c);
+                    String freqLine = map.get(word);
+                    DescriptiveStatistics descriptiveStatistics = querySelector.toDescriptiveStatistics(freqLine);
+
+                    idfs[c] = idf.value(word);
+                    ctis[c] = cti.value(word);
+                    skew[c] = descriptiveStatistics.getSkewness();
+                    kurt[c] = descriptiveStatistics.getKurtosis();
+                    scqs[c] = scq.value(word);
+                    if (term)
+                        System.out.println(need.id() + ":" + word + "\t" + idfs[c] + "\t" + ctis[c] + "\t" + skew[c] + "\t" + kurt[c]);
+                }
+
+                System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + idf.aggregated(need, new Aggregate.Gamma1()) + "\t" + scope.value(need) + "\t");
+                System.out.print(pmi.value(need) + "\t" + scs.value(need) + "\t");
+                System.out.print(StatUtils.mean(idfs) + "\t" + StatUtils.variance(idfs) + "\t");
+                System.out.print(StatUtils.mean(ctis) + "\t" + StatUtils.variance(ctis) + "\t");
+                System.out.print(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt) + "\t");
+                System.out.println(StatUtils.mean(scqs) + "\t" + StatUtils.variance(scqs));
+
+                String line = "qid:" + need.id() +
+                        "\tWordCount:" + need.wordCount() +
+                        "\tGamma:" + String.format("%.5f",idf.aggregated(need, new Aggregate.Gamma1())) +
+                        "\tOmega:" +  String.format("%.5f",scope.value(need)) +
+                        "\tAvgPMI:" + String.format("%.5f",pmi.value(need)) +
+                        "\tSCS:" + String.format("%.5f",scs.value(need)) +
+                        "\tMeanIDF:" + String.format("%.5f",StatUtils.mean(idfs)) +
+                        "\tVarIDF:" + String.format("%.5f",StatUtils.variance(idfs)) +
+                        "\tMeanCTI:" +  String.format("%.5f",StatUtils.mean(ctis)) +
+                        "\tVarCTI:" + String.format("%.5f",StatUtils.variance(ctis)) +
+                        "\tMeanSkew:" + String.format("%.5f",StatUtils.mean(skew)) +
+                        "\tVarSkew:" + String.format("%.5f",StatUtils.variance(skew)) +
+                        "\tMeanKurt:" + String.format("%.5f",StatUtils.mean(kurt)) +
+                        "\tVarKurt:" + String.format("%.5f",StatUtils.variance(kurt)) +
+                        "\tMeanSCQ:" + String.format("%.5f",StatUtils.mean(scqs)) +
+                        "\tVarSCQ:" + String.format("%.5f",StatUtils.variance(scqs));
+                System.out.println(line);
+                bw.write(line);
+                bw.newLine();
             }
 
-            System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + idf.aggregated(need, new Aggregate.Gamma1()) + "\t" + scope.value(need) + "\t");
-            System.out.print(pmi.value(need) + "\t" + scs.value(need) + "\t");
-            System.out.print(StatUtils.mean(idfs) + "\t" + StatUtils.variance(idfs) + "\t");
-            System.out.print(StatUtils.mean(ctis) + "\t" + StatUtils.variance(ctis) + "\t");
-            System.out.print(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt) + "\t");
-            System.out.println(StatUtils.mean(scqs) + "\t" + StatUtils.variance(scqs));
+        }catch (Exception ex){
+            ex.printStackTrace();
         }
 
         pmi.close();

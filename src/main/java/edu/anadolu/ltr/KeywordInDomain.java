@@ -18,11 +18,10 @@ public class KeywordInDomain implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
         try {
-            String keyword = MetaTag.enrich3(base.jDoc, "keywords");
             URI uri = new URI(base.url);
             String host = uri.getHost();
             String domain = host.startsWith("www.") ? host.substring(4) : host;
-            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
+            for (String token : base.keyword) {
                 if (domain.contains(token))
                     return 1;
             }

@@ -21,7 +21,7 @@ public class StopWordRatio implements IDocFeature {
 
         String text = base.jDoc.text();
 
-        Analyzer analyzer = Analyzers.analyzer(Tag.NoStem);
+        Analyzer analyzer = Analyzers.analyzer(base.analyzerTag);
 
         int docLength = 0;
         int stopCount = 0;

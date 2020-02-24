@@ -14,9 +14,6 @@ public class SimContentTitle implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-        if(base.jDoc.body()==null) return 0;
-        String content = base.getFirstWords(base.jDoc.body().text(),100);
-        String title = base.jDoc.title();
-        return base.textSimilarity(content, title);
+        return base.textSimilarity(base.listContent, base.title);
     }
 }

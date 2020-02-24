@@ -1,9 +1,9 @@
 package edu.anadolu.ltr;
 
+import com.google.common.collect.Sets;
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
-import edu.anadolu.datasets.Collection;
 import edu.anadolu.field.MetaTag;
 import edu.cmu.lti.lexical_db.ILexicalDatabase;
 import edu.cmu.lti.lexical_db.NictWordNet;
@@ -14,7 +14,6 @@ import edu.cmu.lti.ws4j.util.StopWordRemover;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermStatistics;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.common.StringUtils;
 import org.clueweb09.WarcRecord;
@@ -34,6 +33,9 @@ import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static edu.anadolu.field.MetaTag.notEmpty;
 
 
 public class DocFeatureBase {
@@ -44,8 +46,14 @@ public class DocFeatureBase {
     CollectionStatistics collectionStatistics;
     Tag analyzerTag;
     List<String> listContent;
+    List<String> title;
+    List<String> keyword;
+    List<String> description;
+    List<String> hTags;
     IndexSearcher searcher;
     IndexReader reader;
+    RelatednessCalculator rc1;
+    Map<String,Integer> mapTf;
 
     /**
      * It is possible to find URL info in the headers of *.warc files for the ClueWeb datasets.
@@ -53,19 +61,31 @@ public class DocFeatureBase {
      *
      * @param warcRecord input warc record
      */
-    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader) {
+    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, RelatednessCalculator rc1) {
         try {
-            rawHTML = warcRecord.content().replace("<a","<br><a");
+            rawHTML = warcRecord.content();
             jDoc = Jsoup.parse(rawHTML);
             docId = warcRecord.id();
             url = warcRecord.url() == null ? jDoc.baseUri() : warcRecord.url();
             this.collectionStatistics = collectionStatistics;
             this.analyzerTag = analyzerTag;
-            listContent = Analyzers.getAnalyzedTokens(jDoc.text(), Analyzers.analyzer(analyzerTag));
+            this.listContent = Analyzers.getAnalyzedTokens(jDoc.text(), Analyzers.analyzer(analyzerTag));
+            mapTf = getDocTfForTerms();
             this.searcher = searcher;
             this.reader = reader;
+
+            this.title = Analyzers.getAnalyzedTokens(jDoc.title(),Analyzers.analyzer(analyzerTag));
+            this.keyword = Analyzers.getAnalyzedTokens(MetaTag.enrich3(jDoc, "keywords"), Analyzers.analyzer(analyzerTag));
+            this.description = Analyzers.getAnalyzedTokens(MetaTag.enrich3(jDoc, "description"), Analyzers.analyzer(analyzerTag));
+            Elements hTags = jDoc.select("h1, h2, h3, h4, h5, h6");
+            this.hTags=hTags.stream()
+                    .map(e -> e.text())
+                    .map(String::trim)
+                    .filter(notEmpty).collect(Collectors.toList());
+            this.rc1=rc1;
         } catch (Exception exception) {
             System.err.println("jdoc exception " + warcRecord.id());
+            exception.printStackTrace();
             jDoc = null;
         }
     }
@@ -162,10 +182,10 @@ public class DocFeatureBase {
         return fields;
     }
 
-    protected static int inlinkCount(Document jDoc, Elements links) {
+    protected int inlinkCount(Document jDoc, Elements links) {
         int inlink = 0;
         try {
-            URI uri = new URI(jDoc.baseUri());
+            URI uri = new URI(url);
             String host = uri.getHost();
             String domain = host.startsWith("www.") ? host.substring(4) : host;
 
@@ -185,30 +205,38 @@ public class DocFeatureBase {
                 }
             }
 
-        } catch (URISyntaxException | NullPointerException e) {
+        } catch (URISyntaxException e) {
+            System.out.println("url syntax: " + url);
+            return 0;
+        } catch (NullPointerException e1){
+            System.out.println("null url : " + url);
             return 0;
         }
         return inlink;
     }
 
-    protected double textSimilarity(String str1, String str2) {
-        if (StringUtils.isEmpty(str1)) return 0;
-        if (StringUtils.isEmpty(str2)) return 0;
-        ILexicalDatabase db = new NictWordNet();
-        RelatednessCalculator rc1 = new WuPalmer(db);
-        Pattern UNWANTED_SYMBOLS = Pattern.compile("\\p{Punct}");
-        Matcher unwantedMatcher = UNWANTED_SYMBOLS.matcher(str1);
-        str1 = unwantedMatcher.replaceAll("");
-        Matcher unwantedMatcher2 = UNWANTED_SYMBOLS.matcher(str2);
-        str2 = unwantedMatcher2.replaceAll("");
-        String[] words1 = str1.split("\\s+");
-        String[] words2 = str2.split("\\s+");
+    protected double textSimilarity(List<String> str1, List<String> str2) {
+
+        String[] words1 = str1.toArray(new String[0]);
+        String[] words2 = str2.toArray(new String[0]);
+
+        if (words1.length==0) return 0;
+        if (words2.length==0) return 0;
+//        Pattern UNWANTED_SYMBOLS = Pattern.compile("\\p{Punct}");
+//        Matcher unwantedMatcher = UNWANTED_SYMBOLS.matcher(str1);
+//        str1 = unwantedMatcher.replaceAll("");
+//        Matcher unwantedMatcher2 = UNWANTED_SYMBOLS.matcher(str2);
+//        str2 = unwantedMatcher2.replaceAll("");
+//        String[] words1 = str1.split("\\s+");
+//        String[] words2 = str2.split("\\s+");
+
+        long avgDoclen = (long)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount();
+        words1 = words1.length > avgDoclen ? copyArrayRandom(words1,avgDoclen) : words1;
+        words2 = words2.length > avgDoclen ? copyArrayRandom(words2,avgDoclen) : words2;
+
         words1 = StopWordRemover.getInstance().removeStopWords(words1);
         words2 = StopWordRemover.getInstance().removeStopWords(words2);
-
-        words1 = words1.length > 100 ? Arrays.copyOfRange(words1, 0, 100) : words1;
-        words2 = words2.length > 100 ? Arrays.copyOfRange(words2, 0, 100) : words2;
-
+        
         double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
 
         double total = 0;
@@ -216,13 +244,29 @@ public class DocFeatureBase {
 
         for (int i = 0; i < words1.length; i++) {
             for (int j = 0; j < words2.length; j++) {
-                total += s1[i][j];
-                ;
-                if (s1[i][j] > 0) count++;
+                if (s1[i][j] > 0){
+                    count++;
+                    total += s1[i][j];
+                }
             }
         }
         if (count == 0) return 0;
         return total / count;
+    }
+
+    private String[] copyArrayRandom(String[] array, long length){
+
+        Random rand = new Random();
+        Set<Integer> randNums = new HashSet<>();
+        while(randNums.size()<length){
+            randNums.add(rand.nextInt(array.length));
+        }
+
+        String[] arrayNew = new String[(int)length];
+        for(int i=0;i<length;i++){
+            arrayNew[i] = array[randNums.iterator().next()];
+        }
+        return arrayNew;
     }
 
     protected double getTf(String word, List<String> listContent) {
@@ -242,5 +286,17 @@ public class DocFeatureBase {
         else
             updatedText = String.join(" ", tokens);
         return updatedText;
+    }
+
+    protected Map<String,Integer> getDocTfForTerms(){
+        Map<String,Integer> mapTf = new HashMap<>();
+
+        for(String term : listContent){
+            if(mapTf.containsKey(term))
+                mapTf.put(term,mapTf.get(term)+1);
+            else
+                mapTf.put(term,1);
+        }
+        return mapTf;
     }
 }

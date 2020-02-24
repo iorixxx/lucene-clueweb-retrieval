@@ -22,6 +22,7 @@ public class VariantsOfTermCountLengthNormFor5Fields implements IQDFeature{
 
     @Override
     public double calculate(QDFeatureBase base, String word, List<String> subParts) throws IOException {
+        if(base.listContent.size()==0)  return 0;
         return base.tf/base.listContent.size();
     }
 }

@@ -12,9 +12,8 @@ public class Description implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
-        String description = MetaTag.enrich3(base.jDoc, "description");
 
-        if (description != null)
+        if (base.description.size()>0)
             return 1;
 
         return 0;

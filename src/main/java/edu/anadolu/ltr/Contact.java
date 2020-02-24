@@ -13,6 +13,7 @@ public class Contact implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) {
+        if(base.jDoc==null) return 0;
         Elements links = base.jDoc.select("a");
         for (Element element : links) {
             String href = element.attr("href");

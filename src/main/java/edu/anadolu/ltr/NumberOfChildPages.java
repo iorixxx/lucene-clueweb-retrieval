@@ -3,6 +3,7 @@ package edu.anadolu.ltr;
 import edu.anadolu.datasets.Collection;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.params.CommonParams;
 
@@ -58,25 +59,33 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
         resp.clear();
         query.clear();
 
-        query = new SolrQuery("{!prefix f=url}" + url.trim().toLowerCase(Locale.ENGLISH)).setFields("id").setRows(0);
+        query = new SolrQuery("{!prefix f=url}" + url.trim().toLowerCase(Locale.ENGLISH)).setFields("id").setRows(1);
         query.set(HEADER_ECHO_PARAMS, CommonParams.EchoParamStyle.NONE.toString());
         query.set(OMIT_HEADER, true);
         query.set(DF, "url");
 
-
+        int count=0;
         try {
             resp = solrClient.query(query).getResults();
-        } catch (SolrServerException e) {
+            count = (int) resp.getNumFound();
+        }catch (SolrServerException e) {
             throw new RuntimeException(e);
+        }catch (StackOverflowError e1){
+            e1.printStackTrace();
+            return 0;
+        }catch (HttpSolrClient.RemoteSolrException e2){
+            e2.printStackTrace();
+            return 0;
         }
 
 
-        if (resp.getNumFound() < 1) {
+        if (count < 1) {
             throw new RuntimeException("url " + url + " docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
         }
-
+        
+        resp.clear();
         query.clear();
 
-        return (double) resp.getNumFound() - 1;
+        return (double) count - 1;
     }
 }

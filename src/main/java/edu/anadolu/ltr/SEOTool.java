@@ -18,6 +18,7 @@ import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.clueweb09.InfoNeed;
+import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -48,6 +49,12 @@ public class SEOTool extends CmdLineTool {
 
     @Option(name = "-type", usage = "seo or doc")
     private String type = null;
+
+    @Option(name = "-resultsettype", usage = "resultset of featureset")
+    private String resultsettype = null;
+
+    @Option(name = "-seopart", required = false, usage = "1-2-3-4-5-6 for divide seo features to fast computing")
+    private String seopart = null;
 
     @Override
     public String getShortDescription() {
@@ -113,9 +120,13 @@ public class SEOTool extends CmdLineTool {
                 System.out.println(getHelp());
                 return;
             }
-            docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
+            if(resultsettype.equals("resultset"))
+                docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSetFromResultset(path));
+            if(resultsettype.equals("featureset"))
+                docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
         }
 
+        System.out.println(docIdSet.size() + " docs will be processed.");
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
@@ -152,44 +163,92 @@ public class SEOTool extends CmdLineTool {
 
         List<IDocFeature> features = new ArrayList<>();
         if(type.equals("seo")){
-            features.add(new Contact());
-            features.add(new ContentLengthOver1800());
-            features.add(new Copyright());
-            features.add(new Description());
-            features.add(new Favicon());
-            features.add(new Https());
-            features.add(new Keyword());
-            features.add(new KeywordInDomain());
-            features.add(new KeywordInFirst100Words());
-            features.add(new KeywordInImgAltTag());
-            features.add(new KeywordInTitle());
-            features.add(new Robots());
-            features.add(new SocialMediaShare());
-            features.add(new Viewport());
+            if(seopart==null) {
+                features.add(new Contact());
+                features.add(new ContentLengthOver1800());
+                features.add(new Copyright());
+                features.add(new Description());
+                features.add(new Favicon());
+                features.add(new Https());
+                features.add(new Keyword());
+                features.add(new KeywordInDomain());
+                features.add(new KeywordInFirst100Words());
+                features.add(new KeywordInImgAltTag());
+                features.add(new KeywordInTitle());
+                features.add(new Robots());
+                features.add(new SocialMediaShare());
+                features.add(new Viewport());
+                features.add(new AlttagToImg());
+                features.add(new ContentLengthToMax());
+                features.add(new HdensityToMax());
+                features.add(new ImgToMax());
+                features.add(new IndexOfKeywordInTitle());
+                features.add(new InOutlinkToAll());
+                features.add(new UrlLength());
+                features.add(new MetaTagToMax());
+                features.add(new NoFollowToAll());
 
-            features.add(new AlttagToImg());
-            features.add(new ContentLengthToMax());
-            features.add(new HdensityToMax());
-            features.add(new ImgToMax());
-            features.add(new IndexOfKeywordInTitle());
-            features.add(new InOutlinkToAll());
-            features.add(new UrlLength());
-            features.add(new MetaTagToMax());
-            features.add(new NoFollowToAll());
-            features.add(new SimDescriptionH());
-            features.add(new SimKeywordDescription());
-            features.add(new SimKeywordH());
-            features.add(new SimTitleDescription());
-            features.add(new SimTitleH());
-            features.add(new SimTitleKeyword());
-            features.add(new SimContentDescription());
-            features.add(new SimContentH());
-            features.add(new SimContentKeyword());
-            features.add(new SimContentTitle());
+                features.add(new SimDescriptionH());
+                features.add(new SimContentDescription());
+
+                features.add(new SimKeywordDescription());
+                features.add(new SimContentH());
+
+                features.add(new SimKeywordH());
+                features.add(new SimContentKeyword());
+
+                features.add(new SimTitleDescription());
+                features.add(new SimContentTitle());
+
+                features.add(new SimTitleH());
+                features.add(new SimTitleKeyword());
+            }else{
+                if(seopart.equals("1")){
+                    features.add(new Contact());
+                    features.add(new ContentLengthOver1800());
+                    features.add(new Copyright());
+                    features.add(new Description());
+                    features.add(new Favicon());
+                    features.add(new Https());
+                    features.add(new Keyword());
+                    features.add(new KeywordInDomain());
+                    features.add(new KeywordInFirst100Words());
+                    features.add(new KeywordInImgAltTag());
+                    features.add(new KeywordInTitle());
+                    features.add(new Robots());
+                    features.add(new SocialMediaShare());
+                    features.add(new Viewport());
+                    features.add(new AlttagToImg());
+                    features.add(new ContentLengthToMax());
+                    features.add(new HdensityToMax());
+                    features.add(new ImgToMax());
+                    features.add(new IndexOfKeywordInTitle());
+                    features.add(new InOutlinkToAll());
+                    features.add(new UrlLength());
+                    features.add(new MetaTagToMax());
+                    features.add(new NoFollowToAll());
+                }else if(seopart.equals("2")){
+                    features.add(new SimDescriptionH());
+                    features.add(new SimContentDescription());
+                }else if(seopart.equals("3")){
+                    features.add(new SimKeywordDescription());
+                    features.add(new SimContentH());
+                }else if(seopart.equals("4")){
+                    features.add(new SimKeywordH());
+                    features.add(new SimContentKeyword());
+                }else if(seopart.equals("5")){
+                    features.add(new SimTitleDescription());
+                    features.add(new SimContentTitle());
+                }else if(seopart.equals("6")){
+                    features.add(new SimTitleH());
+                    features.add(new SimTitleKeyword());
+                }
+            }
         }else if(type.equals("doc")){
             features.add(new NumberOfChildPages(collection));
             features.add(new InLinkCount(collection));
             features.add(new PageRank(collection));
+            features.add(new SpamScore(collection));
 
             features.add(new Entropy());
             features.add(new NumberOfSlashesInURL());
@@ -208,9 +267,12 @@ public class SEOTool extends CmdLineTool {
         }
 
         Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader);
+        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumDocFreq()/collectionStatistics.docCount());
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
+        System.out.println(numThreads + " threads are running.");
         traverser.traverseParallel(Paths.get(out), numThreads);
+        //traverser.traverseWithThreads(Paths.get(out), numThreads);
         System.out.println("Document features are extracted in " + execution(start));
 
         for (IDocFeature feature : features)
@@ -234,6 +296,26 @@ public class SEOTool extends CmdLineTool {
             }
 
             String docId = line.substring(i + 1).trim();
+
+            docIdSet.add(docId);
+        }
+
+        lines.clear();
+
+        return docIdSet;
+    }
+
+    private Set<String> retrieveDocIdSetFromResultset(Path file) throws IOException {
+
+        Set<String> docIdSet = new HashSet<>();
+        List<String> lines = Files.readAllLines(file);
+
+        for (String line : lines) {
+
+            if (line.startsWith("#")) continue;
+
+
+            String docId = Track.whiteSpaceSplitter.split(line)[2];
 
             docIdSet.add(docId);
         }
@@ -286,6 +368,8 @@ public class SEOTool extends CmdLineTool {
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank09A").build();
             else if (InLinkCount.class.equals(clazz))
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor09A").build();
+            else if (SpamScore.class.equals(clazz))
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/spam09A").build();
 
         } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
 
@@ -295,6 +379,8 @@ public class SEOTool extends CmdLineTool {
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank12A").build();
             else if (InLinkCount.class.equals(clazz))
                 return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor12A").build();
+            else if (SpamScore.class.equals(clazz))
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/spam12A").build();
         }
 
         throw new RuntimeException("The factory cannot find appropriate SolrClient for " + collection + " and " + clazz);
