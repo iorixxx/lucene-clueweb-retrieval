@@ -36,6 +36,10 @@ public final class IndexerTool extends CmdLineTool {
     @Option(name = "-semantic", usage = "Boolean switch to index HTML5 semantic elements")
     private boolean semantic = false;
 
+    @Option(name = "-silent", usage = "Do not print the identifiers of empty documents that are skipped during indexing (which are printed by default)")
+    private boolean silent = false;
+
+
     @Option(name = "-tag", metaVar = "[KStem|NoStem|ICU|NoStemTurkish|Zemberek]", required = false, usage = "Analyzer Tag")
     private Tag tag = KStem;
 

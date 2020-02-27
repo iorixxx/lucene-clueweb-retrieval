@@ -236,7 +236,7 @@ public class Analyzers {
     }
 
     public static void main(String[] args) {
-        String text = "I'd love your's yours' you're O'Reilly's don't eagle's feathers, or in one month's time Bernadette's, flower's, glass's, one's";
+        String text = "I'd ip1188 love your's yours' you're O'Reilly's don't eagle's feathers, or in one month's time Bernadette's, flower's, glass's, one's";
         System.out.println(getAnalyzedTokens(text, analyzer(KStem)));
     }
 }

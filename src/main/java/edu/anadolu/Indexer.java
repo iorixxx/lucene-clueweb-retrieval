@@ -132,7 +132,7 @@ public class Indexer {
             String contents = jDoc.text();
 
             // don't index empty documents
-            if (contents.length() == 0) {
+            if (contents.length() == 0 && !config.silent) {
                 System.err.println(id);
                 return 1;
             }
@@ -151,7 +151,7 @@ public class Indexer {
             }
 
             // don't index empty documents
-            if (contents.length() < 2) {
+            if (contents.length() < 2 && !config.silent) {
                 System.err.println(id);
                 return 1;
             }
@@ -187,7 +187,8 @@ public class Indexer {
             try {
                 jDoc = Jsoup.parse(warcRecord.content());
             } catch (Exception exception) {
-                System.err.println("jdoc exception " + id);
+                if (!config.silent)
+                    System.err.println("jdoc exception " + id);
                 return 1;
             }
 
@@ -296,7 +297,7 @@ public class Indexer {
      * Query relevance judgments of the ClueWeb12 dataset does not contain these documents, so skipping them is safe.
      * See open ticket : https://github.com/jhy/jsoup/issues/1192
      * Here are some binary files that hang JSoup.
-     *
+     * <p>
      * <p>
      * clueweb12-1100wb-15-21376 http://csr.bu.edu/colortracking/data/test-sequences/sequence15.mv
      * clueweb12-1100wb-15-21381 http://csr.bu.edu/colortracking/data/test-sequences/sequence4.mv
@@ -408,7 +409,8 @@ public class Indexer {
         try {
             jDoc = Jsoup.parse(wDoc.content());
         } catch (Exception exception) {
-            System.err.println(wDoc.id());
+            if (!config.silent)
+                System.err.println(wDoc.id());
             return null;
         }
 
@@ -459,13 +461,13 @@ public class Indexer {
 
         String metaNames = MetaTag.metaTagsWithNameAttribute(jDoc);
 
-           if (notEmpty.test(metaNames))
-               document.add(new NoPositionsTextField("meta", metaNames));
+        if (notEmpty.test(metaNames))
+            document.add(new NoPositionsTextField("meta", metaNames));
 
-          document.add(new NoPositionsTextField("bt", body + " " + title));
-          document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
-          document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
-          document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
+        document.add(new NoPositionsTextField("bt", body + " " + title));
+        document.add(new NoPositionsTextField("btd", body + " " + title + " " + description));
+        document.add(new NoPositionsTextField("btk", body + " " + title + " " + keywords));
+        document.add(new NoPositionsTextField("btdk", body + " " + title + " " + description + " " + keywords));
 
 
         /*
@@ -718,6 +720,7 @@ public class Indexer {
         boolean field = false;
         boolean script = false;
         boolean semantic = false;
+        boolean silent = false;
 
         public IndexerConfig useAnchorText(boolean anchor) {
             this.anchor = anchor;
@@ -736,6 +739,11 @@ public class Indexer {
 
         public IndexerConfig useSemanticElements(boolean semantic) {
             this.semantic = semantic;
+            return this;
+        }
+
+        public IndexerConfig useSilent(boolean silent) {
+            this.silent = silent;
             return this;
         }
     }
