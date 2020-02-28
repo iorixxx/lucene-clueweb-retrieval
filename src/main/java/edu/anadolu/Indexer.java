@@ -132,8 +132,9 @@ public class Indexer {
             String contents = jDoc.text();
 
             // don't index empty documents
-            if (contents.length() == 0 && !config.silent) {
-                System.err.println(id);
+            if (contents.length() == 0) {
+                if (!config.silent)
+                    System.err.println(id);
                 return 1;
             }
 
@@ -151,8 +152,9 @@ public class Indexer {
             }
 
             // don't index empty documents
-            if (contents.length() < 2 && !config.silent) {
-                System.err.println(id);
+            if (contents.length() < 2) {
+                if (!config.silent)
+                    System.err.println(id);
                 return 1;
             }
             return index(id, contents.toString().trim());
