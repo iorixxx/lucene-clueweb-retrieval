@@ -46,12 +46,12 @@ public final class SpamTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.spam paths.docs files.ids files.spam";
     }
 
-    static HttpSolrClient getSpamSolr(Collection collection) {
+    static HttpSolrClient getSpamSolr(Collection collection, String solrBaseURL) {
 
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
-            return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam09A").build();
+            return new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + "spam09A").build();
         } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
-            return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam12A").build();
+            return new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + "spam12A").build();
         else {
             System.out.println("spam filtering is only applicable to ClueWeb09 and ClueWeb12 collections!");
             return null;
@@ -70,6 +70,13 @@ public final class SpamTool extends CmdLineTool {
             return;
         }
 
+        final String solrBaseURL = props.getProperty("SOLR.URL");
+
+        if (solrBaseURL == null) {
+            System.out.println(getHelp());
+            return;
+        }
+
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         if (!dataset.spamAvailable()) {
@@ -77,7 +84,7 @@ public final class SpamTool extends CmdLineTool {
             return;
         }
 
-        final HttpSolrClient solr = getSpamSolr(collection);
+        final HttpSolrClient solr = getSpamSolr(collection, solrBaseURL);
         if (solr == null) return;
 
         List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("base_spam_runs"), ".txt");

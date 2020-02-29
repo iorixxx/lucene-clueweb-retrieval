@@ -36,7 +36,7 @@ final class AnchorExtractorTool extends CmdLineTool {
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
 
 
-            final HttpSolrClient solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
+            final HttpSolrClient solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor09A").build();
             final String anchorPath = props.getProperty("paths.docs.anchor.CW09");
 
             for (int i = 1; i <= 10; i++) {
@@ -50,7 +50,7 @@ final class AnchorExtractorTool extends CmdLineTool {
             solr.close();
         } else if (Collection.CW12B.equals(collection)) {
 
-            final HttpSolrClient solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
+            final HttpSolrClient solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor12A").build();
 
             final String anchorPath = props.getProperty("paths.docs.anchor.CW12B");
 

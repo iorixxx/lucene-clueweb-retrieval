@@ -24,6 +24,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static edu.anadolu.cmdline.RocTool.Ranking.fusion;
+import static edu.anadolu.cmdline.SpamTool.getSpamSolr;
 import static edu.anadolu.cmdline.SpamTool.percentile;
 
 /**
@@ -56,7 +58,7 @@ public final class CormakTool extends CmdLineTool {
 
     private DataSet dataset;
 
-    class WT09 extends DataSet {
+    static private class WT09 extends DataSet {
 
         WT09(String tfd_home) {
             super(Collection.MQ09, new Track[]{
@@ -99,8 +101,19 @@ public final class CormakTool extends CmdLineTool {
             return;
         }
 
+        final String solrBaseURL = props.getProperty("SOLR.URL");
 
-        final HttpSolrClient solr = RocTool.getCW09Solr(ranking);
+        if (solrBaseURL == null) {
+            System.out.println(getHelp());
+            return;
+        }
+
+        final HttpSolrClient solr;
+        if (fusion.equals(ranking))
+            solr = getSpamSolr(Collection.CW09A, solrBaseURL);
+        else
+            solr = new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + ranking.toString()).build();
+
         if (solr == null) return;
 
         List<Path> pathList = discoverSubmissions(Paths.get(tfd_home, Collection.MQ09.toString()).resolve("base_spam_runs"));

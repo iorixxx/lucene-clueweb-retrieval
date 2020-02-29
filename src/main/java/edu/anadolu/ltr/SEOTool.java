@@ -218,20 +218,20 @@ public class SEOTool extends CmdLineTool {
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
 
             if (NumberOfChildPages.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/url09").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/url09").build();
             else if (PageRank.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/rank09A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank09A").build();
             else if (InLinkCount.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor09A").build();
 
         } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
 
             if (NumberOfChildPages.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/url12").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/url12").build();
             else if (PageRank.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/rank12A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank12A").build();
             else if (InLinkCount.class.equals(clazz))
-                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
+                return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/anchor12A").build();
         }
 
         throw new RuntimeException("The factory cannot find appropriate SolrClient for " + collection + " and " + clazz);

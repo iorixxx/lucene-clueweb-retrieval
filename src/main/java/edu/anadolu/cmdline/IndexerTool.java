@@ -102,10 +102,16 @@ public final class IndexerTool extends CmdLineTool {
 
         final HttpSolrClient solr;
         if (anchor) {
+
+            final String solrBaseURL = props.getProperty("SOLR.URL");
+            if (solrBaseURL == null) {
+                System.out.println(getHelp());
+                return;
+            }
             if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
-                solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor09A").build();
+                solr = new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + "anchor09A").build();
             } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
-                solr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/anchor12A").build();
+                solr = new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + "anchor12A").build();
             else {
                 System.out.println("anchor text is only available to ClueWeb09 and ClueWeb12 collections!");
                 return;
