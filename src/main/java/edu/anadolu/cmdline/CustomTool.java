@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 
 public class CustomTool extends CmdLineTool {
 
-    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
-    protected String tag = null;
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = true, usage = "Index Tag")
+    protected String tag;
 
     /**
      * Terrier's default values

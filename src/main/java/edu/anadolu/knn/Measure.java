@@ -7,6 +7,7 @@ import edu.anadolu.eval.Metric;
  */
 public enum Measure {
 
+    NDCG10(Metric.NDCG, 10),
     NDCG20(Metric.NDCG, 20),
     NDCG100(Metric.NDCG, 100),
     NDCG1000(Metric.NDCG, 1000),
