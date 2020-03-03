@@ -76,6 +76,9 @@ public class EvaluatorTool extends CmdLineTool {
     @Option(name = "-spam", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
     protected int spam = 0;
 
+    @Option(name = "-spamCustomDir", metaVar = "[10|15|...|85|90]", required = false, usage = "Non-negative integer spam threshold")
+    protected String spamDir = null;
+
 
     @Override
     public void run(Properties props) throws Exception {
@@ -90,6 +93,7 @@ public class EvaluatorTool extends CmdLineTool {
         }
 
         String evalDirectory = spam == 0 ? "evals" : "spam_" + spam + "_evals";
+        if(spamDir!=null) evalDirectory=spamDir;
 
         final Evaluator evaluator;
         if (collections.length > 1) {

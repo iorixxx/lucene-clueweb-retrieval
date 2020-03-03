@@ -13,11 +13,10 @@ import org.apache.lucene.search.similarities.ModelBase;
 import org.kohsuke.args4j.Option;
 
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static edu.anadolu.cmdline.ParamTool.train;
 
 public class CustomTool extends CmdLineTool {
 
@@ -107,6 +106,45 @@ public class CustomTool extends CmdLineTool {
             evaluator.printMeanWT();
             evaluator.printMean();
             System.out.println("=======================");
+        }
+        if ("spam".equals(task)) {
+
+            final long start = System.nanoTime();
+
+            final Set<ModelBase> modelBaseSet = Arrays.stream(models.split("_"))
+                    .map(ParamTool::string2model)
+                    .collect(Collectors.toSet());
+
+            modelBaseSet.add(new DFIC());
+            modelBaseSet.add(new DPH());
+            modelBaseSet.add(new DLH13());
+            modelBaseSet.add(new DFRee());
+
+            if (!props.containsKey(collection.toString() + ".fields"))
+                throw new RuntimeException("cannot find " + collection.toString() + ".fields property!");
+
+            final String[] fieldsArr = props.getProperty(collection.toString() + ".fields").split(",");
+
+            List<String> fields = Arrays.asList(fieldsArr);
+            if(fields.size()==0) fields.add( props.getProperty(collection.toString() + ".fields"));
+
+            if (dataset.spamAvailable()) {
+                for (final Path path : discoverIndexes(dataset)) {
+
+                    final String tag = path.getFileName().toString();
+
+                    // search for a specific tag, skip the rest
+                    if (this.tag != null && !tag.equals(this.tag)) continue;
+
+                    try (Searcher searcher = new Searcher(path, dataset, 10000)) {
+                        searcher.searchWithThreads(numThreads, modelBaseSet, fields, "base_spam_runs");
+                    }
+                    modelBaseSet.clear();
+                }
+
+                System.out.println("Base search for spam filtering 10,000 documents per query completed in " + execution(start));
+                return;
+            }
         }
 
     }
