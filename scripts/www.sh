@@ -50,7 +50,8 @@ for WWW in 13 14; do
     mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WWW$WWW/trec_eval"
 
     for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/WWW${WWW}/*.txt; do
-        ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WWW}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WWW${WWW}/trec_eval/${f##/*/}" 
+        ${TFD_HOME}/scripts/trec_eval -M1000 -q -m all_trec ${TFD_HOME}/topics-and-qrels/${qrels[${WWW}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WWW${WWW}/trec_eval/${f##/*/}" #all measures calculated with the standard TREC
+#        ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WWW}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WWW${WWW}/trec_eval/${f##/*/}"
         for k in "${cut_off[@]}"
         do
           mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WWW$WWW/$k"
