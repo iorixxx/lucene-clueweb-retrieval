@@ -145,6 +145,8 @@ public final class CLI {
 
         tools.add(new DeepTool());
 
+        tools.add(new EvaluatorJudgeTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
