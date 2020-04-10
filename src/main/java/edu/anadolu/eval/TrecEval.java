@@ -26,6 +26,7 @@ public final class TrecEval implements EvalTool {
         private String map = null;
         private String p = null;
         private String recall = null;
+        private String ncg = null;
         final private int k;
 
 
@@ -60,6 +61,14 @@ public final class TrecEval implements EvalTool {
                     qID = Integer.parseInt(parts[1]);
 
                 }
+                if (line.startsWith("ncg_cut_" + Integer.toString(k))) {
+                    String[] parts = whiteSpaceSplitter.split(line);
+
+                    if (parts.length != 3) throw new RuntimeException("line does not have 3 parts:  " + line);
+                    ncg = parts[2];
+                    qID = Integer.parseInt(parts[1]);
+
+                }
             }
 
             if (p == null || qID == -1 || map == null)
@@ -72,7 +81,8 @@ public final class TrecEval implements EvalTool {
         public String toString() {
             return "topic=" + qID + System.getProperty("line.separator") +
                     "map=" + map + System.getProperty("line.separator") +
-                    "recall@" + k + "=" + map + System.getProperty("line.separator") +
+                    "recall@" + k + "=" + recall + System.getProperty("line.separator") +
+                    "ncg@" + k + "=" + ncg + System.getProperty("line.separator") +
                     "p@" + k + "=" + p;
         }
     }
@@ -115,6 +125,8 @@ public final class TrecEval implements EvalTool {
             return element.p;
         else if (Metric.Recall.equals(metric))
             return element.recall;
+        else if (Metric.NCG.equals(metric))
+            return element.ncg;
         else if (Metric.ERR.equals(metric))
             throw new UnsupportedOperationException("ERR metric is not reported by trec_eval utility");
         else if (Metric.NDCG.equals(metric))
