@@ -113,7 +113,11 @@ public class QuerySelector {
         final String[] parts = whiteSpaceSplitter.split(line);
 
         for (int i = 1; i < parts.length; i++) {
-            descriptiveStatistics.addValue(Double.parseDouble(parts[i]));
+            try {
+                descriptiveStatistics.addValue(Double.parseDouble(parts[i]));
+            }catch (Exception ex){
+                descriptiveStatistics.addValue(0);
+            }
         }
         return descriptiveStatistics;
     }

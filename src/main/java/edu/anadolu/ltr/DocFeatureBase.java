@@ -11,6 +11,7 @@ import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.impl.WuPalmer;
 import edu.cmu.lti.ws4j.util.MatrixCalculator;
 import edu.cmu.lti.ws4j.util.StopWordRemover;
+import org.apache.commons.text.similarity.CosineDistance;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
@@ -35,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static edu.anadolu.cmdline.CmdLineTool.execution;
 import static edu.anadolu.field.MetaTag.notEmpty;
 
 
@@ -95,9 +97,13 @@ public class DocFeatureBase {
 
         StringBuilder builder = new StringBuilder();
         builder.append(docId);
+//        long start2=0;
         for (IDocFeature iDoc : featureList) {
+//            start2 = System.nanoTime();
             double value = iDoc.calculate(this);
             builder.append("\t").append(iDoc.toString()).append(":").append(String.format("%.5f", value));
+//            if((System.nanoTime()-start2)>1000000000)
+//                System.out.println(iDoc.getClass().getSimpleName() + " "+ (System.nanoTime()-start2)/1000000000);
         }
         return builder.toString();
     }
@@ -236,9 +242,9 @@ public class DocFeatureBase {
 
         words1 = StopWordRemover.getInstance().removeStopWords(words1);
         words2 = StopWordRemover.getInstance().removeStopWords(words2);
-        
-        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
 
+        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
+//        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, new WuPalmer(new NictWordNet()));
         double total = 0;
         int count = 0;
 
@@ -252,6 +258,20 @@ public class DocFeatureBase {
         }
         if (count == 0) return 0;
         return total / count;
+    }
+
+    protected double cosSim(String str1, String str2){
+        if(str1.length()==0 || str2.length()==0) return 0;
+        double score =0.0;
+        try{
+            score = 1-(new CosineDistance().apply(str1,str2));
+        }catch (IllegalArgumentException ex){
+            System.out.println("************************************************");
+            System.out.println("str1 " + str1);
+            System.out.println("str2 " + str2);
+            System.out.println("************************************************");
+        }
+        return score;
     }
 
     private String[] copyArrayRandom(String[] array, long length){

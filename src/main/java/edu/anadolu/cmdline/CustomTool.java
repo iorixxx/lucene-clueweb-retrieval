@@ -39,6 +39,9 @@ public class CustomTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed: search or eval")
     private String task;
 
+    @Option(name = "-numhit", required = false, usage = "Number of Hits")
+    protected int numhit = 5000;
+
     @Override
     public String getShortDescription() {
         return "Searcher Tool in which you supply values of the hyper parameters";
@@ -93,7 +96,7 @@ public class CustomTool extends CmdLineTool {
                 // search for a specific tag, skip the rest
                 if (this.tag != null && !tag.equals(this.tag)) continue;
 
-                try (Searcher searcher = new Searcher(path, dataset, 5000)) {
+                try (Searcher searcher = new Searcher(path, dataset, numhit)) {
                     searcher.searchWithThreads(numThreads, modelBaseSet, /*Collections.singletonList("contents")*/ fields, "runs");
                 }
             }

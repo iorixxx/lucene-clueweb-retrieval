@@ -324,6 +324,15 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/jawjaw-1.0.2.jar</systemPath>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.8</version>
+        </dependency>
+
+
+
 
     </dependencies>
 </project>

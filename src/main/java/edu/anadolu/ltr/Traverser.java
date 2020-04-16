@@ -60,13 +60,12 @@ public class Traverser {
                 return 0;
 
             String id = warcRecord.id();
-
             if (skip(id)) return 0;
-
             DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader, rc1);
             try {
                 String line = base.calculate(featureList);
                 out.get().println(line);
+//                System.out.println(line);
             } catch (Exception ex) {
 //                System.err.println("jdoc exception " + warcRecord.id());
 //                System.err.println("Document : " + warcRecord.content());
@@ -154,13 +153,13 @@ public class Traverser {
 
                 Thread.currentThread().setName(inputWarcFile.toAbsolutePath().toString());
 
-                if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
+                if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection)) {
                     int addCount = processClueWeb09WarcFile();
                     //System.out.println("*./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "  " + addCount);
-                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection)) {
+                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
                     int addCount = processClueWeb12WarcFile();
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
-                } else if (Collection.GOV2.equals(collection)) {
+                } else if (Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) {
                     int addCount = indexGov2File();
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
                 }
@@ -179,6 +178,8 @@ public class Traverser {
      * @return true if the document should be skipped
      */
     protected boolean skip(String docId) {
+        if("all".equals(resultsettype))
+            return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId);
         return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId) || !docIdSet.contains(docId);
     }
 
@@ -190,8 +191,9 @@ public class Traverser {
     private Tag analyzerTag;
     private IndexSearcher searcher;
     private IndexReader reader;
+    private String resultsettype;
 
-    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader) {
+    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, String resultsettype) {
         this.collection = dataset.collection();
         this.docIdSet = docIdSet;
         this.featureList = featureList;
@@ -199,6 +201,7 @@ public class Traverser {
         this.analyzerTag = analyzerTag;
         this.searcher = searcher;
         this.reader = reader;
+        this.resultsettype=resultsettype;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
@@ -213,15 +216,15 @@ public class Traverser {
      */
     void traverseParallel(Path resultPath, int numThreads) throws IOException {
 
+
         RelatednessCalculator rc1 = new WuPalmer(new NictWordNet());
 
 
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + numThreads);
 
-        final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
+        final String suffix = (Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) ? ".gz" : ".warc.gz";
 
         final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
-
 
         if(collection.equals(Collection.CW09A)||collection.equals(Collection.CW09B)) {
             Set<String> docIdPathSuffix = new LinkedHashSet<>();
@@ -229,7 +232,7 @@ public class Traverser {
                 docIdPathSuffix.add(s.split("-")[1] + File.separator + s.split("-")[2] + ".warc.gz");
 
             try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length-2]+File.separator+x.toString().split(File.separator)[x.toString().split(File.separator).length-1]))) {
-                stream.parallel().forEach(p -> new WorkerThread(p, out, rc1).run());
+                stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
 
                 //                final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 //                final Deque<Path> warcFiles = stream.collect(Collectors.toCollection(ArrayDeque::new));
@@ -292,14 +295,23 @@ public class Traverser {
                 ex.printStackTrace();
             }
         }else if(collection.equals(Collection.CW12A)||collection.equals(Collection.CW12B)){
-            Set<String> docIdPathSuffix = new LinkedHashSet<>();
-            for (String s : docIdSet)
-                docIdPathSuffix.add(s.split("-")[1] + "-" + s.split("-")[2] + ".warc.gz");
+            if("all".equals(resultsettype)){
+                try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
-            try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length-1]))) {
-                stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
-            }catch (Exception ex){
-                ex.printStackTrace();
+                    stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
+                }catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }else {
+                Set<String> docIdPathSuffix = new LinkedHashSet<>();
+                for (String s : docIdSet)
+                    docIdPathSuffix.add(s.split("-")[1] + "-" + s.split("-")[2] + ".warc.gz");
+
+                try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length - 1]))) {
+                    stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         }else{
             try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {

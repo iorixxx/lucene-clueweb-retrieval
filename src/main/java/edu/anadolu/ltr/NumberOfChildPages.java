@@ -80,7 +80,9 @@ public class NumberOfChildPages extends SolrAwareFeatureBase {
 
 
         if (count < 1) {
-            throw new RuntimeException("url " + url + " docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
+//            throw new RuntimeException("url " + url + " docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
+            System.err.println("url " + url + " docID " + base.docId + " returned " + resp.getNumFound() + " many hits!");
+            return 0;
         }
         
         resp.clear();

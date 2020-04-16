@@ -16,19 +16,27 @@ import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermStatistics;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.CommonParams;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+
+import static org.apache.solr.common.params.CommonParams.*;
 
 /**
  * Tool that computes SEO-based document features.
@@ -50,7 +58,7 @@ public class SEOTool extends CmdLineTool {
     @Option(name = "-type", usage = "seo or doc")
     private String type = null;
 
-    @Option(name = "-resultsettype", usage = "resultset of featureset")
+    @Option(name = "-resultsettype", usage = "resultset or featureset or all")
     private String resultsettype = null;
 
     @Option(name = "-seopart", required = false, usage = "1-2-3-4-5-6 for divide seo features to fast computing")
@@ -85,11 +93,11 @@ public class SEOTool extends CmdLineTool {
 
         final String docsPath = props.getProperty("paths.docs." + collection.toString());
 
-
         if (docsPath == null) {
             System.out.println(getHelp());
             return;
         }
+
 
         String[] spamWiki = new String[]
                 {
@@ -113,6 +121,7 @@ public class SEOTool extends CmdLineTool {
         Set<String> docIdSet = new HashSet<>();
 //        docIdSet.addAll(Arrays.asList(spamWiki));
 
+
         for (String file : files) {
             System.out.println(file);
             Path path = Paths.get(file);
@@ -120,10 +129,13 @@ public class SEOTool extends CmdLineTool {
                 System.out.println(getHelp());
                 return;
             }
-            if(resultsettype.equals("resultset"))
-                docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSetFromResultset(path));
-            if(resultsettype.equals("featureset"))
-                docIdSet.addAll(Collection.GOV2.equals(collection) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
+            if(resultsettype.equals("resultset")){
+                docIdSet.addAll((Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSetFromResultset(path));
+            }
+            if(resultsettype.equals("featureset")){
+                throw new RuntimeException("Reading from featureset is not ready yet!");
+//                docIdSet.addAll((Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
+            }
         }
 
         System.out.println(docIdSet.size() + " docs will be processed.");
@@ -266,8 +278,8 @@ public class SEOTool extends CmdLineTool {
             features.add(new CDD());
         }
 
-        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader);
-        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumDocFreq()/collectionStatistics.docCount());
+        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader, resultsettype);
+        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount());
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         System.out.println(numThreads + " threads are running.");
