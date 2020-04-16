@@ -929,7 +929,7 @@ public class Evaluator {
             return new StatAP(path, k);
         else if (Metric.ERR.equals(metric) || Metric.NDCG.equals(metric))
             return new GdEval(path);
-        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric) || Metric.Recall.equals(metric))
+        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric) || Metric.Recall.equals(metric) || Metric.NCG.equals(metric))
             return new TrecEval(path, k);
         else
             throw new AssertionError(this);
@@ -944,7 +944,7 @@ public class Evaluator {
             return getPathList(need, "");
         else if (Metric.ERR.equals(metric) || Metric.NDCG.equals(metric))
             return getPathList(need, Integer.toString(k));
-        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric) || Metric.Recall.equals(metric))
+        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric) || Metric.Recall.equals(metric) || Metric.NCG.equals(metric))
             return getPathList(need, "trec_eval");
         else
             throw new AssertionError(this);
