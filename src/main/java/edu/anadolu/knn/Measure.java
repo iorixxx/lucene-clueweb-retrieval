@@ -17,7 +17,7 @@ public enum Measure {
 //    ERR1000(Metric.ERR, 1000),
 
     Recall1000(Metric.Recall, 1000),
-
+    NCG1000(Metric.NCG, 1000),
     P10(Metric.P, 10),
     MAP(Metric.MAP, 1000);
 
