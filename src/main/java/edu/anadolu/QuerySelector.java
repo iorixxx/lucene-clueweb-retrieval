@@ -112,6 +112,12 @@ public class QuerySelector {
 
         final String[] parts = whiteSpaceSplitter.split(line);
 
+        if (parts[1].contains("stopword")) {
+            System.out.println("Returning NaN for " + line);
+            descriptiveStatistics.addValue(Double.NaN);
+            return descriptiveStatistics;
+        }
+
         for (int i = 1; i < parts.length; i++) {
             descriptiveStatistics.addValue(Double.parseDouble(parts[i]));
         }
@@ -293,9 +299,7 @@ public class QuerySelector {
         Path fieldStats = Paths.get(collectionPath.toString(), "stats", tag, "contents_term_stats.csv");
 //        System.out.println(fieldStats.toString());
         List<String> lines = readAllLines(fieldStats);
-        for (String line : lines)
-
-        {
+        for (String line : lines) {
             if ("term \t totalTermFreq \t docFreq \t cti".equals(line)) continue;
 
             String[] parts = whiteSpaceSplitter.split(line);
@@ -378,10 +382,10 @@ public class QuerySelector {
 
             //TODO add meaningful statistics for non-existing terms. e.g., docFreq = totalTermFreq = 0
             if (parts.length != 4) {
-                System.out.println(collectionPath.toString()+" "+tag+": While enriching termstatmap, parts is not equal to 4 for line: "+line);
+                System.out.println(collectionPath.toString() + " " + tag + ": While enriching termstatmap, parts is not equal to 4 for line: " + line);
                 continue;
             }
-                //throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
+            //throw new RuntimeException("line from contents_document_length_stats.csv does not have four parts " + line);
 
 
             String term = parts[0];
