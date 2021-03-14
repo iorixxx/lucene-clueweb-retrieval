@@ -113,8 +113,8 @@ public class QuerySelector {
         final String[] parts = whiteSpaceSplitter.split(line);
 
         if (parts[1].contains("stopword")) {
-            System.out.println("Returning NaN for " + line);
-            descriptiveStatistics.addValue(Double.NaN);
+            System.err.println("Returning NaN for " + line);
+            descriptiveStatistics.addValue(0);
             return descriptiveStatistics;
         }
 

@@ -71,7 +71,7 @@ public abstract class Base implements Predictor, Closeable {
     public long df(String field, String word) throws IOException {
         Term term = new Term(field, word);
         TermStatistics termStatistics = searcher.termStatistics(term, TermContext.build(reader.getContext(), term));
-        if (termStatistics.docFreq() == 0) System.out.println(word + " has 0 df");
+        if (termStatistics.docFreq() == 0) System.err.println(word + " has 0 df");
         return termStatistics.docFreq();
     }
 

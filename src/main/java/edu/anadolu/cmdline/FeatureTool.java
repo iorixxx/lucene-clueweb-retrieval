@@ -118,12 +118,17 @@ public final class FeatureTool extends CmdLineTool {
                     System.out.println(need.id() + ":" + word + "\t" + idfs[c] + "\t" + ctis[c] + "\t" + skew[c] + "\t" + kurt[c]);
             }
 
-            System.out.print("qid:" + need.id() + "\t" + need.wordCount() + "\t" + idf.aggregated(need, new Aggregate.Gamma1()) + "\t" + scope.value(need) + "\t");
-            System.out.print(pmi.value(need) + "\t" + scs.value(need) + "\t");
-            System.out.print(StatUtils.mean(idfs) + "\t" + StatUtils.variance(idfs) + "\t");
-            System.out.print(StatUtils.mean(ctis) + "\t" + StatUtils.variance(ctis) + "\t");
-            System.out.print(StatUtils.mean(skew) + "\t" + StatUtils.variance(skew) + "\t" + StatUtils.mean(kurt) + "\t" + StatUtils.variance(kurt) + "\t");
-            System.out.println(StatUtils.mean(scqs) + "\t" + StatUtils.variance(scqs));
+            printFeatures("qid:" + need.id() + "\t" + need.wordCount(),
+                    idf.aggregated(need, new Aggregate.Gamma1()),
+                    scope.value(need),
+                    pmi.value(need),
+                    scs.value(need),
+                    StatUtils.mean(idfs), StatUtils.variance(idfs),
+                    StatUtils.mean(ctis), StatUtils.variance(ctis),
+                    StatUtils.mean(skew), StatUtils.variance(skew),
+                    StatUtils.mean(kurt), StatUtils.variance(kurt),
+                    StatUtils.mean(scqs), StatUtils.variance(scqs)
+            );
         }
 
         pmi.close();
@@ -132,5 +137,13 @@ public final class FeatureTool extends CmdLineTool {
         idf.close();
         cti.close();
         scope.close();
+    }
+
+    static void printFeatures(String qid, double... values) {
+        System.out.print(qid);
+        for (double d : values) {
+            System.out.printf("\t%.5f", d);
+        }
+        System.out.println();
     }
 }
