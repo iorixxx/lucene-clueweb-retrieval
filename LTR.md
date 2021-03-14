@@ -11,6 +11,7 @@ Running following tools is a pre-requisite.
 ```
 ./run.sh Indexer -collection CW09B
 ./run.sh Optimize -collection CW09B
+./run.sh Doclen -collection CW09B
 ./run.sh Stats -collection CW09B
 ./run.sh Stats -collection CW09B -task query
 ./run.sh TFDistribution -collection CW09B -task query
