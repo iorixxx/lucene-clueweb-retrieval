@@ -54,12 +54,12 @@ final class StatsTool extends CmdLineTool {
 
         final long start = System.nanoTime();
 
-        final String ffff =
-                (collection.equals(Collection.MQ07) || collection.equals(Collection.MQ08) || collection.equals(Collection.GOV2)) ?
-                        "title,body,url,description,keywords" : "title,body,url,description,keywords,anchor";
+      // final String ffff =
+       //         (collection.equals(Collection.MQ07) || collection.equals(Collection.MQ08) || collection.equals(Collection.GOV2)) ?
+        //                "title,body,url,description,keywords" : "title,body,url,description,keywords,anchor";
 
-        // final String[] fields = props.getProperty("freq.fields", "description,keywords,title,contents").split(",");
-        final String[] fields = ffff.split(",");
+        final String[] fields = props.getProperty("freq.fields", "description,keywords,title,contents").split(",");
+     //   final String[] fields = ffff.split(",");
 
         final Path statsPath = dataset.collectionPath().resolve("stats");
 

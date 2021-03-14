@@ -640,7 +640,23 @@ public class Evaluator {
 
 
         } catch (IOException ioe) {
-            throw new RuntimeException("getting random integers from /dev/urandom", ioe);
+
+            Random r = new Random();
+
+            for (int i = localModels.size(); i < needs.size(); i++) {
+                int index = r.nextInt(modelSet.size());
+                localModels.add(modelSet.get(index));
+            }
+
+            for (InfoNeed testQuery : needs) {
+
+                String predictedModel = localModels.remove(r.nextInt(localModels.size()));
+                double predictedScore = score(testQuery, predictedModel);
+
+                Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
+                list.add(prediction);
+            }
+
         }
 
         Solution solution = new Solution(list, -1);
@@ -683,7 +699,16 @@ public class Evaluator {
             }
 
         } catch (IOException ioe) {
-            throw new RuntimeException("getting random integers from /dev/urandom", ioe);
+
+            for (InfoNeed testQuery : needs) {
+
+                int index = new Random().nextInt(modelSet.size());
+                String predictedModel = modelSet.get(index);
+                double predictedScore = score(testQuery, predictedModel);
+
+                Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
+                list.add(prediction);
+            }
         }
 
 
