@@ -209,12 +209,16 @@ public class CrossTool extends CmdLineTool {
             }
 
             Solution solution = new Solution(list, -1);
-            System.out.print(String.format("%s(%.5f) \t", model, solution.getMean()));
+            System.out.print(String.format("%s\tOracle(%.5f) \t", Evaluator.prettyModel(model), solution.getMean()));
 
             countMap = sortByValue(countMap);
-            for (Map.Entry<String, Integer> entry : countMap.entrySet())
+            for (Map.Entry<String, Integer> entry : countMap.entrySet()) {
                 System.out.print(entry.getKey() + "(" + entry.getValue() + ")\t");
-
+                System.out.print(String.format("%s(%d | %.5f) \t",
+                        entry.getKey(),
+                        entry.getValue(),
+                        evaluatorMap.get(entry.getKey()).averagePerModel(model).score));
+            }
             System.out.println();
         }
     }
