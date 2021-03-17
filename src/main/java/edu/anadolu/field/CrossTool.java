@@ -59,6 +59,9 @@ public class CrossTool extends CmdLineTool {
     @Option(name = "-catB", required = false, usage = "use catB qrels for CW12B and CW09B")
     private boolean catB = false;
 
+    @Option(name = "-v", aliases = "--verbose", usage = "verbose=true: prints effectiveness scores for copy-paste")
+    private boolean verbose = false;
+
     private final TTest tTest = new TTest();
 
     /**
@@ -136,6 +139,7 @@ public class CrossTool extends CmdLineTool {
                 if (tTest.pairedTTest(baselines.get(model), scores, 0.05)) {
                     list.add(new ModelScore(tag + "*", modelScore.score));
 
+                    if (!verbose) continue;
 
                     // for risk graphs bar(sort(x(1,:)-x(2,:)))
                     System.out.print(baseline + "_" + model);
@@ -213,7 +217,6 @@ public class CrossTool extends CmdLineTool {
 
             countMap = sortByValue(countMap);
             for (Map.Entry<String, Integer> entry : countMap.entrySet()) {
-                System.out.print(entry.getKey() + "(" + entry.getValue() + ")\t");
                 System.out.print(String.format("%s(%d | %.5f) \t",
                         entry.getKey(),
                         entry.getValue(),

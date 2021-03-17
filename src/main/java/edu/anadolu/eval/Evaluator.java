@@ -280,7 +280,7 @@ public class Evaluator {
 
         if (model.startsWith("PL2c")) return "PL2";
 
-        if (model.startsWith("DirichletLMc")) return "Dirichlet";
+        if (model.startsWith("DirichletLMc")) return "DLM";
 
         return model;
     }

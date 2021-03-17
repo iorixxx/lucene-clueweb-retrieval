@@ -94,7 +94,7 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")
                         .addTokenFilter("lowercase")
-//                      .addTokenFilter("englishpossessive")
+                        .addTokenFilter("englishpossessive")
                         .addTokenFilter("kstem")
                         .build();
 
@@ -102,8 +102,18 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")
                         .addTokenFilter("lowercase")
+                        .addTokenFilter("englishpossessive")
                         .addTokenFilter("snowballporter", "language", "English")
                         .build();
+
+            case Hunspell:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("lowercase")
+                        .addTokenFilter("englishpossessive")
+                        .addTokenFilter("hunspellstem", "dictionary", "en_US.dic", "affix", "en_US.aff", "ignoreCase", "true")
+                        .build();
+
 
             case ICU:
                 return CustomAnalyzer.builder()
@@ -236,7 +246,7 @@ public class Analyzers {
     }
 
     public static void main(String[] args) {
-        String text = "I'd ip1188 love your's yours' you're O'Reilly's don't eagle's feathers, or in one month's time Bernadette's, flower's, glass's, one's";
-        System.out.println(getAnalyzedTokens(text, analyzer(KStem)));
+        String text = "I'd ip1188 love your's yours' you're O'Reilly's don't eagle's feathers, or in one month's time Bernadette's, flower's, glass's, one's divers' snorkels'";
+        System.out.println(getAnalyzedTokens(text, analyzer(Snowball)));
     }
 }

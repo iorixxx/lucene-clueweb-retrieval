@@ -88,7 +88,7 @@ public class FieldTool extends CustomTool {
 
         for (int i = 0; i < fieldsArr.length; i++) {
             String field = fieldsArr[i];
-            final Evaluator evaluator = new Evaluator(dataSet, tag, measure, this.models, evalDirectory, op, field);
+            final Evaluator evaluator = new Evaluator(dataSet, tag.toString(), measure, this.models, evalDirectory, op, field);
             evaluatorMap.put(field, evaluator);
             needs = evaluator.getNeeds();
         }

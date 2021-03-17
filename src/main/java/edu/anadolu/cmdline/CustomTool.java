@@ -1,6 +1,7 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.Searcher;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
@@ -10,18 +11,23 @@ import edu.anadolu.similarities.DFRee;
 import edu.anadolu.similarities.DLH13;
 import edu.anadolu.similarities.DPH;
 import org.apache.lucene.search.similarities.ModelBase;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.clueweb09.InfoNeed;
 import org.kohsuke.args4j.Option;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static edu.anadolu.cmdline.ParamTool.train;
-
 public class CustomTool extends CmdLineTool {
 
-    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = true, usage = "Index Tag")
-    protected String tag;
+    @Option(name = "-tag", metaVar = "[KStem|KStemAnchor]", required = false, usage = "Index Tag")
+    protected Tag tag;
 
     /**
      * Terrier's default values
@@ -67,7 +73,6 @@ public class CustomTool extends CmdLineTool {
 
         if ("search".equals(task)) {
 
-
             final long start = System.nanoTime();
 
             final Set<ModelBase> modelBaseSet = Arrays.stream(models.split("_"))
@@ -97,17 +102,60 @@ public class CustomTool extends CmdLineTool {
                 }
             }
             System.out.println("Search completed in " + execution(start));
-            return;
-        }
-
-        if ("eval".equals(task)) {
-
-            Evaluator evaluator = new Evaluator(dataset, tag, measure, models + "_DFIC_DPH_DFRee_DLH13", "evals", "OR");
+        } else if ("eval".equals(task)) {
+            if (tag == null) tag = Tag.KStem;
+            Evaluator evaluator = new Evaluator(dataset, tag.toString(), measure, models + "_DFIC_DPH_DFRee_DLH13", "evals", "OR");
             evaluator.printMeanWT();
             evaluator.printMean();
             System.out.println("=======================");
-        }
-        if ("spam".equals(task)) {
+        } else if ("export".equals(task)) {
+
+            Path excelPath = Paths.get(tfd_home, collection.toString()).resolve("excels");
+            if (!Files.exists(excelPath))
+                Files.createDirectories(excelPath);
+
+            Path excelFile = excelPath.resolve(collection + ".xlsx");
+
+            Workbook workbook = new XSSFWorkbook();
+
+            for (final Path path : discoverIndexes(dataset)) {
+
+                final String tag = path.getFileName().toString();
+
+                for (Measure measure : new Measure[]{Measure.NDCG100, Measure.MAP}) {
+
+                    Evaluator evaluator = new Evaluator(dataset, tag, measure, models + "_DFIC_DPH_DFRee_DLH13", "evals", "OR");
+
+
+                    Sheet statSheet = workbook.createSheet(tag + measure);
+
+                    Row r0 = statSheet.createRow(0);
+
+                    r0.createCell(0).setCellValue("qID");
+                    int i = 1;
+                    for (String model : new TreeSet<>(evaluator.getModelSet()))
+                        r0.createCell(i++).setCellValue(Evaluator.prettyModel(model));
+
+                    int row = 1;
+                    for (InfoNeed need : evaluator.getNeeds()) {
+
+                        Row r = statSheet.createRow(row);
+                        r.createCell(0).setCellValue(need.id());
+
+                        i = 1;
+                        for (String model : new TreeSet<>(evaluator.getModelSet()))
+                            r.createCell(i++).setCellValue(evaluator.score(need, model));
+
+                        row++;
+                    }
+                }
+            }
+
+            workbook.write(Files.newOutputStream(excelFile));
+            workbook.close();
+            System.out.println(collection + "'s run-topic matrix is saved into : " + excelFile.toAbsolutePath());
+
+        } else if ("spam".equals(task)) {
 
             final long start = System.nanoTime();
 
@@ -126,7 +174,7 @@ public class CustomTool extends CmdLineTool {
             final String[] fieldsArr = props.getProperty(collection.toString() + ".fields").split(",");
 
             List<String> fields = Arrays.asList(fieldsArr);
-            if(fields.size()==0) fields.add( props.getProperty(collection.toString() + ".fields"));
+            if (fields.size() == 0) fields.add(props.getProperty(collection.toString() + ".fields"));
 
             if (dataset.spamAvailable()) {
                 for (final Path path : discoverIndexes(dataset)) {
@@ -143,7 +191,6 @@ public class CustomTool extends CmdLineTool {
                 }
 
                 System.out.println("Base search for spam filtering 10,000 documents per query completed in " + execution(start));
-                return;
             }
         }
 
