@@ -38,6 +38,8 @@ public final class FeatureTool extends CmdLineTool {
     @Option(name = "-task", required = false, usage = "task to be executed")
     private String task;
 
+    public static final String DEFAULT_MODELS = "BM25k1.2b0.75_DirichletLMc2500.0_LGDc1.0_PL2c1.0_DPH_DFIC_DFRee_DLH13";
+
     @Override
     public String getShortDescription() {
         return "Feature Extraction Tool";
@@ -65,7 +67,7 @@ public final class FeatureTool extends CmdLineTool {
         //           .filter(Files::isRegularFile)
         //          .collect(Collectors.toList());
 
-        String[] models = "BM25k1.2b0.75_DirichletLMc2500.0_LGDc1.0_PL2c1.0_DPH_DFIC_DFRee_DLH13".split("_");
+        String[] models = DEFAULT_MODELS.split("_");
 
         Map<String, Map<Integer, List<SubmissionFile.Tuple>>> theMap = new HashMap<>();
 
@@ -133,7 +135,7 @@ public final class FeatureTool extends CmdLineTool {
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         if ("labels".equals(task)) {
-            Evaluator evaluator = new Evaluator(dataset, tag, measure, "all", evalDirectory(dataset), "OR");
+            Evaluator evaluator = new Evaluator(dataset, tag, measure, DEFAULT_MODELS, "evals"/*evalDirectory(dataset)*/, "OR");
             List<InfoNeed> needs = evaluator.getNeeds();
 
             // Print header

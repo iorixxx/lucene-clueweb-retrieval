@@ -18,6 +18,11 @@ public abstract class DataSet {
 
     public abstract String getNoDocumentsID();
 
+    public boolean validateDocID(String docID) {
+        if (null == docID) return false;
+        else return !"".equals(docID.trim());
+    }
+
     public abstract boolean spamAvailable();
 
     private final List<InfoNeed> needs;

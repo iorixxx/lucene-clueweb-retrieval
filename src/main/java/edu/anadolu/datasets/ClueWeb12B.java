@@ -28,6 +28,11 @@ class ClueWeb12B extends DataSet {
     }
 
     @Override
+    public boolean validateDocID(String docID) {
+        return docID.startsWith("clueweb12-");
+    }
+
+    @Override
     public boolean spamAvailable() {
         return true;
     }

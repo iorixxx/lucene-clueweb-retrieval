@@ -51,7 +51,7 @@ public class LearningToSelect {
         if (!Files.exists(thePath) || !Files.isRegularFile(thePath) || !Files.isReadable(thePath))
             throw new IllegalArgumentException(thePath + " does not exist or is not a directory.");
 
-        String queryID = Integer.toString(need.id()) + "\t";
+        String queryID = need.id() + "\t";
 
         Map<String, Double> documentScoreMap = new HashMap<>();
 
@@ -74,7 +74,7 @@ public class LearningToSelect {
 
             String docId = parts[2];
 
-            if (dataSet.getNoDocumentsID().length() != docId.length() && dataSet.getNoDocumentsID().length() + 1 != docId.length())
+            if (!dataSet.validateDocID(docId))
                 throw new RuntimeException("invalid doc id : " + docId);
 
 
@@ -383,6 +383,11 @@ public class LearningToSelect {
         int K = -1;
         int N = -1;
 
+        if (tracks.length == 1) {
+            System.out.println("The current train/test split mechanism requires more than one tracks.");
+            return new ModelScore("LTS (k=" + K + ", n=" + N + ")", Double.NaN);
+        }
+
         for (int n = 20; n <= 1000; n += 10) {
 
             Map<Integer, Double> mean = emptyDoubleMap();
@@ -392,7 +397,7 @@ public class LearningToSelect {
                 List<InfoNeed> trainingQueries = trainingQueries(residualNeeds, track);
                 List<InfoNeed> testQueries = testQueries(residualNeeds, track);
 
-                System.out.println("training set size : " + trainingQueries.size() + " test set size : " + testQueries.size());
+                System.out.println("n=" + n + " training set size : " + trainingQueries.size() + " test set size : " + testQueries.size());
 
 
                 if (trainingQueries.size() + testQueries.size() != residualNeeds.size())
