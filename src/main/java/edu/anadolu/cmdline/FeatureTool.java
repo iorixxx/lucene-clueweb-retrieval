@@ -9,15 +9,20 @@ import edu.anadolu.datasets.DataSet;
 import edu.anadolu.eval.Evaluator;
 import edu.anadolu.knn.Measure;
 import edu.anadolu.qpp.*;
+import edu.anadolu.spam.SubmissionFile;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.lucene.analysis.Analyzer;
 import org.clueweb09.InfoNeed;
+import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Feature Extraction Tool
@@ -52,17 +57,78 @@ public final class FeatureTool extends CmdLineTool {
         }
     }
 
+    void resultListFeatures(DataSet dataset) throws IOException {
+
+        // final Path runs_path = dataset.collectionPath().resolve("runs").resolve(tag).resolve(track.toString());
+        //
+        //    List<Path> fileList = Files.walk(runs_path)
+        //           .filter(Files::isRegularFile)
+        //          .collect(Collectors.toList());
+
+        String[] models = "BM25k1.2b0.75_DirichletLMc2500.0_LGDc1.0_PL2c1.0_DPH_DFIC_DFRee_DLH13".split("_");
+
+        Map<String, Map<Integer, List<SubmissionFile.Tuple>>> theMap = new HashMap<>();
+
+        for (String model : models) {
+
+            final Map<Integer, List<SubmissionFile.Tuple>> entries = new LinkedHashMap<>();
+
+            int counter = 0;
+
+            for (Track track : dataset.tracks()) {
+
+                Path thePath = Paths.get(dataset.collectionPath().toString(), "runs", tag, track.toString(), model + "_contents_" + tag + "_" + "OR_all.txt");
+
+                if (!Files.exists(thePath) || !Files.isRegularFile(thePath) || !Files.isReadable(thePath))
+                    throw new IllegalArgumentException(thePath + " does not exist or is not a directory.");
+
+
+                final SubmissionFile submissionFile = new SubmissionFile(thePath);
+                counter += submissionFile.size();
+                entries.putAll(submissionFile.entryMap());
+
+            }
+
+            if (counter != entries.size()) throw new RuntimeException("map sizes are not equal!");
+
+            theMap.put(model, entries);
+
+        }
+
+        for (InfoNeed need : dataset.getTopics()) {
+
+            final List<SubmissionFile.Tuple> reference = theMap.get(models[0]).get(need.id());
+
+            double[] values = new double[models.length - 1];
+
+            for (int i = 1; i < models.length; i++) {
+                List<SubmissionFile.Tuple> alternate = theMap.get(models[i]).get(need.id());
+                values[i - 1] = systemSimilarity(reference, alternate);
+            }
+            printFeatures(Integer.toString(need.id()), values);
+        }
+    }
+
+    private static double systemSimilarity(List<SubmissionFile.Tuple> reference, List<SubmissionFile.Tuple> alternate) {
+
+        Set<String> set1 = reference.stream().map(SubmissionFile.Tuple::docID).collect(Collectors.toSet());
+        Set<String> set2 = alternate.stream().map(SubmissionFile.Tuple::docID).collect(Collectors.toSet());
+
+        Set<String> result = new HashSet<>(set1);
+        result.addAll(set2); // Union
+
+        int union = result.size();
+
+        result = new HashSet<>(set1);
+        result.retainAll(set2); // Intersection
+
+        int intersection = result.size();
+
+        return (double) intersection / union;
+    }
+
     @Override
     public void run(Properties props) throws Exception {
-
-        if (parseArguments(props) == -1) return;
-
-        final String tfd_home = props.getProperty("tfd.home");
-
-        if (tfd_home == null) {
-            System.out.println(getHelp());
-            return;
-        }
 
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
@@ -75,6 +141,9 @@ public final class FeatureTool extends CmdLineTool {
             for (InfoNeed need : needs) {
                 System.out.println("qid:" + need.id() + "\t" + evaluator.bestModel(need, false) + "\t" + evaluator.bestModelScore(need, false) + "\t" + evaluator.bestModel(need, true) + "\t" + evaluator.bestModelScore(need, true));
             }
+            return;
+        } else if ("list".equals(task)) {
+            resultListFeatures(dataset);
             return;
         }
 

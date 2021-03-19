@@ -94,7 +94,7 @@ public class Evaluator {
         return Collections.unmodifiableList(new ArrayList<>(needs));
     }
 
-    protected final List<InfoNeed> needs;
+    protected List<InfoNeed> needs;
     protected final String indexTag;
     protected final Metric metric;
     protected final int k;
@@ -280,7 +280,7 @@ public class Evaluator {
 
         if (model.startsWith("PL2c")) return "PL2";
 
-        if (model.startsWith("DirichletLMc")) return "DLM";
+        if (model.startsWith("DirichletLMc")) return "Dirichlet";
 
         return model;
     }
@@ -291,6 +291,11 @@ public class Evaluator {
      * @return Evaluator instance constructed from residual information needs
      */
     public Evaluator evaluatorFromResidualNeeds() {
+
+        Map<InfoNeed, List<ModelScore>> performanceMap = new HashMap<>(this.performanceMap);
+        Map<String, List<InfoNeed>> bestModelMap = new HashMap<>(this.bestModelMap);
+        Map<String, List<InfoNeed>> worstModelMap = new HashMap<>(this.worstModelMap);
+        List<InfoNeed> needs = new ArrayList<>(this.needs);
 
         for (InfoNeed need : allZero) {
             performanceMap.remove(need);
@@ -304,8 +309,16 @@ public class Evaluator {
 
         bestModelMap.remove("ALL_SAME");
         bestModelMap.remove("ALL_ZERO");
+        worstModelMap.remove("ALL_SAME");
+        worstModelMap.remove("ALL_ZERO");
+
         allSame.clear();
         allZero.clear();
+
+        this.performanceMap = Collections.unmodifiableMap(performanceMap);
+        this.needs = Collections.unmodifiableList(needs);
+        this.bestModelMap = Collections.unmodifiableMap(bestModelMap);
+        this.worstModelMap = Collections.unmodifiableMap(worstModelMap);
 
         return this;
     }
