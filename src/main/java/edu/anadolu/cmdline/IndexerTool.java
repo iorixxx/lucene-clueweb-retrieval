@@ -6,7 +6,6 @@ import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.exp.ROB04;
-import edu.anadolu.field.SemanticStats;
 import edu.anadolu.mc.MCIndexer;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.kohsuke.args4j.Option;
@@ -55,15 +54,6 @@ public final class IndexerTool extends CmdLineTool {
 
     @Override
     public void run(Properties props) throws Exception {
-
-        final String tfd_home = props.getProperty("tfd.home");
-
-        if (tfd_home == null) {
-            System.out.println(getHelp());
-            return;
-        }
-
-        if (parseArguments(props) == -1) return;
 
         if (Collection.MQ07.equals(collection) || Collection.MQ08.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
             System.out.println("No need to run separate indexer for Million Query!");

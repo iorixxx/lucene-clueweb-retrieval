@@ -12,7 +12,7 @@ else
 
   echo "starting processes with collection = $1 ..."
   for tag in NoStem KStem Snowball Hunspell; do
-    ./run.sh Indexer -collection "$1" -tag "$tag"
+    ./run.sh Indexer -collection "$1" -tag "$tag" -silent
   done
   ./run.sh Optimize -collection "$1"
   ./run.sh Doclen -collection "$1"

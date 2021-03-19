@@ -7,8 +7,8 @@ public class MC extends DataSet {
 
     public MC(String tfd_home) {
         super(Collection.MC, new Track[]{
-                new org.clueweb09.tracks.MC(tfd_home),
-                new UBE(tfd_home)
+                new org.clueweb09.tracks.MC(tfd_home)
+            //    new UBE(tfd_home)
         }, tfd_home);
     }
 

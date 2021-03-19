@@ -58,15 +58,6 @@ public class CustomTool extends CmdLineTool {
     @Override
     public void run(Properties props) throws Exception {
 
-        if (parseArguments(props) == -1) return;
-
-        final String tfd_home = props.getProperty("tfd.home");
-
-        if (tfd_home == null) {
-            System.out.println(getHelp());
-            return;
-        }
-
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         final int numThreads = Integer.parseInt(props.getProperty("numThreads", "2"));

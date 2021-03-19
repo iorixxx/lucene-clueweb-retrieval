@@ -12,12 +12,14 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.OptionHandlerFilter;
 import org.kohsuke.args4j.ParserProperties;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -94,6 +96,38 @@ public abstract class CmdLineTool {
             properties.store(out, "best parameters of " + dataSet.toString());
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
+        }
+    }
+
+    protected String tfd_home;
+
+    /**
+     * Executes the tool with the given properties.
+     *
+     * @param props properties
+     */
+    public void do_run(Properties props) throws Exception {
+
+        if (parseArguments(props) == -1) return;
+
+        final String tfd_home;
+
+        if (props.getProperty("tfd.home") == null) {
+            System.out.println("tfd.home property is null. Trying with " + System.getProperty("user.home") + File.separator + "TFD_HOME");
+            tfd_home = System.getProperty("user.home") + File.separator + "TFD_HOME";
+        } else {
+            tfd_home = props.getProperty("tfd.home").replaceFirst("^~", System.getProperty("user.home"));
+        }
+
+        Path p = Paths.get(tfd_home);
+
+        if (Files.exists(p) && Files.isDirectory(p)) {
+            this.tfd_home = p.toAbsolutePath().toString();
+            props.setProperty("tfd.home", this.tfd_home);
+            run(props);
+        } else {
+            System.out.println("TFD_HOME directory does not exist: " + p.toAbsolutePath());
+            System.out.println(getHelp());
         }
     }
 

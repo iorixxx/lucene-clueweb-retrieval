@@ -73,15 +73,6 @@ public class CrossTool extends CmdLineTool {
     @Override
     public void run(Properties props) throws Exception {
 
-        if (parseArguments(props) == -1) return;
-
-        final String tfd_home = props.getProperty("tfd.home");
-
-        if (tfd_home == null) {
-            System.out.println(getHelp());
-            return;
-        }
-
         DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
 
         String evalDirectory = spam == 0 ? "evals" : "spam_" + spam + "_evals";

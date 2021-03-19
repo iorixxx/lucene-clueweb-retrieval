@@ -156,6 +156,14 @@ public class Analyzers {
                         .addTokenFilter("snowballporter", "language", "Turkish")
                         .build();
 
+            case HunspellTurkish:
+                return CustomAnalyzer.builder()
+                        .withTokenizer("standard")
+                        .addTokenFilter("apostrophe")
+                        .addTokenFilter("turkishlowercase")
+                        .addTokenFilter("hunspellstem", "dictionary", "tr_TR.dic", "affix", "tr_TR.aff", "ignoreCase", "true", "longestOnly","true")
+                        .build();
+
             case F5:
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")

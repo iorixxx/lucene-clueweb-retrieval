@@ -352,7 +352,7 @@ public class QuerySelector {
 
     private List<String> readAllLines(Path path) {
         try {
-            return Files.readAllLines(path, StandardCharsets.US_ASCII);
+            return Files.readAllLines(path);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }

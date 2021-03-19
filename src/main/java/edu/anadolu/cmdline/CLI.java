@@ -243,6 +243,6 @@ public final class CLI {
                 properties.put("toolArguments", buffer.toString());
         }
 
-        tool.run(properties);
+        tool.do_run(properties);
     }
 }
