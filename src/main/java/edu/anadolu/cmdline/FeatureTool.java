@@ -111,22 +111,28 @@ public final class FeatureTool extends CmdLineTool {
         }
     }
 
+    /**
+     * The ratio of Intersection over Union. The Jaccard coefficient measures similarity between finite sample sets,
+     * and is defined as the size of the intersection divided by the size of the union of the sample sets.
+     *
+     * @param reference set1
+     * @param alternate set1
+     * @return Note that by design,  0 <= J(A,B) <=1. If A and B are both empty, define J(A,B) = 1.
+     */
     private static double systemSimilarity(List<SubmissionFile.Tuple> reference, List<SubmissionFile.Tuple> alternate) {
 
         Set<String> set1 = reference.stream().map(SubmissionFile.Tuple::docID).collect(Collectors.toSet());
         Set<String> set2 = alternate.stream().map(SubmissionFile.Tuple::docID).collect(Collectors.toSet());
 
-        Set<String> result = new HashSet<>(set1);
-        result.addAll(set2); // Union
+        if (set1.isEmpty() && set2.isEmpty()) return 1.0;
 
-        int union = result.size();
+        Set<String> union = new HashSet<>(set1);
+        union.addAll(set2); // Union
 
-        result = new HashSet<>(set1);
-        result.retainAll(set2); // Intersection
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2); // Intersection
 
-        int intersection = result.size();
-
-        return (double) intersection / union;
+        return (double) intersection.size() / union.size();
     }
 
     @Override
