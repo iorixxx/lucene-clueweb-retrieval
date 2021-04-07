@@ -113,7 +113,7 @@ public class CustomTool extends CmdLineTool {
 
                 final String tag = path.getFileName().toString();
 
-                for (Measure measure : new Measure[]{Measure.NDCG100, Measure.MAP}) {
+                for (Measure measure : new Measure[]{Measure.NDCG20, Measure.NDCG100, Measure.MAP}) {
 
                     Evaluator evaluator = new Evaluator(dataset, tag, measure, models + "_DFIC_DPH_DFRee_DLH13", "evals", "OR");
 
