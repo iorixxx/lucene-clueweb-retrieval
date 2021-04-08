@@ -1,0 +1,402 @@
+<queries>
+	<query>
+		<qid>0101</qid>
+		<content>Global military rankings</content>
+		<description>You want to investigate the military powers of countries around the world.</description>
+	</query>
+	<query>
+		<qid>0102</qid>
+		<content>bank of america</content>
+		<description>You want to find the official website of Bank of America.</description>
+	</query>
+	<query>
+		<qid>0103</qid>
+		<content>Peppa Pig</content>
+		<description>You want to know about characters from the Peppa Pig cartoon.</description>
+	</query>
+	<query>
+		<qid>0104</qid>
+		<content>greeting cards</content>
+		<description>You want to send an online greeting card for free.</description>
+	</query>
+	<query>
+		<qid>0105</qid>
+		<content>naruto</content>
+		<description>Yout want to know the plot of Naruto, a Japanese manga.</description>
+	</query>
+	<query>
+		<qid>0106</qid>
+		<content>beyonce</content>
+		<description>You want to read a biography of Beyonce.</description>
+	</query>
+	<query>
+		<qid>0107</qid>
+		<content>honda</content>
+		<description>You need to buy a car, and are wondering whether a Honda would be a good choice.</description>
+	</query>
+	<query>
+		<qid>0108</qid>
+		<content>How to treat epilepsy</content>
+		<description>You want to know how epilepsy can be treated.</description>
+	</query>
+	<query>
+		<qid>0109</qid>
+		<content>free online games</content>
+		<description>You want to play free online games to kill time.</description>
+	</query>
+	<query>
+		<qid>0110</qid>
+		<content>FedEx</content>
+		<description>You want to find out how to send a parcel by FedEx.</description>
+	</query>
+	<query>
+		<qid>0111</qid>
+		<content>internet explorer</content>
+		<description>You want to know whether you should use Internet Explorer as your main browser.</description>
+	</query>
+	<query>
+		<qid>0112</qid>
+		<content>cartoon network</content>
+		<description>You want to find the official website of cartoon network.</description>
+	</query>
+	<query>
+		<qid>0113</qid>
+		<content>autism</content>
+		<description>You want to know about the symptoms and treatment of autism.</description>
+	</query>
+	<query>
+		<qid>0114</qid>
+		<content>las vegas hilton</content>
+		<description>You want to find out about Hilton hotels in Las Vegas for your upcoming trip.</description>
+	</query>
+	<query>
+		<qid>0115</qid>
+		<content>Spirited Away</content>
+		<description>You want to find out some information about a Japanese movie called Spirited Away, while avoiding spoilers.</description>
+	</query>
+	<query>
+		<qid>0116</qid>
+		<content>Getting Started with Stocks</content>
+		<description>You want to start investing in stocks and need some advice from experts.</description>
+	</query>
+	<query>
+		<qid>0117</qid>
+		<content>pageant dresses</content>
+		<description>You are planning to buy a pageant dress at a shop, but now doing a research online to see what options there are.</description>
+	</query>
+	<query>
+		<qid>0118</qid>
+		<content>Pokemon</content>
+		<description>You want to find information about Pokemon characters.</description>
+	</query>
+	<query>
+		<qid>0119</qid>
+		<content>zeus</content>
+		<description>You want to know how Zeus is described in the Greek Mythology.</description>
+	</query>
+	<query>
+		<qid>0120</qid>
+		<content>asbestos</content>
+		<description>You want to know what harm asbestos does to the human body.</description>
+	</query>
+	<query>
+		<qid>0121</qid>
+		<content>spinal stenosis</content>
+		<description>You want to learn how to treat spinal stenosis.</description>
+	</query>
+	<query>
+		<qid>0122</qid>
+		<content>American immigration</content>
+		<description>Your relatives have immigrated to the United States, and you want to know about the relevant US immigration policies and regulations.</description>
+	</query>
+	<query>
+		<qid>0123</qid>
+		<content>george washington university</content>
+		<description>You want to know the admission requirements of George Washington University for undergraduates.</description>
+	</query>
+	<query>
+		<qid>0124</qid>
+		<content>bill clinton</content>
+		<description>You want to know about Bill Clinton&apos;s life after leaving office in 2001.</description>
+	</query>
+	<query>
+		<qid>0125</qid>
+		<content>ice age</content>
+		<description>You want to know how the Earth&apos;s Ice Age was formed.</description>
+	</query>
+	<query>
+		<qid>0126</qid>
+		<content>learn spanish</content>
+		<description>You want to find some online materials to help you learn Spanish.</description>
+	</query>
+	<query>
+		<qid>0127</qid>
+		<content>Texas Hold&apos;em</content>
+		<description>You want to know how to play Texas Holdem.</description>
+	</query>
+	<query>
+		<qid>0128</qid>
+		<content>kangaroo</content>
+		<description>You want to know what different types of kangaroos there are.</description>
+	</query>
+	<query>
+		<qid>0129</qid>
+		<content>how to write a resume</content>
+		<description>You are looking for a job and need to know how to write a resume properly.</description>
+	</query>
+	<query>
+		<qid>0130</qid>
+		<content>yosemite</content>
+		<description>You are planning to visist Yosemite National Park and want to know what you can do there.</description>
+	</query>
+	<query>
+		<qid>0131</qid>
+		<content>dyslexia</content>
+		<description>You want to know whether and how dyslexia can be medically treated.</description>
+	</query>
+	<query>
+		<qid>0132</qid>
+		<content>Friends</content>
+		<description>Friends is a very famous TV series, you want to know in which year it first aired.</description>
+	</query>
+	<query>
+		<qid>0133</qid>
+		<content>Audi</content>
+		<description>Your friend recently bought an Audi, and you are curious about the history of this car brand.</description>
+	</query>
+	<query>
+		<qid>0134</qid>
+		<content>Frozen shoulder</content>
+		<description>You are suffering from a shoulder pain and want to find out the symptoms of frozen shoulder.</description>
+	</query>
+	<query>
+		<qid>0135</qid>
+		<content>fish oil</content>
+		<description>You want to know the benefits of taking fish oil.</description>
+	</query>
+	<query>
+		<qid>0136</qid>
+		<content>How to lose weight fast</content>
+		<description>You want to know how to lose weight fast.</description>
+	</query>
+	<query>
+		<qid>0137</qid>
+		<content>restless legs</content>
+		<description>You want to know the possible causes of restless legs syndrome.</description>
+	</query>
+	<query>
+		<qid>0138</qid>
+		<content>Smart home</content>
+		<description>You want to know the definition of Smart Home.</description>
+	</query>
+	<query>
+		<qid>0139</qid>
+		<content>Rental contract</content>
+		<description>You plan to rent a house and want to know what a typical house rental contract looks like.</description>
+	</query>
+	<query>
+		<qid>0140</qid>
+		<content>country music awards</content>
+		<description>You want to know what music awards there are for country music.</description>
+	</query>
+	<query>
+		<qid>0141</qid>
+		<content>strawberry shortcake</content>
+		<description>You want good strawberry shortcake recipes.</description>
+	</query>
+	<query>
+		<qid>0142</qid>
+		<content>foxsports.com</content>
+		<description>You want to find the website &quot;foxsports.com&quot;.</description>
+	</query>
+	<query>
+		<qid>0143</qid>
+		<content>little mermaid</content>
+		<description>You want to know the story of the little mermaid written by Andersen.</description>
+	</query>
+	<query>
+		<qid>0144</qid>
+		<content>Origin of Teacher&apos;s Day</content>
+		<description>Teacher&apos;s Day is approaching and you want to know its origin.</description>
+	</query>
+	<query>
+		<qid>0145</qid>
+		<content>face recognition</content>
+		<description>You want to know how a face recognition system generally works. Technical details are not needed.</description>
+	</query>
+	<query>
+		<qid>0146</qid>
+		<content>Medicine for cancer</content>
+		<description>You want to know whether there are effective medicines for cancer.</description>
+	</query>
+	<query>
+		<qid>0147</qid>
+		<content>bird nest effect</content>
+		<description>You want to know whether there are health benefits of bird nest.</description>
+	</query>
+	<query>
+		<qid>0148</qid>
+		<content>sexually transmitted diseases</content>
+		<description>You want to know the names of some common sexually transmitted diseases.</description>
+	</query>
+	<query>
+		<qid>0149</qid>
+		<content>stalin</content>
+		<description>You are interested in Soviet history and want to learn about the political career of Stalin.</description>
+	</query>
+	<query>
+		<qid>0150</qid>
+		<content>time adjustment</content>
+		<description>Your PC clock is currently inaccurate so you want to find out how to set it accurately.</description>
+	</query>
+	<query>
+		<qid>0151</qid>
+		<content>Artificial Intelligence</content>
+		<description>You want to know the definition of Artificial Intelligence.</description>
+	</query>
+	<query>
+		<qid>0152</qid>
+		<content>Pirates of the Caribbean</content>
+		<description>After watching Pirates of the Caribbean the movie, you want to learn about the real history of the piracy in the Caribbean.</description>
+	</query>
+	<query>
+		<qid>0153</qid>
+		<content>freeweblayouts</content>
+		<description>You want to visit the website &quot;www.freeweblayouts.net&quot;.</description>
+	</query>
+	<query>
+		<qid>0154</qid>
+		<content>How to change the wifi password</content>
+		<description>You want to know how to change the WIFI password.</description>
+	</query>
+	<query>
+		<qid>0155</qid>
+		<content>scorpions</content>
+		<description>You want to find information about scorpion stings.</description>
+	</query>
+	<query>
+		<qid>0156</qid>
+		<content>Toyota Corolla</content>
+		<description>You are planning to buy a car and want to know the specs of Toyota Corolla.</description>
+	</query>
+	<query>
+		<qid>0157</qid>
+		<content>wedding vows</content>
+		<description>You are about to get married. As a groom, you want to know what traditional wedding vows are like.</description>
+	</query>
+	<query>
+		<qid>0158</qid>
+		<content>jones beach theater</content>
+		<description>You want to know the address of Jones Beach Theater.</description>
+	</query>
+	<query>
+		<qid>0159</qid>
+		<content>dredger</content>
+		<description>You want to know what dredgers or dredge ships do.</description>
+	</query>
+	<query>
+		<qid>0160</qid>
+		<content>akron beacon journal</content>
+		<description>You want to find the official website of Akron Beacon Journal.</description>
+	</query>
+	<query>
+		<qid>0161</qid>
+		<content>belly dancing</content>
+		<description>You want to know where belly dancing originated from.</description>
+	</query>
+	<query>
+		<qid>0162</qid>
+		<content>Volvo</content>
+		<description>You want to know the reputation of Volvo cars.</description>
+	</query>
+	<query>
+		<qid>0163</qid>
+		<content>panama canal</content>
+		<description>You want to know the financial and environmental impact of the Panama Canal expansion project.</description>
+	</query>
+	<query>
+		<qid>0164</qid>
+		<content>pompeii art</content>
+		<description>You want to see images of Pompeii art.</description>
+	</query>
+	<query>
+		<qid>0165</qid>
+		<content>bloomberg</content>
+		<description>You want to know the history of Bloomberg L.P.</description>
+	</query>
+	<query>
+		<qid>0166</qid>
+		<content>Diabetes treatment</content>
+		<description>You want to know how diabetes can be treated and cured.</description>
+	</query>
+	<query>
+		<qid>0167</qid>
+		<content>hypoglycemia</content>
+		<description>You want to know what causes hypoglycemia.</description>
+	</query>
+	<query>
+		<qid>0168</qid>
+		<content>California traffic laws</content>
+		<description>You are driving in Carlifornia for the first time and want to check out the relevant traffic rules.</description>
+	</query>
+	<query>
+		<qid>0169</qid>
+		<content>The origin of paper</content>
+		<description>You want to know when and where paper was invented.</description>
+	</query>
+	<query>
+		<qid>0170</qid>
+		<content>causes of hair loss in women</content>
+		<description>You want to know what are the causes of hair loss for women.</description>
+	</query>
+	<query>
+		<qid>0171</qid>
+		<content>Australian shepherd</content>
+		<description>You are going to adopt an Australian shepherd, and you want to know how to take care of it properly.</description>
+	</query>
+	<query>
+		<qid>0172</qid>
+		<content>mineral essence</content>
+		<description>You want to know about the benefits of mineral essence to skin.</description>
+	</query>
+	<query>
+		<qid>0173</qid>
+		<content>arthropathy</content>
+		<description>You want to know what causes arthropathy.</description>
+	</query>
+	<query>
+		<qid>0174</qid>
+		<content>just breathe lyrics</content>
+		<description>You want the lyrics to Just Breathe by Pearl Jam.</description>
+	</query>
+	<query>
+		<qid>0175</qid>
+		<content>fort smith public schools</content>
+		<description>You want to know the reputation of fort smith public schools.</description>
+	</query>
+	<query>
+		<qid>0176</qid>
+		<content>pottery collectors</content>
+		<description>You want to visit websites of pottery collectors around the world.</description>
+	</query>
+	<query>
+		<qid>0177</qid>
+		<content>invertebrates</content>
+		<description>You want to know the difference between vertebrates and invertebrates.</description>
+	</query>
+	<query>
+		<qid>0178</qid>
+		<content>Movies about animals</content>
+		<description>You want to find movies in which the main characters are animals.</description>
+	</query>
+	<query>
+		<qid>0179</qid>
+		<content>internet pros and cons</content>
+		<description>What are the pros and cons of having all kinds of information on the internet? What is the impact on our society?.</description>
+	</query>
+	<query>
+		<qid>0180</qid>
+		<content>quincy jones productions</content>
+		<description>You want a list of famous records produced by Quincy Jones.</description>
+	</query>
+</queries>

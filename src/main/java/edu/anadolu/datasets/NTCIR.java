@@ -3,6 +3,7 @@ package edu.anadolu.datasets;
 import org.clueweb09.tracks.Track;
 import org.clueweb09.tracks.WWW13;
 import org.clueweb09.tracks.WWW14;
+import org.clueweb09.tracks.WWW15;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,7 +22,7 @@ public class NTCIR extends DataSet {
 
     NTCIR(String tfd_home) {
         super(Collection.NTCIR, new Track[]{
-                new WWW13(tfd_home), new WWW14(tfd_home)
+                new WWW13(tfd_home), new WWW14(tfd_home), new WWW15(tfd_home)
         }, tfd_home);
     }
 
