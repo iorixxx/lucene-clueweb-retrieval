@@ -47,7 +47,7 @@ public class Analyzers {
     public static String getAnalyzedToken(String text, Analyzer analyzer) {
         final List<String> list = getAnalyzedTokens(text, analyzer);
         if (list.size() != 1)
-            throw new RuntimeException("Text : " + text + " contains more than one tokens : " + list.toString());
+            throw new RuntimeException("Text : " + text + " contains more than one tokens : " + list.toString() + " " + analyzer.toString());
         return list.get(0);
     }
 
@@ -111,7 +111,7 @@ public class Analyzers {
                         .withTokenizer("standard")
                         .addTokenFilter("lowercase")
                         .addTokenFilter("englishpossessive")
-                        .addTokenFilter("hunspellstem", "dictionary", "en_US.dic", "affix", "en_US.aff", "ignoreCase", "true")
+                        .addTokenFilter("hunspellstem", "dictionary", "en_US.dic", "affix", "en_US.aff", "ignoreCase", "true", "longestOnly", "true")
                         .build();
 
 
@@ -161,7 +161,7 @@ public class Analyzers {
                         .withTokenizer("standard")
                         .addTokenFilter("apostrophe")
                         .addTokenFilter("turkishlowercase")
-                        .addTokenFilter("hunspellstem", "dictionary", "tr_TR.dic", "affix", "tr_TR.aff", "ignoreCase", "true", "longestOnly","true")
+                        .addTokenFilter("hunspellstem", "dictionary", "tr_TR.dic", "affix", "tr_TR.aff", "ignoreCase", "true", "longestOnly", "true")
                         .build();
 
             case F5:

@@ -1,5 +1,9 @@
 package org.clueweb09.tracks;
 
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
 import org.clueweb09.InfoNeed;
 
 import java.io.IOException;
@@ -10,8 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-
-import static org.clueweb09.tracks.MQ09.escape;
 
 /**
  * The NTCIR-13  We Want Web-1 (WWW) Task!
@@ -87,7 +89,7 @@ public class WWW13 extends Track {
      * @param topicsPath topics file
      * @throws IOException exception
      */
-     void populateInfoNeedsWWW(Path topicsPath) throws IOException {
+    void populateInfoNeedsWWW(Path topicsPath) throws IOException {
 
         List<String> lines = Files.readAllLines(topicsPath, StandardCharsets.UTF_8);
 
@@ -123,7 +125,7 @@ public class WWW13 extends Track {
 
                 final Map<String, Integer> innerMap = map.get(qID);
 
-                InfoNeed need = new InfoNeed(qID, escape(query), this, innerMap);
+                InfoNeed need = new InfoNeed(qID, xml(query), this, innerMap);
 
 
                 if (need.relevant() == 0) {
@@ -135,6 +137,26 @@ public class WWW13 extends Track {
         }
 
         lines.clear();
+    }
+
+    private static String xml(String query) {
+        return query.replaceAll("&apos;", "'")
+                .replaceAll("&quot;", " ")
+                .replaceAll("&amp;", " ");
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        QueryParser parser = new QueryParser("text", Analyzers.analyzer(Tag.KStem));
+
+        parser.setSplitOnWhitespace(true);
+        parser.setAutoGeneratePhraseQueries(true);
+
+        Query query = parser.parse("car-parts.com");
+        System.out.println(query.toString());
+
+        query = parser.parse("e-mails");
+        System.out.println(query.toString());
     }
 
     private void saveQRelsMap(Path path) throws IOException {
