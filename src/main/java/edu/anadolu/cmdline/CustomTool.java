@@ -86,7 +86,7 @@ public class CustomTool extends CmdLineTool {
                 final String tag = path.getFileName().toString();
 
                 // search for a specific tag, skip the rest
-                if (!(this.tag != null && this.tag.toString().equals(tag))) continue;
+                if (this.tag != null && !this.tag.toString().equals(tag)) continue;
 
                 try (Searcher searcher = new Searcher(path, dataset, 1000)) {
                     searcher.searchWithThreads(numThreads, modelBaseSet, /*Collections.singletonList("contents")*/ fields, "runs");
@@ -173,7 +173,7 @@ public class CustomTool extends CmdLineTool {
                     final String tag = path.getFileName().toString();
 
                     // search for a specific tag, skip the rest
-                    if (!(this.tag != null && this.tag.toString().equals(tag))) continue;
+                    if (this.tag != null && !this.tag.toString().equals(tag)) continue;
 
                     try (Searcher searcher = new Searcher(path, dataset, 10000)) {
                         searcher.searchWithThreads(numThreads, modelBaseSet, fields, "base_spam_runs");

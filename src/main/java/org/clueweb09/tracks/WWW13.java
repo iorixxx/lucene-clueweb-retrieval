@@ -142,20 +142,26 @@ public class WWW13 extends Track {
     private static String xml(String query) {
         return query.replaceAll("&apos;", "'")
                 .replaceAll("&quot;", " ")
-                .replaceAll("&amp;", " ");
+                .replaceAll("&amp;", " ")
+                .replaceAll("\\?"," ");
     }
 
     public static void main(String[] args) throws Exception {
 
-        QueryParser parser = new QueryParser("text", Analyzers.analyzer(Tag.KStem));
+        System.out.println(xml("Texas Hold&apos;em does &quot;foxsports.com&quot;. defense AT&amp;T's mean?"));
+
+        QueryParser parser = new QueryParser("text", Analyzers.analyzer(Tag.KStemField));
 
         parser.setSplitOnWhitespace(true);
         parser.setAutoGeneratePhraseQueries(true);
 
-        Query query = parser.parse("car-parts.com");
+        Query query = parser.parse("AT\\&T's car-parts.com cingular at&t");
         System.out.println(query.toString());
 
         query = parser.parse("e-mails");
+        System.out.println(query.toString());
+
+        query = parser.parse("Chibi Maruko-chan");
         System.out.println(query.toString());
     }
 
