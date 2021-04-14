@@ -70,7 +70,7 @@ public final class IndexerTool extends CmdLineTool {
         if (Collection.ROB04.equals(collection)) {
 
             final long start = System.nanoTime();
-            final int numIndexed = ROB04.index(docsPath, indexPath, tag);
+            final int numIndexed = ROB04.index(docsPath, indexPath, tag, silent);
             System.out.println("Total " + numIndexed + " documents indexed in " + execution(start));
             return;
         }

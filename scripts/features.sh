@@ -21,8 +21,11 @@ else
   ./run.sh TFDistribution -collection "$1" -task query
   ./run.sh TFDistribution -collection "$1" -task term
 
- # ./run.sh Custom -collection $1 -task search
- # ./eval.sh
- # ./run.sh Custom -collection $1 -task export
+  ./run.sh Custom -collection $1 -task search
+  ./eval.sh
+  ./www.sh
+  ./rob.sh
+  ./run.sh Custom -collection $1 -task export
+  ./run.sh Feature -collection $1 -task export
 
 fi

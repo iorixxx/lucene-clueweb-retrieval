@@ -30,7 +30,7 @@ import java.util.Properties;
  */
 public class ROB04 {
 
-    public static int index(String dataDir, final String indexPath, Tag tag) throws IOException {
+    public static int index(String dataDir, final String indexPath, Tag tag, boolean silent) throws IOException {
 
         Path iPath = Paths.get(indexPath, tag.toString());
 
@@ -88,7 +88,8 @@ public class ROB04 {
 
             // don't index empty documents
             if (contents.length() == 0) {
-                System.err.println(id + " " + dd.getTitle() + " " + dd.getBody());
+                if (!silent)
+                    System.err.println(id + " " + dd.getTitle() + " " + dd.getBody());
                 continue;
             }
 
@@ -116,7 +117,6 @@ public class ROB04 {
             writer.close();
             dir.close();
         }
-
 
 
         return numIndexed;
