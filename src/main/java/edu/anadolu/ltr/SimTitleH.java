@@ -18,8 +18,8 @@ public class SimTitleH implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-        return base.textSimilarity(base.title, base.hTags);
-//        return base.cosSim(String.join(" ",base.title),String.join(" ",base.hTags));
+//        return base.textSimilarity(base.title, base.hTags);
+        return base.cosSim(String.join(" ",base.title),String.join(" ",base.hTags));
     }
 }
 

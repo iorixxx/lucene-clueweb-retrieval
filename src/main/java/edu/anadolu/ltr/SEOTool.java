@@ -138,8 +138,11 @@ public class SEOTool extends CmdLineTool {
             }
         }
 
-        System.out.println(docIdSet.size() + " docs will be processed.");
+//        docIdSet.removeAll(retrieveDocIdSetFromExisting(Paths.get("Seo12B.txt")));
 
+
+        System.out.println(docIdSet.size() + " docs will be processed.");
+        
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
         long start = System.nanoTime();
 
@@ -175,7 +178,6 @@ public class SEOTool extends CmdLineTool {
 
         List<IDocFeature> features = new ArrayList<>();
         if(type.equals("seo")){
-            if(seopart==null) {
                 features.add(new Contact());
                 features.add(new ContentLengthOver1800());
                 features.add(new Copyright());
@@ -214,48 +216,6 @@ public class SEOTool extends CmdLineTool {
 
                 features.add(new SimTitleH());
                 features.add(new SimTitleKeyword());
-            }else{
-                if(seopart.equals("1")){
-                    features.add(new Contact());
-                    features.add(new ContentLengthOver1800());
-                    features.add(new Copyright());
-                    features.add(new Description());
-                    features.add(new Favicon());
-                    features.add(new Https());
-                    features.add(new Keyword());
-                    features.add(new KeywordInDomain());
-                    features.add(new KeywordInFirst100Words());
-                    features.add(new KeywordInImgAltTag());
-                    features.add(new KeywordInTitle());
-                    features.add(new Robots());
-                    features.add(new SocialMediaShare());
-                    features.add(new Viewport());
-                    features.add(new AlttagToImg());
-                    features.add(new ContentLengthToMax());
-                    features.add(new HdensityToMax());
-                    features.add(new ImgToMax());
-                    features.add(new IndexOfKeywordInTitle());
-                    features.add(new InOutlinkToAll());
-                    features.add(new UrlLength());
-                    features.add(new MetaTagToMax());
-                    features.add(new NoFollowToAll());
-                }else if(seopart.equals("2")){
-                    features.add(new SimDescriptionH());
-                    features.add(new SimContentDescription());
-                }else if(seopart.equals("3")){
-                    features.add(new SimKeywordDescription());
-                    features.add(new SimContentH());
-                }else if(seopart.equals("4")){
-                    features.add(new SimKeywordH());
-                    features.add(new SimContentKeyword());
-                }else if(seopart.equals("5")){
-                    features.add(new SimTitleDescription());
-                    features.add(new SimContentTitle());
-                }else if(seopart.equals("6")){
-                    features.add(new SimTitleH());
-                    features.add(new SimTitleKeyword());
-                }
-            }
         }else if(type.equals("doc")){
             features.add(new NumberOfChildPages(collection));
             features.add(new InLinkCount(collection));
@@ -336,6 +296,29 @@ public class SEOTool extends CmdLineTool {
 
         return docIdSet;
     }
+    private Set<String> retrieveDocIdSetFromExisting(Path file) throws IOException {
+
+        Set<String> docIdSet = new HashSet<>();
+        List<String> lines = Files.readAllLines(file);
+
+        for (int i=0;i<lines.size();i++) {
+
+            String line = lines.get(i);
+
+            if (line.startsWith("#")) continue;
+
+
+            String docId = Track.whiteSpaceSplitter.split(line)[0];
+
+            docIdSet.add(docId);
+        }
+
+        System.out.println("Existing docs "+docIdSet.size());
+
+        lines.clear();
+
+        return docIdSet;
+    }
 
 
     private Set<String> retrieveDocIdSetForLetor(Path file) throws IOException {
@@ -347,13 +330,7 @@ public class SEOTool extends CmdLineTool {
 
             if (line.startsWith("#")) continue;
 
-            int i = line.indexOf("GX");
-
-            if (i == -1) {
-                throw new RuntimeException("cannot find # in " + line);
-            }
-
-            String docId = line.substring(i, line.indexOf(" ", i)).trim();
+            String docId = Track.whiteSpaceSplitter.split(line)[2];
 
             docIdSet.add(docId);
         }

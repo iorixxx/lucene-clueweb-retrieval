@@ -16,7 +16,7 @@ public class SimTitleDescription implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-        return base.textSimilarity(base.title, base.description);
-//        return base.cosSim(String.join(" ",base.title),String.join(" ",base.description));
+//        return base.textSimilarity(base.title, base.description);
+        return base.cosSim(String.join(" ",base.title),String.join(" ",base.description));
     }
 }

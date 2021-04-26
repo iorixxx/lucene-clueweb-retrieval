@@ -107,7 +107,7 @@ public class Analyzers {
                         .addTokenFilter("englishpossessive")
                         .addTokenFilter("snowballporter", "language", "English")
                         .build();
-
+                
             case ICU:
                 return CustomAnalyzer.builder()
                         .withTokenizer("icu")

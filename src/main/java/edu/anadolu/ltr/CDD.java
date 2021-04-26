@@ -19,18 +19,22 @@ public class CDD implements IDocFeature {
         // Formula is borrowed from the paper : Zhou, Y., & Croft, W. B. (2005, October). Document quality models for web ad hoc retrieval.
         double cdd = 0.0;
         double lambda = 0.8;
-
-
         
         int contentsize = base.listContent.size();
         long totalTerm = base.collectionStatistics.sumTotalTermFreq();
+        boolean nan = false;
         for(Map.Entry<String,Integer> word : base.mapTf.entrySet()){
             Term term = new Term(Indexer.FIELD_CONTENTS, word.getKey());
+            if(TermContext.build(base.reader.getContext(), term).totalTermFreq()==0) continue;
             double pColl = (double) TermContext.build(base.reader.getContext(), term).totalTermFreq()/totalTerm;
             double pDoc = (double) word.getValue()/ contentsize;
             double pwd = (lambda * pDoc) + ((1-lambda) * pColl);
-            cdd += pColl * Math.log(pColl/pwd);
+            if(pwd==0 || Double.isNaN(pwd)) continue;
+            double result = pColl * Math.log(pColl/pwd);
+            cdd += result;
         }
+
+
 
 //        if(cdd>10 || cdd<-10){
 //            System.out.println("****************************************************************************************************************************************");
