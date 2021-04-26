@@ -96,7 +96,7 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")
                         .addTokenFilter("lowercase")
-//                      .addTokenFilter("englishpossessive")
+                        .addTokenFilter("englishpossessive")
                         .addTokenFilter("kstem")
                         .build();
 
@@ -104,6 +104,7 @@ public class Analyzers {
                 return CustomAnalyzer.builder()
                         .withTokenizer("standard")
                         .addTokenFilter("lowercase")
+                        .addTokenFilter("englishpossessive")
                         .addTokenFilter("snowballporter", "language", "English")
                         .build();
 
