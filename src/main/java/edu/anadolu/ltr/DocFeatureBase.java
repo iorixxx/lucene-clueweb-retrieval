@@ -95,15 +95,14 @@ public class DocFeatureBase {
 
     String calculate(List<IDocFeature> featureList) throws IOException {
 
+//        if(StringUtils.isEmpty(url)) return null;
+
         StringBuilder builder = new StringBuilder();
         builder.append(docId);
-//        long start2=0;
+//        builder.append("\t").append(url);
         for (IDocFeature iDoc : featureList) {
-//            start2 = System.nanoTime();
             double value = iDoc.calculate(this);
             builder.append("\t").append(iDoc.toString()).append(":").append(String.format("%.5f", value));
-//            if((System.nanoTime()-start2)>1000000000)
-//                System.out.println(iDoc.getClass().getSimpleName() + " "+ (System.nanoTime()-start2)/1000000000);
         }
         return builder.toString();
     }

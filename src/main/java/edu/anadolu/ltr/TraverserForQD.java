@@ -144,7 +144,7 @@ public class TraverserForQD {
 
                 Thread.currentThread().setName(inputWarcFile.toAbsolutePath().toString());
 
-                if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
+                if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection)) {
                     int addCount = processClueWeb09WarcFile();
                     //System.out.println("*./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "  " + addCount);
                 } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {

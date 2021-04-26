@@ -60,10 +60,12 @@ public class Traverser {
                 return 0;
 
             String id = warcRecord.id();
+
             if (skip(id)) return 0;
             DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader, rc1);
             try {
                 String line = base.calculate(featureList);
+                if(line==null) return 1;
                 out.get().println(line);
 //                System.out.println(line);
             } catch (Exception ex) {
@@ -294,7 +296,7 @@ public class Traverser {
             }catch (Exception ex){
                 ex.printStackTrace();
             }
-        }else if(collection.equals(Collection.CW12A)||collection.equals(Collection.CW12B)){
+        }else if(collection.equals(Collection.CW12A)||collection.equals(Collection.CW12B)||collection.equals(Collection.NTCIR)){
             if("all".equals(resultsettype)){
                 try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
