@@ -3,11 +3,15 @@ package org.clueweb09.tracks;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-public class WWW15 extends WWW13{
+/**
+ * The NTCIR-15 WWW-3 English Subtask
+ * http://sakailab.com/www3english/
+ */
+public class WWW15 extends WWW13 {
 
     @Override
     protected int offset() {
-        return 200;
+        return 100;
     }
 
     @Override
@@ -17,7 +21,8 @@ public class WWW15 extends WWW13{
 
     @Override
     protected void populateQRelsMap() throws IOException {
-        populateQRelsMap(Paths.get(home, "topics-and-qrels", "www3e.qrels"));
+        // tail -n -16677 ntcir15www2+3official.qrels >> ntcir15www3.qrels
+        populateQRelsMap(Paths.get(home, "topics-and-qrels", "ntcir15www3.qrels"));
     }
 
     public WWW15(String home) {
