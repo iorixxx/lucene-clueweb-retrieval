@@ -61,7 +61,7 @@ public class SEOTool extends CmdLineTool {
     @Option(name = "-resultsettype", usage = "resultset or featureset or all")
     private String resultsettype = null;
 
-    @Option(name = "-seopart", required = false, usage = "1-2-3-4-5-6 for divide seo features to fast computing")
+    @Option(name = "-seopart", required = false, usage = "meta,content,link,url,simcos,simbert (seperated by -) to divide seo features for fast computing")
     private String seopart = null;
 
     @Override
@@ -178,6 +178,7 @@ public class SEOTool extends CmdLineTool {
 
         List<IDocFeature> features = new ArrayList<>();
         if(type.equals("seo")){
+            if(seopart==null) {
                 features.add(new Contact());
                 features.add(new ContentLengthOver1800());
                 features.add(new Copyright());
@@ -201,21 +202,20 @@ public class SEOTool extends CmdLineTool {
                 features.add(new UrlLength());
                 features.add(new MetaTagToMax());
                 features.add(new NoFollowToAll());
-
                 features.add(new SimDescriptionH());
                 features.add(new SimContentDescription());
-
                 features.add(new SimKeywordDescription());
                 features.add(new SimContentH());
-
                 features.add(new SimKeywordH());
                 features.add(new SimContentKeyword());
-
                 features.add(new SimTitleDescription());
                 features.add(new SimContentTitle());
-
                 features.add(new SimTitleH());
                 features.add(new SimTitleKeyword());
+            }else{
+                String[] parts = seopart.split("-");
+//                for(String)
+            }
         }else if(type.equals("doc")){
             features.add(new NumberOfChildPages(collection));
             features.add(new InLinkCount(collection));
