@@ -9,14 +9,22 @@ import java.util.Arrays;
 
 public class SimTitleKeyword implements IDocFeature {
 
+    String type="";
+
+    public SimTitleKeyword(String type){
+        this.type=type;
+    }
+
     @Override
     public String toString() {
-        return this.getClass().getSimpleName();
+        return this.getClass().getSimpleName() + this.type;
     }
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
 //        return base.textSimilarity(base.title, base.keyword);
+        if("bert".equals(this.type))
+            return base.bertSim(String.join(" ",base.title),String.join(" ",base.keyword));
         return base.cosSim(String.join(" ",base.title),String.join(" ",base.keyword));
     }
 }

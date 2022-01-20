@@ -1,6 +1,7 @@
 package edu.anadolu.ltr;
 
 import com.google.common.collect.Sets;
+import com.robrua.nlp.bert.Bert;
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
@@ -54,8 +55,8 @@ public class DocFeatureBase {
     List<String> hTags;
     IndexSearcher searcher;
     IndexReader reader;
-    RelatednessCalculator rc1;
     Map<String,Integer> mapTf;
+    Bert bert;
 
     /**
      * It is possible to find URL info in the headers of *.warc files for the ClueWeb datasets.
@@ -63,7 +64,7 @@ public class DocFeatureBase {
      *
      * @param warcRecord input warc record
      */
-    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, RelatednessCalculator rc1) {
+    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, Bert bert) {
         try {
             rawHTML = warcRecord.content();
             jDoc = Jsoup.parse(rawHTML);
@@ -75,7 +76,7 @@ public class DocFeatureBase {
             mapTf = getDocTfForTerms();
             this.searcher = searcher;
             this.reader = reader;
-
+            this.bert=bert;
             this.title = Analyzers.getAnalyzedTokens(jDoc.title(),Analyzers.analyzer(analyzerTag));
             this.keyword = Analyzers.getAnalyzedTokens(MetaTag.enrich3(jDoc, "keywords"), Analyzers.analyzer(analyzerTag));
             this.description = Analyzers.getAnalyzedTokens(MetaTag.enrich3(jDoc, "description"), Analyzers.analyzer(analyzerTag));
@@ -84,7 +85,6 @@ public class DocFeatureBase {
                     .map(e -> e.text())
                     .map(String::trim)
                     .filter(notEmpty).collect(Collectors.toList());
-            this.rc1=rc1;
         } catch (Exception exception) {
             System.err.println("jdoc exception " + warcRecord.id());
             exception.printStackTrace();
@@ -220,44 +220,44 @@ public class DocFeatureBase {
         return inlink;
     }
 
-    protected double textSimilarity(List<String> str1, List<String> str2) {
-
-        String[] words1 = str1.toArray(new String[0]);
-        String[] words2 = str2.toArray(new String[0]);
-
-        if (words1.length==0) return 0;
-        if (words2.length==0) return 0;
-//        Pattern UNWANTED_SYMBOLS = Pattern.compile("\\p{Punct}");
-//        Matcher unwantedMatcher = UNWANTED_SYMBOLS.matcher(str1);
-//        str1 = unwantedMatcher.replaceAll("");
-//        Matcher unwantedMatcher2 = UNWANTED_SYMBOLS.matcher(str2);
-//        str2 = unwantedMatcher2.replaceAll("");
-//        String[] words1 = str1.split("\\s+");
-//        String[] words2 = str2.split("\\s+");
-
-        long avgDoclen = (long)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount();
-        words1 = words1.length > avgDoclen ? copyArrayRandom(words1,avgDoclen) : words1;
-        words2 = words2.length > avgDoclen ? copyArrayRandom(words2,avgDoclen) : words2;
-
-        words1 = StopWordRemover.getInstance().removeStopWords(words1);
-        words2 = StopWordRemover.getInstance().removeStopWords(words2);
-
-        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
-//        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, new WuPalmer(new NictWordNet()));
-        double total = 0;
-        int count = 0;
-
-        for (int i = 0; i < words1.length; i++) {
-            for (int j = 0; j < words2.length; j++) {
-                if (s1[i][j] > 0){
-                    count++;
-                    total += s1[i][j];
-                }
-            }
-        }
-        if (count == 0) return 0;
-        return total / count;
-    }
+//    protected double textSimilarity(List<String> str1, List<String> str2) {
+//
+//        String[] words1 = str1.toArray(new String[0]);
+//        String[] words2 = str2.toArray(new String[0]);
+//
+//        if (words1.length==0) return 0;
+//        if (words2.length==0) return 0;
+////        Pattern UNWANTED_SYMBOLS = Pattern.compile("\\p{Punct}");
+////        Matcher unwantedMatcher = UNWANTED_SYMBOLS.matcher(str1);
+////        str1 = unwantedMatcher.replaceAll("");
+////        Matcher unwantedMatcher2 = UNWANTED_SYMBOLS.matcher(str2);
+////        str2 = unwantedMatcher2.replaceAll("");
+////        String[] words1 = str1.split("\\s+");
+////        String[] words2 = str2.split("\\s+");
+//
+//        long avgDoclen = (long)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount();
+//        words1 = words1.length > avgDoclen ? copyArrayRandom(words1,avgDoclen) : words1;
+//        words2 = words2.length > avgDoclen ? copyArrayRandom(words2,avgDoclen) : words2;
+//
+//        words1 = StopWordRemover.getInstance().removeStopWords(words1);
+//        words2 = StopWordRemover.getInstance().removeStopWords(words2);
+//
+//        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, rc1);
+////        double[][] s1 = MatrixCalculator.getNormalizedSimilarityMatrix(words1, words2, new WuPalmer(new NictWordNet()));
+//        double total = 0;
+//        int count = 0;
+//
+//        for (int i = 0; i < words1.length; i++) {
+//            for (int j = 0; j < words2.length; j++) {
+//                if (s1[i][j] > 0){
+//                    count++;
+//                    total += s1[i][j];
+//                }
+//            }
+//        }
+//        if (count == 0) return 0;
+//        return total / count;
+//    }
 
     protected double cosSim(String str1, String str2){
         if(str1.length()==0 || str2.length()==0) return 0;
@@ -271,6 +271,22 @@ public class DocFeatureBase {
             System.out.println("************************************************");
         }
         return score;
+    }
+
+    protected double bertSim(String str1, String str2){
+        if(str1.length()==0 || str2.length()==0) return 0;
+        float[][] embeddings = bert.embedSequences(str1,str2);
+        double dotProduct = 0.0;
+        double normA = 0.0;
+        double normB = 0.0;
+        float[] vectorA = embeddings[0];
+        float[] vectorB = embeddings[1];
+        for (int i = 0; i < vectorA.length; i++) {
+            dotProduct += vectorA[i] * vectorB[i];
+            normA += Math.pow(vectorA[i], 2);
+            normB += Math.pow(vectorB[i], 2);
+        }
+        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
     }
 
     private String[] copyArrayRandom(String[] array, long length){

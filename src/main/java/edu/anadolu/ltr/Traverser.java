@@ -1,5 +1,6 @@
 package edu.anadolu.ltr;
 
+import com.robrua.nlp.bert.Bert;
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
@@ -46,12 +47,12 @@ public class Traverser {
 
         private final Path inputWarcFile;
         private final AtomicReference<PrintWriter> out;
-        private final RelatednessCalculator rc1;
+        private final Bert bert;
 
-        WorkerThread(Path inputWarcFile, AtomicReference<PrintWriter> out, RelatednessCalculator rc1) {
+        WorkerThread(Path inputWarcFile, AtomicReference<PrintWriter> out, Bert bert) {
             this.inputWarcFile = inputWarcFile;
             this.out = out;
-            this.rc1=rc1;
+            this.bert=bert;
         }
 
         private int processWarcRecord(WarcRecord warcRecord) {
@@ -62,7 +63,7 @@ public class Traverser {
             String id = warcRecord.id();
 
             if (skip(id)) return 0;
-            DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader, rc1);
+            DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader, bert);
             try {
                 String line = base.calculate(featureList);
                 if(line==null) return 1;
@@ -217,9 +218,9 @@ public class Traverser {
      * Traverse based on Java8's parallel streams
      */
     void traverseParallel(Path resultPath, int numThreads) throws IOException {
+        Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-uncased-L-12-H-768-A-12");
 
-
-        RelatednessCalculator rc1 = new WuPalmer(new NictWordNet());
+//        RelatednessCalculator rc1 = new WuPalmer(new NictWordNet());
 
 
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + numThreads);
@@ -234,7 +235,7 @@ public class Traverser {
                 docIdPathSuffix.add(s.split("-")[1] + File.separator + s.split("-")[2] + ".warc.gz");
 
             try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length-2]+File.separator+x.toString().split(File.separator)[x.toString().split(File.separator).length-1]))) {
-                stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
+                stream.parallel().forEach(p -> new WorkerThread(p, out, bert).run());
 
                 //                final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 //                final Deque<Path> warcFiles = stream.collect(Collectors.toCollection(ArrayDeque::new));
@@ -300,7 +301,7 @@ public class Traverser {
             if("all".equals(resultsettype)){
                 try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
-                    stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
+                    stream.parallel().forEach(p -> new WorkerThread(p, out,bert).run());
                 }catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -310,7 +311,7 @@ public class Traverser {
                     docIdPathSuffix.add(s.split("-")[1] + "-" + s.split("-")[2] + ".warc.gz");
 
                 try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length - 1]))) {
-                    stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
+                    stream.parallel().forEach(p -> new WorkerThread(p, out,bert).run());
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -318,7 +319,7 @@ public class Traverser {
         }else{
             try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
-                stream.parallel().forEach(p -> new WorkerThread(p, out,rc1).run());
+                stream.parallel().forEach(p -> new WorkerThread(p, out,bert).run());
             }
         }
         out.get().flush();

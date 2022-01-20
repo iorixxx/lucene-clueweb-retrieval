@@ -178,6 +178,7 @@ public class SEOTool extends CmdLineTool {
 
         List<IDocFeature> features = new ArrayList<>();
         if(type.equals("seo")){
+            String type="cos";
             if(seopart==null) {
                 features.add(new Contact());
                 features.add(new ContentLengthOver1800());
@@ -202,19 +203,77 @@ public class SEOTool extends CmdLineTool {
                 features.add(new UrlLength());
                 features.add(new MetaTagToMax());
                 features.add(new NoFollowToAll());
-                features.add(new SimDescriptionH());
-                features.add(new SimContentDescription());
-                features.add(new SimKeywordDescription());
-                features.add(new SimContentH());
-                features.add(new SimKeywordH());
-                features.add(new SimContentKeyword());
-                features.add(new SimTitleDescription());
-                features.add(new SimContentTitle());
-                features.add(new SimTitleH());
-                features.add(new SimTitleKeyword());
+                features.add(new SimDescriptionH(type));
+                features.add(new SimContentDescription(type));
+                features.add(new SimKeywordDescription(type));
+                features.add(new SimContentH(type));
+                features.add(new SimKeywordH(type));
+                features.add(new SimContentKeyword(type));
+                features.add(new SimTitleDescription(type));
+                features.add(new SimContentTitle(type));
+                features.add(new SimTitleH(type));
+                features.add(new SimTitleKeyword(type));
             }else{
                 String[] parts = seopart.split("-");
-//                for(String)
+                for(String part : parts){
+                    if(part==null) continue;
+                    if(part.isEmpty()) continue;
+                    if("meta".equals(part)){
+                        features.add(new MetaTagToMax());
+                        features.add(new Copyright());
+                        features.add(new Viewport());
+                        features.add(new Robots());
+                        features.add(new Description());
+                        features.add(new Keyword());
+                        features.add(new KeywordInDomain());
+                        features.add(new KeywordInFirst100Words());
+                        features.add(new KeywordInImgAltTag());
+                        features.add(new KeywordInTitle());
+                        features.add(new IndexOfKeywordInTitle());
+                    }
+                    if("content".equals(part)){
+                        features.add(new ContentLengthToMax());
+                        features.add(new ContentLengthOver1800());
+                        features.add(new HdensityToMax());
+                    }
+                    if("link".equals(part)){
+                        features.add(new Contact());
+                        features.add(new Favicon());
+                        features.add(new SocialMediaShare());
+                        features.add(new ImgToMax());
+                        features.add(new AlttagToImg());
+                        features.add(new InOutlinkToAll());
+                        features.add(new NoFollowToAll());
+                    }
+                    if("url".equals(part)){
+                        features.add(new Https());
+                    }
+                    if("simcos".equals(part)){
+                        features.add(new SimDescriptionH(type));
+                        features.add(new SimContentDescription(type));
+                        features.add(new SimKeywordDescription(type));
+                        features.add(new SimContentH(type));
+                        features.add(new SimKeywordH(type));
+                        features.add(new SimContentKeyword(type));
+                        features.add(new SimTitleDescription(type));
+                        features.add(new SimContentTitle(type));
+                        features.add(new SimTitleH(type));
+                        features.add(new SimTitleKeyword(type));
+                    }
+                    if("simbert".equals(part)){
+                        type="bert";
+                        features.add(new SimDescriptionH(type));
+                        features.add(new SimContentDescription(type));
+                        features.add(new SimKeywordDescription(type));
+                        features.add(new SimContentH(type));
+                        features.add(new SimKeywordH(type));
+                        features.add(new SimContentKeyword(type));
+                        features.add(new SimTitleDescription(type));
+                        features.add(new SimContentTitle(type));
+                        features.add(new SimTitleH(type));
+                        features.add(new SimTitleKeyword(type));
+                    }
+                }
             }
         }else if(type.equals("doc")){
             features.add(new NumberOfChildPages(collection));
