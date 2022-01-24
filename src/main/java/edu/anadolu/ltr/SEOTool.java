@@ -1,5 +1,6 @@
 package edu.anadolu.ltr;
 
+import com.robrua.nlp.bert.Bert;
 import edu.anadolu.Indexer;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
@@ -149,31 +150,35 @@ public class SEOTool extends CmdLineTool {
 
         ///////////////////////////// Index Reading for stats ///////////////////////////////////////////
         Path indexPath=null;
-        if(this.tag == null)
-            indexPath = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory).iterator().next();
-        else {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory)) {
-                for (Path path : stream) {
-                    if(!tag.equals(path.getFileName().toString())) continue;
-                    indexPath = path;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        if(this.tag == null)
+//            indexPath = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory).iterator().next();
+//        else {
+//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory)) {
+//                for (Path path : stream) {
+//                    if(!tag.equals(path.getFileName().toString())) continue;
+//                    indexPath = path;
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        if(indexPath == null)
+//            throw new RuntimeException(tag + " index not found");
+//
+//
+//        this.indexTag = indexPath.getFileName().toString();
+//        this.analyzerTag = Tag.tag(indexTag);
+        this.analyzerTag = Tag.tag(tag);
 
-        if(indexPath == null)
-            throw new RuntimeException(tag + " index not found");
+//        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
 
+        IndexSearcher searcher = null;
+//        IndexSearcher searcher = new IndexSearcher(reader);
+        CollectionStatistics collectionStatistics = null;
+//        CollectionStatistics collectionStatistics = searcher.collectionStatistics(Indexer.FIELD_CONTENTS);
 
-        this.indexTag = indexPath.getFileName().toString();
-        this.analyzerTag = Tag.tag(indexTag);
-
-        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
-
-        IndexSearcher searcher = new IndexSearcher(reader);
-        CollectionStatistics collectionStatistics = searcher.collectionStatistics(Indexer.FIELD_CONTENTS);
-
+        Bert bert = null;
 
 
         List<IDocFeature> features = new ArrayList<>();
@@ -272,6 +277,7 @@ public class SEOTool extends CmdLineTool {
                         features.add(new SimContentTitle(type));
                         features.add(new SimTitleH(type));
                         features.add(new SimTitleKeyword(type));
+                        bert = Bert.load("com/robrua/nlp/easy-bert/bert-uncased-L-12-H-768-A-12");
                     }
                 }
             }
@@ -297,8 +303,8 @@ public class SEOTool extends CmdLineTool {
             features.add(new CDD());
         }
 
-        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader, resultsettype);
-        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount());
+        Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader, resultsettype, bert);
+//        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount());
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         System.out.println(numThreads + " threads are running.");

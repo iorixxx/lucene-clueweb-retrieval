@@ -3,6 +3,8 @@ package edu.anadolu.datasets;
 import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ public abstract class DataSet {
     }
 
     public Path indexesPath() {
-        return Paths.get(tfd_home, collection.toString(), "indexes");
+        return Paths.get("/indexes/TFD-HOME", collection.toString(), "indexes");
     }
 
 

@@ -195,8 +195,9 @@ public class Traverser {
     private IndexSearcher searcher;
     private IndexReader reader;
     private String resultsettype;
+    private Bert bert;
 
-    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, String resultsettype) {
+    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, String resultsettype, Bert bert) {
         this.collection = dataset.collection();
         this.docIdSet = docIdSet;
         this.featureList = featureList;
@@ -205,6 +206,7 @@ public class Traverser {
         this.searcher = searcher;
         this.reader = reader;
         this.resultsettype=resultsettype;
+        this.bert=bert;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
@@ -218,7 +220,7 @@ public class Traverser {
      * Traverse based on Java8's parallel streams
      */
     void traverseParallel(Path resultPath, int numThreads) throws IOException {
-        Bert bert = Bert.load("com/robrua/nlp/easy-bert/bert-uncased-L-12-H-768-A-12");
+
 
 //        RelatednessCalculator rc1 = new WuPalmer(new NictWordNet());
 

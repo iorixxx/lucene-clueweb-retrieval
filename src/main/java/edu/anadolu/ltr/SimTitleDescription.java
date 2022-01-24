@@ -24,7 +24,7 @@ public class SimTitleDescription implements IDocFeature {
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
 //        return base.textSimilarity(base.title, base.description);
         if("bert".equals(this.type))
-            return base.bertSim(String.join(" ",base.title),String.join(" ",base.description));
+            return base.bertSim(base.vectortitle,base.vectordescription);
         return base.cosSim(String.join(" ",base.title),String.join(" ",base.description));
     }
 }

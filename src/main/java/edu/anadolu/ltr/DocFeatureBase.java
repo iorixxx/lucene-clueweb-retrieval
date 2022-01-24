@@ -53,6 +53,11 @@ public class DocFeatureBase {
     List<String> keyword;
     List<String> description;
     List<String> hTags;
+    float[] vectorlistContent;
+    float[] vectortitle;
+    float[] vectorkeyword;
+    float[] vectordescription;
+    float[] vectorhTags;
     IndexSearcher searcher;
     IndexReader reader;
     Map<String,Integer> mapTf;
@@ -85,6 +90,13 @@ public class DocFeatureBase {
                     .map(e -> e.text())
                     .map(String::trim)
                     .filter(notEmpty).collect(Collectors.toList());
+            if(bert!=null){
+                vectorlistContent = bertVector(this.listContent);
+                vectortitle = bertVector(this.title);
+                vectorkeyword = bertVector(this.keyword);
+                vectordescription = bertVector(this.description);
+                vectorhTags = bertVector(this.hTags);
+            }
         } catch (Exception exception) {
             System.err.println("jdoc exception " + warcRecord.id());
             exception.printStackTrace();
@@ -273,14 +285,16 @@ public class DocFeatureBase {
         return score;
     }
 
-    protected double bertSim(String str1, String str2){
-        if(str1.length()==0 || str2.length()==0) return 0;
-        float[][] embeddings = bert.embedSequences(str1,str2);
+    protected float[] bertVector(List<String> str){
+        if(str.size()==0) return null;
+        return bert.embedSequence(String.join(" ",str));
+    }
+
+    protected double bertSim(float[] vectorA, float[] vectorB){
+        if(vectorA==null || vectorB==null) return 0;
         double dotProduct = 0.0;
         double normA = 0.0;
         double normB = 0.0;
-        float[] vectorA = embeddings[0];
-        float[] vectorB = embeddings[1];
         for (int i = 0; i < vectorA.length; i++) {
             dotProduct += vectorA[i] * vectorB[i];
             normA += Math.pow(vectorA[i], 2);
