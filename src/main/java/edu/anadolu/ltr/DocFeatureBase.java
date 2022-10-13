@@ -12,10 +12,11 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.common.StringUtils;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.jsoup.select.Evaluator;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static edu.anadolu.Indexer.titleEval;
 
 
 public class DocFeatureBase {
@@ -81,6 +84,7 @@ public class DocFeatureBase {
     /**
      * Different document representations (keywords, body, title, description, URL)
      */
+
     protected Map<String, String> parseFields(SolrClient solr) {
 
         Map<String, String> fields = new HashMap<>();
@@ -89,7 +93,7 @@ public class DocFeatureBase {
 
 
         // HTML <title> Tag
-        Element titleEl = jDoc.getElementsByTag("title").first();
+        Element titleEl = jDoc.head().selectFirst(titleEval);
         if (titleEl != null) {
             title = StringUtil.normaliseWhitespace(titleEl.text()).trim();
         }

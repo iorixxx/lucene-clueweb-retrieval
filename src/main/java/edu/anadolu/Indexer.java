@@ -32,8 +32,9 @@ import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
 import org.clueweb09.WarcRecord;
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Evaluator;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -82,6 +83,8 @@ public class Indexer {
     public static final String RESPONSE = "response";
 
     public static final int BUFFER_SIZE = 1 << 16; // 64K
+
+    public static final Evaluator titleEval = new Evaluator.Tag("title");
 
     private final class IndexerThread extends Thread {
 
@@ -428,7 +431,7 @@ public class Indexer {
 
 
         // HTML <title> Tag
-        Element titleEl = jDoc.getElementsByTag("title").first();
+        Element titleEl = jDoc.head().selectFirst(titleEval);
         if (titleEl != null) {
             title = StringUtil.normaliseWhitespace(titleEl.text()).trim();
             document.add(new NoPositionsTextField("title", title));
