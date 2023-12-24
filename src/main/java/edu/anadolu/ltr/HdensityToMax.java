@@ -8,9 +8,6 @@ import java.util.function.Predicate;
 
 public class HdensityToMax implements IDocFeature {
 
-    private final Predicate<String> notEmpty = (String s) -> s != null && !s.isEmpty();
-
-
     @Override
     public String toString() {
         return this.getClass().getSimpleName();

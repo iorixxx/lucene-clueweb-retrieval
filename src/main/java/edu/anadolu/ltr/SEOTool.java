@@ -134,8 +134,9 @@ public class SEOTool extends CmdLineTool {
                 docIdSet.addAll((Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSetFromResultset(path));
             }
             if(resultsettype.equals("featureset")){
-                throw new RuntimeException("Reading from featureset is not ready yet!");
-//                docIdSet.addAll((Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) ? retrieveDocIdSetForLetor(path) : retrieveDocIdSet(path));
+//                throw new RuntimeException("Reading from featureset is not ready yet!");
+                if(Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection))
+                    docIdSet.addAll(retrieveDocIdSetForOfficialLetor(path));
             }
         }
 
@@ -150,137 +151,71 @@ public class SEOTool extends CmdLineTool {
 
         ///////////////////////////// Index Reading for stats ///////////////////////////////////////////
         Path indexPath=null;
-//        if(this.tag == null)
-//            indexPath = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory).iterator().next();
-//        else {
-//            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory)) {
-//                for (Path path : stream) {
-//                    if(!tag.equals(path.getFileName().toString())) continue;
-//                    indexPath = path;
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        if(indexPath == null)
-//            throw new RuntimeException(tag + " index not found");
-//
-//
-//        this.indexTag = indexPath.getFileName().toString();
-//        this.analyzerTag = Tag.tag(indexTag);
-        this.analyzerTag = Tag.tag(tag);
+        if(this.tag == null)
+            indexPath = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory).iterator().next();
+        else {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dataset.indexesPath(), Files::isDirectory)) {
+                for (Path path : stream) {
+                    if(!tag.equals(path.getFileName().toString())) continue;
+                    indexPath = path;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-//        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+        if(indexPath == null)
+            throw new RuntimeException(tag + " index not found");
 
-        IndexSearcher searcher = null;
-//        IndexSearcher searcher = new IndexSearcher(reader);
-        CollectionStatistics collectionStatistics = null;
-//        CollectionStatistics collectionStatistics = searcher.collectionStatistics(Indexer.FIELD_CONTENTS);
+
+        this.indexTag = indexPath.getFileName().toString();
+        this.analyzerTag = Tag.tag(indexTag);
+//        this.analyzerTag = Tag.tag(tag);
+
+        this.reader = DirectoryReader.open(FSDirectory.open(indexPath));
+
+//        IndexSearcher searcher = null;
+        IndexSearcher searcher = new IndexSearcher(reader);
+//        CollectionStatistics collectionStatistics = null;
+        CollectionStatistics collectionStatistics = searcher.collectionStatistics(Indexer.FIELD_CONTENTS);
 
         Bert bert = null;
 
 
         List<IDocFeature> features = new ArrayList<>();
         if(type.equals("seo")){
-            String type="cos";
-            if(seopart==null) {
-                features.add(new Contact());
-                features.add(new ContentLengthOver1800());
-                features.add(new Copyright());
-                features.add(new Description());
-                features.add(new Favicon());
-                features.add(new Https());
-                features.add(new Keyword());
-                features.add(new KeywordInDomain());
-                features.add(new KeywordInFirst100Words());
-                features.add(new KeywordInImgAltTag());
-                features.add(new KeywordInTitle());
-                features.add(new Robots());
-                features.add(new SocialMediaShare());
-                features.add(new Viewport());
-                features.add(new AlttagToImg());
-                features.add(new ContentLengthToMax());
-                features.add(new HdensityToMax());
-                features.add(new ImgToMax());
-                features.add(new IndexOfKeywordInTitle());
-                features.add(new InOutlinkToAll());
-                features.add(new UrlLength());
-                features.add(new MetaTagToMax());
-                features.add(new NoFollowToAll());
-                features.add(new SimDescriptionH(type));
-                features.add(new SimContentDescription(type));
-                features.add(new SimKeywordDescription(type));
-                features.add(new SimContentH(type));
-                features.add(new SimKeywordH(type));
-                features.add(new SimContentKeyword(type));
-                features.add(new SimTitleDescription(type));
-                features.add(new SimContentTitle(type));
-                features.add(new SimTitleH(type));
-                features.add(new SimTitleKeyword(type));
-            }else{
-                String[] parts = seopart.split("-");
-                for(String part : parts){
-                    if(part==null) continue;
-                    if(part.isEmpty()) continue;
-                    if("meta".equals(part)){
-                        features.add(new MetaTagToMax());
-                        features.add(new Copyright());
-                        features.add(new Viewport());
-                        features.add(new Robots());
-                        features.add(new Description());
-                        features.add(new Keyword());
-                        features.add(new KeywordInDomain());
-                        features.add(new KeywordInFirst100Words());
-                        features.add(new KeywordInImgAltTag());
-                        features.add(new KeywordInTitle());
-                        features.add(new IndexOfKeywordInTitle());
-                    }
-                    if("content".equals(part)){
-                        features.add(new ContentLengthToMax());
-                        features.add(new ContentLengthOver1800());
-                        features.add(new HdensityToMax());
-                    }
-                    if("link".equals(part)){
-                        features.add(new Contact());
-                        features.add(new Favicon());
-                        features.add(new SocialMediaShare());
-                        features.add(new ImgToMax());
-                        features.add(new AlttagToImg());
-                        features.add(new InOutlinkToAll());
-                        features.add(new NoFollowToAll());
-                    }
-                    if("url".equals(part)){
-                        features.add(new Https());
-                    }
-                    if("simcos".equals(part)){
-                        features.add(new SimDescriptionH(type));
-                        features.add(new SimContentDescription(type));
-                        features.add(new SimKeywordDescription(type));
-                        features.add(new SimContentH(type));
-                        features.add(new SimKeywordH(type));
-                        features.add(new SimContentKeyword(type));
-                        features.add(new SimTitleDescription(type));
-                        features.add(new SimContentTitle(type));
-                        features.add(new SimTitleH(type));
-                        features.add(new SimTitleKeyword(type));
-                    }
-                    if("simbert".equals(part)){
-                        type="bert";
-                        features.add(new SimDescriptionH(type));
-                        features.add(new SimContentDescription(type));
-                        features.add(new SimKeywordDescription(type));
-                        features.add(new SimContentH(type));
-                        features.add(new SimKeywordH(type));
-                        features.add(new SimContentKeyword(type));
-                        features.add(new SimTitleDescription(type));
-                        features.add(new SimContentTitle(type));
-                        features.add(new SimTitleH(type));
-                        features.add(new SimTitleKeyword(type));
-                        bert = Bert.load("com/robrua/nlp/easy-bert/bert-uncased-L-12-H-768-A-12");
-                    }
-                }
-            }
+            features.add(new Contact());
+            features.add(new ContentLengthOver1800());
+            features.add(new Copyright());
+            features.add(new Description());
+            features.add(new Favicon());
+            features.add(new Https());
+            features.add(new Keyword());
+            features.add(new KeywordInDomain());
+            features.add(new KeywordInFirst100Words());
+            features.add(new KeywordInImgAltTag());
+            features.add(new KeywordInTitle());
+            features.add(new Robots());
+            features.add(new SocialMediaShare());
+            features.add(new Viewport());
+            features.add(new AlttagToImg());
+            features.add(new ContentLengthToMax());
+            features.add(new HdensityToMax());
+            features.add(new ImgToMax());
+            features.add(new IndexOfKeywordInTitle());
+            features.add(new InOutlinkToAll());
+            features.add(new MetaTagToMax());
+            features.add(new NoFollowToAll());
+            features.add(new SimDescriptionH());
+            features.add(new SimContentDescription());
+            features.add(new SimKeywordDescription());
+            features.add(new SimContentH());
+            features.add(new SimKeywordH());
+            features.add(new SimContentKeyword());
+            features.add(new SimTitleDescription());
+            features.add(new SimContentTitle());
+            features.add(new SimTitleH());
+//            features.add(new SimTitleKeyword());
         }else if(type.equals("doc")){
             features.add(new NumberOfChildPages(collection));
             features.add(new InLinkCount(collection));
@@ -304,7 +239,7 @@ public class SEOTool extends CmdLineTool {
         }
 
         Traverser traverser = new Traverser(dataset, docsPath, docIdSet, features, collectionStatistics, analyzerTag, searcher, reader, resultsettype, bert);
-//        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount());
+        System.out.println("Average Doc Len = "+(double)collectionStatistics.sumTotalTermFreq()/collectionStatistics.docCount());
 
         final int numThreads = props.containsKey("numThreads") ? Integer.parseInt(props.getProperty("numThreads")) : Runtime.getRuntime().availableProcessors();
         System.out.println(numThreads + " threads are running.");
@@ -396,6 +331,26 @@ public class SEOTool extends CmdLineTool {
             if (line.startsWith("#")) continue;
 
             String docId = Track.whiteSpaceSplitter.split(line)[2];
+
+            docIdSet.add(docId);
+        }
+
+        lines.clear();
+
+        return docIdSet;
+    }
+
+
+    private Set<String> retrieveDocIdSetForOfficialLetor(Path file) throws IOException {
+
+        Set<String> docIdSet = new HashSet<>();
+        List<String> lines = Files.readAllLines(file);
+
+        for (String line : lines) {
+
+            if (line.startsWith("#")) continue;
+
+            String docId = Track.whiteSpaceSplitter.split(line)[50];
 
             docIdSet.add(docId);
         }

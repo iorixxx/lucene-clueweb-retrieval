@@ -2,6 +2,7 @@ package edu.anadolu.ltr;
 
 import com.robrua.nlp.bert.Bert;
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
@@ -16,6 +17,8 @@ import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
 import org.clueweb09.WarcRecord;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -47,12 +50,10 @@ public class Traverser {
 
         private final Path inputWarcFile;
         private final AtomicReference<PrintWriter> out;
-        private final Bert bert;
 
-        WorkerThread(Path inputWarcFile, AtomicReference<PrintWriter> out, Bert bert) {
+        WorkerThread(Path inputWarcFile, AtomicReference<PrintWriter> out) {
             this.inputWarcFile = inputWarcFile;
             this.out = out;
-            this.bert=bert;
         }
 
         private int processWarcRecord(WarcRecord warcRecord) {
@@ -63,15 +64,25 @@ public class Traverser {
             String id = warcRecord.id();
 
             if (skip(id)) return 0;
-            DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader, bert);
+
+//            StringBuilder builder = new StringBuilder();
+//            Document jDoc = Jsoup.parse(warcRecord.content());
+//            builder.append(id).append("<<<>><<<>><><<<>>").append(jDoc.title());
+//            if(jDoc.body()==null)
+//                builder.append(" null");
+//            else
+//                builder.append(" ").append(jDoc.body().text());
+//            System.out.println(builder.toString());
+
+//            out.get().println(builder.toString());
+
+
+            DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader);
             try {
                 String line = base.calculate(featureList);
                 if(line==null) return 1;
                 out.get().println(line);
-//                System.out.println(line);
             } catch (Exception ex) {
-//                System.err.println("jdoc exception " + warcRecord.id());
-//                System.err.println("Document : " + warcRecord.content());
                 throw new RuntimeException(ex);
             }
 
@@ -237,7 +248,7 @@ public class Traverser {
                 docIdPathSuffix.add(s.split("-")[1] + File.separator + s.split("-")[2] + ".warc.gz");
 
             try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length-2]+File.separator+x.toString().split(File.separator)[x.toString().split(File.separator).length-1]))) {
-                stream.parallel().forEach(p -> new WorkerThread(p, out, bert).run());
+                stream.parallel().forEach(p -> new WorkerThread(p, out).run());
 
                 //                final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
 //                final Deque<Path> warcFiles = stream.collect(Collectors.toCollection(ArrayDeque::new));
@@ -303,7 +314,7 @@ public class Traverser {
             if("all".equals(resultsettype)){
                 try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
-                    stream.parallel().forEach(p -> new WorkerThread(p, out,bert).run());
+                    stream.parallel().forEach(p -> new WorkerThread(p, out).run());
                 }catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -313,7 +324,7 @@ public class Traverser {
                     docIdPathSuffix.add(s.split("-")[1] + "-" + s.split("-")[2] + ".warc.gz");
 
                 try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length - 1]))) {
-                    stream.parallel().forEach(p -> new WorkerThread(p, out,bert).run());
+                    stream.parallel().forEach(p -> new WorkerThread(p, out).run());
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -321,7 +332,7 @@ public class Traverser {
         }else{
             try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
 
-                stream.parallel().forEach(p -> new WorkerThread(p, out,bert).run());
+                stream.parallel().forEach(p -> new WorkerThread(p, out).run());
             }
         }
         out.get().flush();

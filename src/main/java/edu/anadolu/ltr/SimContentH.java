@@ -12,22 +12,14 @@ import static edu.anadolu.field.MetaTag.notEmpty;
 
 public class SimContentH implements IDocFeature {
 
-    String type="";
-
-    public SimContentH(String type){
-        this.type=type;
-    }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + this.type;
+        return this.getClass().getSimpleName();
     }
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-//        return base.textSimilarity(base.listContent, base.hTags);
-        if("bert".equals(this.type))
-            return base.bertSim(base.vectorlistContent,base.vectorhTags);
         return base.cosSim(String.join(" ",base.listContent),String.join(" ",base.hTags));
     }
 }

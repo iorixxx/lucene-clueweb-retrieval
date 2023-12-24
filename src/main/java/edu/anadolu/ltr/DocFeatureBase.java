@@ -53,15 +53,9 @@ public class DocFeatureBase {
     List<String> keyword;
     List<String> description;
     List<String> hTags;
-    float[] vectorlistContent;
-    float[] vectortitle;
-    float[] vectorkeyword;
-    float[] vectordescription;
-    float[] vectorhTags;
     IndexSearcher searcher;
     IndexReader reader;
     Map<String,Integer> mapTf;
-    Bert bert;
 
     /**
      * It is possible to find URL info in the headers of *.warc files for the ClueWeb datasets.
@@ -69,7 +63,7 @@ public class DocFeatureBase {
      *
      * @param warcRecord input warc record
      */
-    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, Bert bert) {
+    DocFeatureBase(WarcRecord warcRecord, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader) {
         try {
             rawHTML = warcRecord.content();
             jDoc = Jsoup.parse(rawHTML);
@@ -81,7 +75,6 @@ public class DocFeatureBase {
             mapTf = getDocTfForTerms();
             this.searcher = searcher;
             this.reader = reader;
-            this.bert=bert;
             this.title = Analyzers.getAnalyzedTokens(jDoc.title(),Analyzers.analyzer(analyzerTag));
             this.keyword = Analyzers.getAnalyzedTokens(MetaTag.enrich3(jDoc, "keywords"), Analyzers.analyzer(analyzerTag));
             this.description = Analyzers.getAnalyzedTokens(MetaTag.enrich3(jDoc, "description"), Analyzers.analyzer(analyzerTag));
@@ -90,13 +83,6 @@ public class DocFeatureBase {
                     .map(e -> e.text())
                     .map(String::trim)
                     .filter(notEmpty).collect(Collectors.toList());
-            if(bert!=null){
-                vectorlistContent = bertVector(this.listContent);
-                vectortitle = bertVector(this.title);
-                vectorkeyword = bertVector(this.keyword);
-                vectordescription = bertVector(this.description);
-                vectorhTags = bertVector(this.hTags);
-            }
         } catch (Exception exception) {
             System.err.println("jdoc exception " + warcRecord.id());
             exception.printStackTrace();
@@ -107,11 +93,9 @@ public class DocFeatureBase {
 
     String calculate(List<IDocFeature> featureList) throws IOException {
 
-//        if(StringUtils.isEmpty(url)) return null;
-
         StringBuilder builder = new StringBuilder();
+
         builder.append(docId);
-//        builder.append("\t").append(url);
         for (IDocFeature iDoc : featureList) {
             double value = iDoc.calculate(this);
             builder.append("\t").append(iDoc.toString()).append(":").append(String.format("%.5f", value));
@@ -285,23 +269,6 @@ public class DocFeatureBase {
         return score;
     }
 
-    protected float[] bertVector(List<String> str){
-        if(str.size()==0) return null;
-        return bert.embedSequence(String.join(" ",str));
-    }
-
-    protected double bertSim(float[] vectorA, float[] vectorB){
-        if(vectorA==null || vectorB==null) return 0;
-        double dotProduct = 0.0;
-        double normA = 0.0;
-        double normB = 0.0;
-        for (int i = 0; i < vectorA.length; i++) {
-            dotProduct += vectorA[i] * vectorB[i];
-            normA += Math.pow(vectorA[i], 2);
-            normB += Math.pow(vectorB[i], 2);
-        }
-        return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-    }
 
     private String[] copyArrayRandom(String[] array, long length){
 
