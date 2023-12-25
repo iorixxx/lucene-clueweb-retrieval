@@ -2,8 +2,6 @@ package edu.anadolu.ltr;
 
 import org.jsoup.select.Elements;
 
-import static edu.anadolu.ltr.DocFeatureBase.inlinkCount;
-
 public class OutLinkCount implements IDocFeature {
 
     @Override
@@ -17,7 +15,7 @@ public class OutLinkCount implements IDocFeature {
         //TODO investigate calculation method further
         Elements links = base.jDoc.select("a");
         if (links.size() == 0) return 0;
-        int in = inlinkCount(base.jDoc, links);
+        int in = base.inlinkCount(base.jDoc, links);
         int out = links.size() - in;
 
         return (double) out;

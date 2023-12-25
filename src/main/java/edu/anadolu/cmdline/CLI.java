@@ -4,6 +4,7 @@ import edu.anadolu.field.CrossTool;
 import edu.anadolu.field.FieldTool;
 import edu.anadolu.field.SelectiveStemmingTool;
 import edu.anadolu.knn.*;
+import edu.anadolu.ltr.QDFeatureTool;
 import edu.anadolu.ltr.SEOTool;
 import org.apache.lucene.util.Version;
 import org.clueweb09.WarcTool;
@@ -138,6 +139,8 @@ public final class CLI {
         tools.add(new CustomTool());
 
         tools.add(new SEOTool());
+
+        tools.add(new QDFeatureTool());
 
         tools.add(new WikiTool());
 

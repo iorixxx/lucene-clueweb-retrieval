@@ -5,6 +5,7 @@ import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.field.MetaTag;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class KeywordInFirst100Words implements IDocFeature {
@@ -17,16 +18,9 @@ public class KeywordInFirst100Words implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
         try {
-            String text = base.jDoc.body().text();
-            String keyword = MetaTag.enrich3(base.jDoc, "keywords");
-            List<String> content = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(Tag.NoStem));
-            String first100words = "";
-            int first100 = content.size()>100?100:content.size();
-            for (int i = 0; i < first100; i++) {
-                first100words += content.get(i);
-            }
-            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
-                if (first100words.contains(token))
+            String[] first100words = Arrays.copyOfRange(base.listContent.toArray(new String[0]),0,100);
+            for (String token : first100words) {
+                if (base.keyword.contains(token))
                     return 1;
             }
             return 0;

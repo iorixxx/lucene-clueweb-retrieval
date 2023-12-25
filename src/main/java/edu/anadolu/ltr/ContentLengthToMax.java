@@ -16,9 +16,6 @@ public class ContentLengthToMax implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException {
-        if(base.jDoc.body()==null) return 0;
-        String text = base.jDoc.body().text();
-        List<String> content = Analyzers.getAnalyzedTokens(text, Analyzers.analyzer(Tag.KStem));
-        return content.size();
+        return base.listContent.size();
     }
 }

@@ -15,10 +15,8 @@ public class KeywordInTitle implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
         try {
-            String title = base.jDoc.title();
-            String keyword = MetaTag.enrich3(base.jDoc, "keywords");
-            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
-                if (title.contains(token))
+            for (String token : base.keyword) {
+                if (base.title.contains(token))
                     return 1;
             }
             return 0;

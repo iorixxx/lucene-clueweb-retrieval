@@ -17,7 +17,7 @@ public class AlttagToImg implements IDocFeature {
         int count = 0;
         Elements images = base.jDoc.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
 
-        //TODO think how to handle pages with no images
+        //TODO Can be updated with alternatives
         if (images.size() == 0) return 0;
 
 

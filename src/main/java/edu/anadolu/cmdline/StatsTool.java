@@ -8,6 +8,7 @@ import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.datasets.DataSet;
 import edu.anadolu.stats.CorpusStatistics;
 import edu.anadolu.stats.QueryStatistics;
+import org.apache.commons.lang3.ArrayUtils;
 import org.kohsuke.args4j.Option;
 
 import java.nio.file.Files;
@@ -54,6 +55,21 @@ final class StatsTool extends CmdLineTool {
 
         final long start = System.nanoTime();
 
+
+//        final String ffff =
+//                (collection.equals(Collection.MQ07) || collection.equals(Collection.MQ08) || collection.equals(Collection.GOV2)) ?
+//                        "title,body,url,description,keywords" : "title,body,url,description,keywords,anchor";
+
+        final String ffff = props.getProperty(collection.name() + ".fields");
+
+//         final String[] fields = (props.getProperty("freq.fields") + "," + ffff).split(",");
+        final String[] fields;
+        if(ffff.contains(","))
+            fields=ffff.split(",");
+        else{
+            fields = new String[1];
+            fields[0]=ffff;
+        }
       // final String ffff =
        //         (collection.equals(Collection.MQ07) || collection.equals(Collection.MQ08) || collection.equals(Collection.GOV2)) ?
         //                "title,body,url,description,keywords" : "title,body,url,description,keywords,anchor";
@@ -81,6 +97,8 @@ final class StatsTool extends CmdLineTool {
                 statistics.saveLaTexStats(fields);
                 Tag t = Tag.tag(indexPath.getFileName().toString());
                 System.out.println("StatsTool Tag: " + t.name());
+                for (String field : fields)
+                    System.out.println("Field " + field);
                 if (Tag.Script.equals(t) || Tag.KStemField.equals(t)) continue;
                 for (String field : fields)
                     statistics.saveTermStatsForWords(field, new QueryBank(dataset).distinctTerms(Analyzers.analyzer(t)), field + "_term_stats.csv");

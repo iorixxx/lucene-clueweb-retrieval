@@ -1,12 +1,24 @@
 package edu.anadolu.ltr;
 
+import com.robrua.nlp.bert.Bert;
 import edu.anadolu.Indexer;
+import edu.anadolu.analysis.Analyzers;
+import edu.anadolu.analysis.Tag;
 import edu.anadolu.datasets.Collection;
 import edu.anadolu.datasets.DataSet;
+import edu.cmu.lti.lexical_db.NictWordNet;
+import edu.cmu.lti.ws4j.RelatednessCalculator;
+import edu.cmu.lti.ws4j.impl.WuPalmer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
 import org.clueweb09.ClueWeb09WarcRecord;
 import org.clueweb09.ClueWeb12WarcRecord;
 import org.clueweb09.Gov2Record;
 import org.clueweb09.WarcRecord;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -15,21 +27,26 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 import static edu.anadolu.Indexer.BUFFER_SIZE;
+import static edu.anadolu.Indexer.discoverWarcFiles;
 
 /**
  * Traverses for ClueWeb{09|12} plus GOV2
  */
 public class Traverser {
 
-    private final class WorkerThread {
+    private final class WorkerThread{
 
         private final Path inputWarcFile;
         private final AtomicReference<PrintWriter> out;
@@ -46,27 +63,29 @@ public class Traverser {
 
             String id = warcRecord.id();
 
-
             if (skip(id)) return 0;
 
-//            System.out.println(id + "\t" + warcRecord.url());
-//
-//            try (BufferedWriter out = Files.newBufferedWriter(Paths.get("/home/iorixxx/" + id + ".html"), StandardCharsets.UTF_8)) {
-//                out.write(warcRecord.content());
-//            } catch (Exception e) {
-//                throw new RuntimeException(e);
-//            }
+//            StringBuilder builder = new StringBuilder();
+//            Document jDoc = Jsoup.parse(warcRecord.content());
+//            builder.append(id).append("<<<>><<<>><><<<>>").append(jDoc.title());
+//            if(jDoc.body()==null)
+//                builder.append(" null");
+//            else
+//                builder.append(" ").append(jDoc.body().text());
+//            System.out.println(builder.toString());
+
+//            out.get().println(builder.toString());
 
 
-            DocFeatureBase base = new DocFeatureBase(warcRecord);
+            DocFeatureBase base = new DocFeatureBase(warcRecord, collectionStatistics, analyzerTag, searcher, reader);
             try {
                 String line = base.calculate(featureList);
+                if(line==null) return 1;
                 out.get().println(line);
             } catch (Exception ex) {
-                System.err.println("jdoc exception " + warcRecord.id());
-                System.err.println("Document : " + warcRecord.content());
                 throw new RuntimeException(ex);
             }
+
 
             return 1;
         }
@@ -79,7 +98,9 @@ public class Traverser {
                 // iterate through our stream
                 ClueWeb12WarcRecord wDoc;
                 while ((wDoc = ClueWeb12WarcRecord.readNextWarcRecord(inStream)) != null) {
+
                     i += processWarcRecord(wDoc);
+
                 }
             }
             return i;
@@ -95,6 +116,8 @@ public class Traverser {
                 while ((wDoc = ClueWeb09WarcRecord.readNextWarcRecord(inStream)) != null) {
                     i += processWarcRecord(wDoc);
                 }
+            }catch (Exception ex){
+                ex.printStackTrace();
             }
             return i;
         }
@@ -144,13 +167,13 @@ public class Traverser {
 
                 Thread.currentThread().setName(inputWarcFile.toAbsolutePath().toString());
 
-                if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection)) {
+                if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection)) {
                     int addCount = processClueWeb09WarcFile();
                     //System.out.println("*./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "  " + addCount);
-                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection)) {
+                } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) || Collection.NTCIR.equals(collection)) {
                     int addCount = processClueWeb12WarcFile();
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
-                } else if (Collection.GOV2.equals(collection)) {
+                } else if (Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) {
                     int addCount = indexGov2File();
                     //System.out.println("./" + inputWarcFile.getParent().getFileName().toString() + File.separator + inputWarcFile.getFileName().toString() + "\t" + addCount);
                 }
@@ -169,6 +192,8 @@ public class Traverser {
      * @return true if the document should be skipped
      */
     protected boolean skip(String docId) {
+        if("all".equals(resultsettype))
+            return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId);
         return "clueweb12-1100wb-15-21376".equals(docId) || "clueweb12-1100wb-15-21381".equals(docId) || "clueweb12-1013wb-14-21356".equals(docId) || "clueweb12-0200wb-38-08218".equals(docId) || "clueweb12-0200wb-38-08219".equals(docId) || !docIdSet.contains(docId);
     }
 
@@ -176,11 +201,23 @@ public class Traverser {
     private final Collection collection;
     private final Set<String> docIdSet;
     private final List<IDocFeature> featureList;
+    private CollectionStatistics collectionStatistics;
+    private Tag analyzerTag;
+    private IndexSearcher searcher;
+    private IndexReader reader;
+    private String resultsettype;
+    private Bert bert;
 
-    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList) {
+    Traverser(DataSet dataset, String docsDir, Set<String> docIdSet, List<IDocFeature> featureList, CollectionStatistics collectionStatistics, Tag analyzerTag, IndexSearcher searcher, IndexReader reader, String resultsettype, Bert bert) {
         this.collection = dataset.collection();
         this.docIdSet = docIdSet;
         this.featureList = featureList;
+        this.collectionStatistics = collectionStatistics;
+        this.analyzerTag = analyzerTag;
+        this.searcher = searcher;
+        this.reader = reader;
+        this.resultsettype=resultsettype;
+        this.bert=bert;
 
         docsPath = Paths.get(docsDir);
         if (!Files.exists(docsPath) || !Files.isReadable(docsPath) || !Files.isDirectory(docsPath)) {
@@ -195,17 +232,109 @@ public class Traverser {
      */
     void traverseParallel(Path resultPath, int numThreads) throws IOException {
 
+
+//        RelatednessCalculator rc1 = new WuPalmer(new NictWordNet());
+
+
         System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "" + numThreads);
 
-        final String suffix = Collection.GOV2.equals(collection) ? ".gz" : ".warc.gz";
+        final String suffix = (Collection.GOV2.equals(collection)||Collection.MQ07.equals(collection)||Collection.MQ08.equals(collection)) ? ".gz" : ".warc.gz";
 
         final AtomicReference<PrintWriter> out = new AtomicReference<>(new PrintWriter(Files.newBufferedWriter(resultPath, StandardCharsets.US_ASCII)));
 
-        try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
+        if(collection.equals(Collection.CW09A)||collection.equals(Collection.CW09B)) {
+            Set<String> docIdPathSuffix = new LinkedHashSet<>();
+            for (String s : docIdSet)
+                docIdPathSuffix.add(s.split("-")[1] + File.separator + s.split("-")[2] + ".warc.gz");
 
-            stream.parallel().forEach(p -> new WorkerThread(p, out).run());
+            try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length-2]+File.separator+x.toString().split(File.separator)[x.toString().split(File.separator).length-1]))) {
+                stream.parallel().forEach(p -> new WorkerThread(p, out).run());
+
+                //                final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(numThreads);
+//                final Deque<Path> warcFiles = stream.collect(Collectors.toCollection(ArrayDeque::new));
+//                long totalWarcFiles = warcFiles.size();
+//                System.out.println(totalWarcFiles+" many warc files will be examined.");
+//                for (int i = 0; i < 5000; i++) {
+//                    if (!warcFiles.isEmpty())
+//                        executor.execute(new WorkerThread(warcFiles.removeFirst(),out));
+//                    else {
+//                        if (!executor.isShutdown()) {
+//                            Thread.sleep(30000);
+//                            executor.shutdown();
+//                        }
+//                        break;
+//                    }
+//                }
+//
+//                long previous = 0;
+//                //add some delay to let some threads spawn by scheduler
+//                Thread.sleep(30000);
+//
+//
+//                try {
+//                    // Wait for existing tasks to terminate
+//                    while (!executor.awaitTermination(3, TimeUnit.MINUTES)) {
+//
+//                        System.out.print(String.format("%.2f percentage completed ", ((double) executor.getCompletedTaskCount() / totalWarcFiles) * 100.0d));
+//                        System.out.println("activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+//
+//                        final long completedTaskCount = executor.getCompletedTaskCount();
+//
+//                        if (!warcFiles.isEmpty())
+//                            for (long i = previous; i < completedTaskCount; i++) {
+//                                if (!warcFiles.isEmpty())
+//                                    executor.execute(new WorkerThread(warcFiles.removeFirst(),out));
+//                                else {
+//                                    if (!executor.isShutdown())
+//                                        executor.shutdown();
+//                                }
+//                            }
+//
+//                        previous = completedTaskCount;
+//                        Thread.sleep(1000);
+//                    }
+//                } catch (InterruptedException ie) {
+//                    // (Re-)Cancel if current thread also interrupted
+//                    executor.shutdownNow();
+//                    // Preserve interrupt status
+//                    Thread.currentThread().interrupt();
+//                }
+//
+//                if (totalWarcFiles != executor.getCompletedTaskCount())
+//                    throw new RuntimeException("totalWarcFiles = " + totalWarcFiles + " is not equal to completedTaskCount =  " + executor.getCompletedTaskCount());
+//
+//                System.out.println("outside while pool size = " + executor.getPoolSize() + " activeCount = " + executor.getActiveCount() + " completed task = " + executor.getCompletedTaskCount() + " task count = " + executor.getTaskCount());
+
+
+
+            }catch (Exception ex){
+                ex.printStackTrace();
+            }
+        }else if(collection.equals(Collection.CW12A)||collection.equals(Collection.CW12B)||collection.equals(Collection.NTCIR)){
+            if("all".equals(resultsettype)){
+                try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
+
+                    stream.parallel().forEach(p -> new WorkerThread(p, out).run());
+                }catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }else {
+                Set<String> docIdPathSuffix = new LinkedHashSet<>();
+                for (String s : docIdSet)
+                    docIdPathSuffix.add(s.split("-")[1] + "-" + s.split("-")[2] + ".warc.gz");
+
+                try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix)).filter(x -> docIdPathSuffix.contains(x.toString().split(File.separator)[x.toString().split(File.separator).length - 1]))) {
+                    stream.parallel().forEach(p -> new WorkerThread(p, out).run());
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }else{
+            try (Stream<Path> stream = Files.find(docsPath, 4, new WarcMatcher(suffix))) {
+
+                stream.parallel().forEach(p -> new WorkerThread(p, out).run());
+            }
         }
-
         out.get().flush();
         out.get().close();
     }

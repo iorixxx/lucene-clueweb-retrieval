@@ -21,7 +21,7 @@ public class StopWordRatio implements IDocFeature {
 
         String text = base.jDoc.text();
 
-        Analyzer analyzer = Analyzers.analyzer(Tag.NoStem);
+        Analyzer analyzer = Analyzers.analyzer(base.analyzerTag);
 
         int docLength = 0;
         int stopCount = 0;
@@ -40,7 +40,15 @@ public class StopWordRatio implements IDocFeature {
             throw new RuntimeException("happened during string analysis", ioe);
         }
 
-        if (docLength == 0) return -1.0;
+        if (docLength == 0) return 0;
+
+        if(((double) stopCount / docLength)>1.0){
+            System.out.println("****************************************************************************************************************************************");
+            System.out.println("Doc Id = " + base.docId + " StopWordRatio : " + (double) stopCount / docLength);
+            System.out.println("********************************************************************");
+            System.out.println(base.jDoc.html());
+            System.out.println("****************************************************************************************************************************************");
+        }
 
         return (double) stopCount / docLength;
     }

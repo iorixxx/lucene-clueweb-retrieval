@@ -15,7 +15,7 @@ public class Https implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
         if(StringUtils.isEmpty(base.url)) {
-            //TODO think how to handle
+            //TODO Can be updated with alternatives
             return 0;
         }
         return base.url.startsWith("https:") ? 1 : 0;

@@ -380,6 +380,25 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/jawjaw-1.0.2.jar</systemPath>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.robrua.nlp</groupId>
+            <artifactId>easy-bert</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.robrua.nlp.models</groupId>
+            <artifactId>easy-bert-uncased-L-12-H-768-A-12</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
 
     </dependencies>
 </project>

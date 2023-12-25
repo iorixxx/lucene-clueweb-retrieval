@@ -56,8 +56,7 @@ public final class DFRee extends ModelBase {
         double norm = tf * log2(posterior / prior);
 
         return keyFrequency * norm * (
-                tf * (
-                        -log2(prior * InvPriorCollection)
+                tf * (-log2(prior * InvPriorCollection)
                 )
                         +
                         (tf + 1d) * (

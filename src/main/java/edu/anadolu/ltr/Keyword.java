@@ -14,9 +14,7 @@ public class Keyword implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
 
-        String keyword = MetaTag.enrich3(base.jDoc, "keywords");
-
-        if (keyword != null)
+        if (base.keyword.size()>0)
             return 1;
 
         return 0;

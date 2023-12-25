@@ -1,5 +1,6 @@
 package edu.anadolu.ltr;
 
+import com.google.common.base.Strings;
 import edu.anadolu.analysis.Analyzers;
 import edu.anadolu.analysis.Tag;
 import edu.anadolu.field.MetaTag;
@@ -17,13 +18,11 @@ public class KeywordInImgAltTag implements IDocFeature {
     @Override
     public double calculate(DocFeatureBase base) {
         try {
-            String keyword = MetaTag.enrich3(base.jDoc, "keywords");
             Elements images = base.jDoc.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
-            if (images.size() == 0 || keyword.length() == 0) return 0;
-            for (String token : Analyzers.getAnalyzedTokens(keyword, Analyzers.analyzer(Tag.NoStem))) {
+            if (images.size() == 0 || base.keyword.size() == 0) return 0;
+            for (String token : base.keyword) {
                 for (Element image : images) {
-                    if (image.attr("alt") == null) continue;
-                    if (image.attr("alt").equals("")) continue;
+                    if (Strings.isNullOrEmpty(image.attr("alt"))) continue;
                     if (image.attr("alt").contains(token)) return 1;
                 }
             }

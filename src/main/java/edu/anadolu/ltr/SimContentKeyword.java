@@ -2,8 +2,10 @@ package edu.anadolu.ltr;
 
 
 import edu.anadolu.field.MetaTag;
+import org.apache.commons.text.similarity.CosineDistance;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class SimContentKeyword implements IDocFeature {
 
@@ -14,9 +16,6 @@ public class SimContentKeyword implements IDocFeature {
 
     @Override
     public double calculate(DocFeatureBase base) throws IOException, NullPointerException {
-        if(base.jDoc.body()==null) return 0;
-        String content = base.getFirstWords(base.jDoc.body().text(),100);
-        String keyword = MetaTag.enrich3(base.jDoc, "keywords");
-        return base.textSimilarity(content, keyword);
+        return base.cosSim(String.join(" ",base.listContent),String.join(" ",base.keyword));
     }
 }
