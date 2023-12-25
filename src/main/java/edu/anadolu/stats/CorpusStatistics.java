@@ -53,7 +53,7 @@ public final class CorpusStatistics implements Closeable {
         final long docCount = searcher.collectionStatistics(field).docCount();
         final long sumTotalTermFreq = searcher.collectionStatistics(field).sumTotalTermFreq();
 
-        PrintWriter out = new PrintWriter(Files.newBufferedWriter(termsPath.resolve(fileName), StandardCharsets.US_ASCII));
+        PrintWriter out = new PrintWriter(Files.newBufferedWriter(termsPath.resolve(fileName)));
 
         out.println("term \t totalTermFreq \t docFreq \t cti");
 

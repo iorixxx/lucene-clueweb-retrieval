@@ -17,7 +17,7 @@ public final class QueryBank {
 
     private final List<InfoNeed> ALL_QUERIES;
 
-    public Set<String> distinctTerms(Analyzer analyzer) throws IOException {
+    public Set<String> distinctTerms(Analyzer analyzer) {
         Set<String> set = new HashSet<>();
         for (InfoNeed need : ALL_QUERIES)
             set.addAll(Analyzers.getAnalyzedTokens(need.query(), analyzer));

@@ -1,6 +1,7 @@
 package edu.anadolu.cmdline;
 
 import edu.anadolu.datasets.Collection;
+import edu.anadolu.datasets.CollectionFactory;
 import edu.anadolu.spam.OddsBinning;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -61,22 +62,22 @@ public class RocTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.spam paths.docs files.ids files.spam";
     }
 
-    static HttpSolrClient getCW09Solr(Ranking ranking) {
+    HttpSolrClient getCW09Solr(Ranking ranking) {
 
         if (fusion.equals(ranking))
-            return getSpamSolr(Collection.CW09A);
+            return getSpamSolr(Collection.CW09A, solrBaseURL);
 
-        return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/" + ranking.toString()).build();
+        return new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + ranking.toString()).build();
     }
 
     private void raw(String tfd_home) throws IOException, SolrServerException {
 
         final String[] qRels;
-        HttpSolrClient[] solrURLs;
+        final HttpSolrClient[] solrURLs;
 
         if (Collection.CW09A.equals(collection)) {
             qRels = new String[]{"qrels.web.51-100.txt", "qrels.web.101-150.txt", "qrels.web.151-200.txt",
-                    "qrels.session.201-262.txt", "qrels.session.301-348.txt" };
+                    "qrels.session.201-262.txt", "qrels.session.301-348.txt"};
             solrURLs = new HttpSolrClient[5];
             solrURLs[0] = getCW09Solr(Ranking.fusion);
             solrURLs[1] = getCW09Solr(Ranking.britney);
@@ -86,9 +87,14 @@ public class RocTool extends CmdLineTool {
 
         } else if (Collection.CW12A.equals(collection)) {
             qRels = new String[]{"qrels.web.201-250.txt", "qrels.web.251-300.txt", "qrels.web.301-350.txt", "qrels.web.351-400.txt",
-                    "qrels.session.401-469.txt", "qrels.session.501-560.txt" };
+                    "qrels.session.401-469.txt", "qrels.session.501-560.txt"};
             solrURLs = new HttpSolrClient[1];
-            solrURLs[0] = getSpamSolr(Collection.CW12A);
+            solrURLs[0] = getSpamSolr(Collection.CW12A, solrBaseURL);
+        } else if (Collection.NTCIR.equals(collection)) {
+            CollectionFactory.dataset(collection, tfd_home);
+            qRels = new String[]{"qrels.www.1-100.txt", "qrels.www.101-180.txt"};
+            solrURLs = new HttpSolrClient[1];
+            solrURLs[0] = getSpamSolr(Collection.CW12A, solrBaseURL);
         } else return;
 
 
@@ -104,6 +110,8 @@ public class RocTool extends CmdLineTool {
 
             Path path = Paths.get(tfd_home, "topics-and-qrels", qRel);
 
+            System.out.println("processing qrel: " + path);
+
             final List<String> lines = Files.readAllLines(path, StandardCharsets.US_ASCII);
 
             for (String line : lines) {
@@ -118,11 +126,14 @@ public class RocTool extends CmdLineTool {
                 int grade = Integer.parseInt(parts[3]);
 
                 out.print(queryID + "," + docID + "," + grade);
-                for (int i = 0; i < 4; i++) {
-                    HttpSolrClient client = solrURLs[i];
-                    out.print("," + SpamTool.percentile(client, docID));
-                }
-                out.print("," + odds(solrURLs[4], docID));
+                if (Collection.CW09A.equals(collection)) {
+                    for (int i = 0; i < 4; i++) {
+                        HttpSolrClient client = solrURLs[i];
+                        out.print("," + SpamTool.percentile(client, docID));
+                    }
+                    out.print("," + odds(solrURLs[4], docID));
+                } else
+                    out.print("," + SpamTool.percentile(solrURLs[0], docID));
                 out.println();
             }
 
@@ -165,7 +176,7 @@ public class RocTool extends CmdLineTool {
         else throw new RuntimeException("odd ratio is invalid " + odds);
     }
 
-    class Struct {
+    static private class Struct {
         final Ranking ranking;
         final int[] relevant, spam, non;
 
@@ -243,7 +254,7 @@ public class RocTool extends CmdLineTool {
         }
     }
 
-    class Confusion {
+    static private class Confusion {
 
         int sum() {
             return tp + tn + fp + fn;
@@ -376,7 +387,7 @@ public class RocTool extends CmdLineTool {
      */
     private void wiki12() throws IOException, SolrServerException {
 
-        HttpSolrClient client = getSpamSolr(Collection.CW12A);
+        HttpSolrClient client = getSpamSolr(Collection.CW12A, solrBaseURL);
 
         if (client == null) {
             System.out.println("solr client is null!");
@@ -447,6 +458,7 @@ public class RocTool extends CmdLineTool {
         return wiki;
     }
 
+    private String solrBaseURL = "http://irra-micro:8983/solr/";
 
     @Override
     public void run(Properties props) throws Exception {
@@ -456,6 +468,13 @@ public class RocTool extends CmdLineTool {
         final String tfd_home = props.getProperty("tfd.home");
 
         if (tfd_home == null) {
+            System.out.println(getHelp());
+            return;
+        }
+
+        solrBaseURL = props.getProperty("SOLR.URL");
+
+        if (solrBaseURL == null) {
             System.out.println(getHelp());
             return;
         }
@@ -527,30 +546,24 @@ public class RocTool extends CmdLineTool {
                         u.recall() + "," + u.fallout());
             }
 
-            //
-
             System.out.println("percentile,fusionNon,britneyNon,groupxNon,uk2006Non");
             for (int i = 0; i < 100; i++)
                 System.out.println(i + "," + fusion.non[i] + "," + britney.non[i] + "," + groupx.non[i] + "," + uk2006.non[i]);
 
-        } else if (Collection.CW12A.equals(collection)) {
+        } else if (Collection.CW12A.equals(collection) || Collection.NTCIR.equals(collection)) {
 
             Struct fusion = distribution(Ranking.fusion);
-            System.out.println("percentile,fusionSpam,fusionRel");
+            System.out.println("percentile,fusionSpam,fusionRel,fusionNonRel");
             for (int i = 0; i < 100; i++)
-                System.out.println(i + "," + fusion.spam[i] + "," + fusion.relevant[i]);
+                System.out.println(i + "," + fusion.spam[i] + "," + fusion.relevant[i] + "," + fusion.non[i]);
 
-
+            System.out.println("percentile,f1,recall,fallout");
             for (int t = 0; t < 100; t++) {
 
                 Confusion f = fusion.classify(t);
 
                 System.out.println(t + "," + f.f1() + "," + f.recall() + "," + f.fallout());
             }
-
-            System.out.println("percentile,fusionNon");
-            for (int i = 0; i < 100; i++)
-                System.out.println(i + "," + fusion.non[i]);
         }
     }
 

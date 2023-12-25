@@ -12,7 +12,6 @@ import org.clueweb09.tracks.Track;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -154,7 +153,7 @@ public class TermFreqDistribution implements TFD {
 
         final Map<Integer, PrintWriter> writerMap = new HashMap<>(10);
         for (int judge : track.getJudgeLevels())
-            writerMap.put(judge, new PrintWriter(Files.newBufferedWriter(base.resolve(generateFileName(judge)), StandardCharsets.US_ASCII)));
+            writerMap.put(judge, new PrintWriter(Files.newBufferedWriter(base.resolve(generateFileName(judge)))));
 
         for (InfoNeed need : track.getTopics()) {
 
@@ -185,7 +184,7 @@ public class TermFreqDistribution implements TFD {
     private void saveDistributionStats(Path base, Track track) throws IOException {
 
         final HashMap<String, String> cache = new HashMap<>(150);
-        PrintWriter allOutput = new PrintWriter(Files.newBufferedWriter(base.resolve(outputFileName()), StandardCharsets.US_ASCII));
+        PrintWriter allOutput = new PrintWriter(Files.newBufferedWriter(base.resolve(outputFileName())));
 
         for (InfoNeed need : track.getTopics()) {
 
@@ -232,7 +231,7 @@ public class TermFreqDistribution implements TFD {
         final Path path = Paths.get(freqsPath.toString(), indexTag, "StopWords");
         if (!Files.exists(path)) Files.createDirectories(path);
 
-        final PrintWriter stopOutput = new PrintWriter(Files.newBufferedWriter(path.resolve(field + "_stop_freq.csv"), StandardCharsets.US_ASCII));
+        final PrintWriter stopOutput = new PrintWriter(Files.newBufferedWriter(path.resolve(field + "_stop_freq.csv")));
 
         for (final String stopWord : stopWords) {
             stopOutput.println(Analyzers.getAnalyzedToken(stopWord, analyzer) + "\t" + distribution.getTermDistributionStats(Analyzers.getAnalyzedToken(stopWord, analyzer)));

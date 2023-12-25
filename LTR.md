@@ -11,6 +11,7 @@ Running following tools is a pre-requisite.
 ```
 ./run.sh Indexer -collection CW09B
 ./run.sh Optimize -collection CW09B
+./run.sh Doclen -collection CW09B
 ./run.sh Stats -collection CW09B
 ./run.sh Stats -collection CW09B -task query
 ./run.sh TFDistribution -collection CW09B -task query
@@ -38,7 +39,7 @@ To extract Weighting Model Single Field (WMSF) features
 ./run.sh Searcher -collection CW09B -task field -tag KStem
 ```
 The eight models are: BM25, LGD 
-Fields: ULR, title, body, anchor
+Fields: URL, title, body, anchor
 
 To be implemented WMFB
 

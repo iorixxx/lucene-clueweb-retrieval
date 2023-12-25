@@ -148,6 +148,8 @@ public final class CLI {
 
         tools.add(new DeepTool());
 
+        tools.add(new EvaluatorJudgeTool());
+
         for (CmdLineTool tool : tools) {
             toolLookupMap.put(tool.getName(), tool);
         }
@@ -244,6 +246,6 @@ public final class CLI {
                 properties.put("toolArguments", buffer.toString());
         }
 
-        tool.run(properties);
+        tool.do_run(properties);
     }
 }

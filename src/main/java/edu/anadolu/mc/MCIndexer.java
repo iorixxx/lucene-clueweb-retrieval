@@ -49,7 +49,7 @@ public class MCIndexer {
             int id = rs.getInt(1);
             Document document = new Document();
 
-            document.add(new StringField("id", "Milliyet_0105_v00_" + Integer.toString(id), Field.Store.YES));
+            document.add(new StringField("id", "Milliyet_0105_v00_" + id, Field.Store.YES));
             document.add(new TextField("contents", rs.getString(2) + " " + rs.getString(3), Field.Store.NO));
 
             writer.addDocument(document);

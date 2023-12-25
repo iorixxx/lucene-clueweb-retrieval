@@ -26,6 +26,10 @@ public class SubmissionFile {
         entries.clear();
     }
 
+    public int size() {
+        return entries.size();
+    }
+
     public Map<Integer, List<Tuple>> entryMap() {
         return Collections.unmodifiableMap(entries);
     }
@@ -40,6 +44,10 @@ public class SubmissionFile {
             this.docID = docID;
             this.score = score;
             this.s = Double.parseDouble(score);
+        }
+
+        public String docID() {
+            return docID;
         }
 
         @Override

@@ -94,7 +94,7 @@ public class Evaluator {
         return Collections.unmodifiableList(new ArrayList<>(needs));
     }
 
-    protected final List<InfoNeed> needs;
+    protected List<InfoNeed> needs;
     protected final String indexTag;
     protected final Metric metric;
     protected final int k;
@@ -292,6 +292,11 @@ public class Evaluator {
      */
     public Evaluator evaluatorFromResidualNeeds() {
 
+        Map<InfoNeed, List<ModelScore>> performanceMap = new HashMap<>(this.performanceMap);
+        Map<String, List<InfoNeed>> bestModelMap = new HashMap<>(this.bestModelMap);
+        Map<String, List<InfoNeed>> worstModelMap = new HashMap<>(this.worstModelMap);
+        List<InfoNeed> needs = new ArrayList<>(this.needs);
+
         for (InfoNeed need : allZero) {
             performanceMap.remove(need);
             needs.remove(need);
@@ -304,8 +309,16 @@ public class Evaluator {
 
         bestModelMap.remove("ALL_SAME");
         bestModelMap.remove("ALL_ZERO");
+        worstModelMap.remove("ALL_SAME");
+        worstModelMap.remove("ALL_ZERO");
+
         allSame.clear();
         allZero.clear();
+
+        this.performanceMap = Collections.unmodifiableMap(performanceMap);
+        this.needs = Collections.unmodifiableList(needs);
+        this.bestModelMap = Collections.unmodifiableMap(bestModelMap);
+        this.worstModelMap = Collections.unmodifiableMap(worstModelMap);
 
         return this;
     }
@@ -640,7 +653,23 @@ public class Evaluator {
 
 
         } catch (IOException ioe) {
-            throw new RuntimeException("getting random integers from /dev/urandom", ioe);
+
+            Random r = new Random();
+
+            for (int i = localModels.size(); i < needs.size(); i++) {
+                int index = r.nextInt(modelSet.size());
+                localModels.add(modelSet.get(index));
+            }
+
+            for (InfoNeed testQuery : needs) {
+
+                String predictedModel = localModels.remove(r.nextInt(localModels.size()));
+                double predictedScore = score(testQuery, predictedModel);
+
+                Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
+                list.add(prediction);
+            }
+
         }
 
         Solution solution = new Solution(list, -1);
@@ -683,7 +712,16 @@ public class Evaluator {
             }
 
         } catch (IOException ioe) {
-            throw new RuntimeException("getting random integers from /dev/urandom", ioe);
+
+            for (InfoNeed testQuery : needs) {
+
+                int index = new Random().nextInt(modelSet.size());
+                String predictedModel = modelSet.get(index);
+                double predictedScore = score(testQuery, predictedModel);
+
+                Prediction prediction = new Prediction(testQuery, predictedModel, predictedScore);
+                list.add(prediction);
+            }
         }
 
 
@@ -929,7 +967,7 @@ public class Evaluator {
             return new StatAP(path, k);
         else if (Metric.ERR.equals(metric) || Metric.NDCG.equals(metric))
             return new GdEval(path);
-        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric))
+        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric) || Metric.Recall.equals(metric) || Metric.NCG.equals(metric))
             return new TrecEval(path, k);
         else
             throw new AssertionError(this);
@@ -944,7 +982,7 @@ public class Evaluator {
             return getPathList(need, "");
         else if (Metric.ERR.equals(metric) || Metric.NDCG.equals(metric))
             return getPathList(need, Integer.toString(k));
-        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric))
+        else if (Metric.MAP.equals(metric) || Metric.P.equals(metric) || Metric.Recall.equals(metric) || Metric.NCG.equals(metric))
             return getPathList(need, "trec_eval");
         else
             throw new AssertionError(this);

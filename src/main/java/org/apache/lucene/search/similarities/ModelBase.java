@@ -48,7 +48,7 @@ public abstract class ModelBase extends Similarity {
 
     @Override
     public final SimWeight computeWeight(float boost, CollectionStatistics collectionStats, TermStatistics... termStats) {
-        BasicStats stats[] = new BasicStats[termStats.length];
+        BasicStats[] stats = new BasicStats[termStats.length];
         for (int i = 0; i < termStats.length; i++) {
             stats[i] = newStats(collectionStats.field(), boost);
             fillBasicStats(stats[i], collectionStats, termStats[i]);

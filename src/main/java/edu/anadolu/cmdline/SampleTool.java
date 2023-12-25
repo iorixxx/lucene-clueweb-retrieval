@@ -198,8 +198,8 @@ public class SampleTool extends CmdLineTool {
 
     private void addPageRank(Path in, Path out, List<List<String>> dupDOCNOlist) throws IOException, SolrServerException {
 
-        final HttpSolrClient rankSolr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/rank09A").build();
-        final HttpSolrClient spamSolr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam09A").build();
+        final HttpSolrClient rankSolr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/rank09A").build();
+        final HttpSolrClient spamSolr = new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro:8983/solr/spam09A").build();
 
 
         int featureNum = -1;

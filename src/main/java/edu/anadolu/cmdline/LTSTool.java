@@ -26,15 +26,7 @@ public final class LTSTool extends EvaluatorTool {
     @Override
     public void run(Properties props) throws Exception {
 
-        if (parseArguments(props) == -1) return;
-
-        final String tfd_home = props.getProperty("tfd.home");
-
-        if (tfd_home == null) {
-            System.out.println(getHelp());
-            return;
-        }
-
+        this.models = "BM25k1.2b0.75_DirichletLMc2500.0_LGDc1.0_PL2c1.0_DPH_DFIC_DFRee_DLH13";
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         Evaluator evaluator = new Evaluator(dataset, tag, measure, models, "evals", op);

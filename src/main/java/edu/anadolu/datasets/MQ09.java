@@ -29,6 +29,11 @@ class MQ09 extends DataSet {
     }
 
     @Override
+    public boolean validateDocID(String docID) {
+        return docID.startsWith("clueweb09-");
+    }
+
+    @Override
     public boolean spamAvailable() {
         return true;
     }

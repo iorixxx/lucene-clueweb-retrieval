@@ -9,6 +9,7 @@ import org.clueweb09.InfoNeed;
 import org.clueweb09.tracks.Track;
 import org.kohsuke.args4j.Option;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,14 +38,6 @@ public final class DoclenTool extends CmdLineTool {
     @Override
     public void run(Properties props) throws Exception {
 
-        if (parseArguments(props) == -1) return;
-
-        String tfd_home = props.getProperty("tfd.home");
-        if (tfd_home == null) {
-            System.out.println("tfd.home is mandatory for query statistics!");
-            return;
-        }
-
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         List<InfoNeed> needs = new ArrayList<>();
@@ -56,6 +49,8 @@ public final class DoclenTool extends CmdLineTool {
 
         for (final Path indexPath : discoverIndexes(dataset)) {
             Tag t = Tag.tag(indexPath.getFileName().toString());
+            if (Files.notExists(dataset.collectionPath().resolve("stats").resolve(t.toString())))
+                Files.createDirectories(dataset.collectionPath().resolve("stats").resolve(t.toString()));
             Set<String> words = distinctTerms(needs, Analyzers.analyzer(t));
             for (String field : fields)
                 try (DocLengthStats docLengthStats = new DocLengthStats(dataset.collectionPath(), indexPath, field)) {

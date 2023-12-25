@@ -34,8 +34,7 @@ public final class DocLengthStats implements Closeable {
     public void process(Set<String> words) throws IOException {
 
         PrintWriter out = new PrintWriter(
-                Files.newBufferedWriter(Paths.get(collectionPath.toString(), "stats", tag, field + "_document_length_stats.csv"), StandardCharsets.US_ASCII)
-
+                Files.newBufferedWriter(Paths.get(collectionPath.toString(), "stats", tag, field + "_document_length_stats.csv"))
         );
 
         out.println("Term\tN\tdocLenAcc\tdocLenSquareAcc");

@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Entity to represent a collection and its query set(s). e.g. MQ09 and ClueWeb09B
@@ -22,6 +19,11 @@ public abstract class DataSet {
     protected final String tfd_home;
 
     public abstract String getNoDocumentsID();
+
+    public boolean validateDocID(String docID) {
+        if (null == docID) return false;
+        else return !"".equals(docID.trim());
+    }
 
     public abstract boolean spamAvailable();
 
@@ -69,5 +71,23 @@ public abstract class DataSet {
     @Override
     public String toString() {
         return collection.toString() + ":" + Arrays.toString(tracks);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DataSet dataSet = (DataSet) o;
+        return collection == dataSet.collection &&
+                Arrays.equals(tracks, dataSet.tracks) &&
+                Objects.equals(tfd_home, dataSet.tfd_home) &&
+                Objects.equals(needs, dataSet.needs);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(collection);
+        result = 31 * result + Arrays.hashCode(tracks);
+        return result;
     }
 }

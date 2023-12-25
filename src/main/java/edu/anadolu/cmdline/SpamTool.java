@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static edu.anadolu.cmdline.RocTool.Ranking.fusion;
 import static org.apache.solr.common.params.CommonParams.HEADER_ECHO_PARAMS;
 import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
 
@@ -32,6 +33,8 @@ import static org.apache.solr.common.params.CommonParams.OMIT_HEADER;
  * Tool for integration Waterloo Spam Rankings
  */
 public final class SpamTool extends CmdLineTool {
+    @Option(name = "-rank", usage = "Spam Ranking")
+    private RocTool.Ranking ranking = RocTool.Ranking.fusion;
 
     @Option(name = "-collection", required = true, usage = "Collection")
     private edu.anadolu.datasets.Collection collection;
@@ -46,12 +49,12 @@ public final class SpamTool extends CmdLineTool {
         return "Following properties must be defined in config.properties for " + CLI.CMD + " " + getName() + " paths.spam paths.docs files.ids files.spam";
     }
 
-    static HttpSolrClient getSpamSolr(Collection collection) {
+    static HttpSolrClient getSpamSolr(Collection collection, String solrBaseURL) {
 
         if (Collection.CW09A.equals(collection) || Collection.CW09B.equals(collection) || Collection.MQ09.equals(collection) || Collection.MQE2.equals(collection)) {
-            return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam09A").build();
-        } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection))
-            return new HttpSolrClient.Builder().withBaseSolrUrl("http://irra-micro.nas.ceng.local:8983/solr/spam12A").build();
+            return new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + "spam09A").build();
+        } else if (Collection.CW12A.equals(collection) || Collection.CW12B.equals(collection) ||  Collection.NTCIR.equals(collection))
+            return new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + "spam12A").build();
         else {
             System.out.println("spam filtering is only applicable to ClueWeb09 and ClueWeb12 collections!");
             return null;
@@ -70,6 +73,13 @@ public final class SpamTool extends CmdLineTool {
             return;
         }
 
+        final String solrBaseURL = props.getProperty("SOLR.URL");
+
+        if (solrBaseURL == null) {
+            System.out.println(getHelp());
+            return;
+        }
+
         DataSet dataset = CollectionFactory.dataset(collection, tfd_home);
 
         if (!dataset.spamAvailable()) {
@@ -77,8 +87,14 @@ public final class SpamTool extends CmdLineTool {
             return;
         }
 
-        final HttpSolrClient solr = getSpamSolr(collection);
+        final HttpSolrClient solr;
+        if (fusion.equals(ranking))
+            solr = getSpamSolr(collection, solrBaseURL);
+        else
+            solr = new HttpSolrClient.Builder().withBaseSolrUrl(solrBaseURL + ranking.toString()).build();
+
         if (solr == null) return;
+
 
         List<Path> pathList = Evaluator.discoverTextFiles(dataset.collectionPath().resolve("base_spam_runs"), ".txt");
 
@@ -93,7 +109,7 @@ public final class SpamTool extends CmdLineTool {
 
             executor.execute(() -> {
                 try {
-                    filterTRECSubmissionFile(dataset, submission, solr);
+                    filterTRECSubmissionFile(dataset, submission, solr,ranking);
                 } catch (SolrServerException | IOException ioe) {
                     System.out.println(Thread.currentThread().getName() + ": ERROR: unexpected IOException:");
                     ioe.printStackTrace();
@@ -240,4 +256,68 @@ public final class SpamTool extends CmdLineTool {
             return percentile;
         else throw new RuntimeException("percentile invalid " + percentile);
     }
+
+    private static void filterTRECSubmissionFile(DataSet dataset, Path submission, HttpSolrClient solr, RocTool.Ranking ranking) throws IOException, SolrServerException {
+
+        final SubmissionFile submissionFile = new SubmissionFile(submission);
+
+        Path relPath = dataset.collectionPath().resolve("base_spam_runs").relativize(submission);
+
+        Map<Integer, List<SubmissionFile.Tuple>> submissionFileMap = submissionFile.entryMap();
+        String runTag = submissionFile.runTag();
+
+        int start=25, finish=50;
+        Path parallel = dataset.collectionPath().resolve("spam_" + ranking + "_" + "discard_"+start+"_" +finish+ "_runs").resolve(relPath);
+
+        if (!Files.exists(parallel.getParent()))
+            Files.createDirectories(parallel.getParent());
+
+        PrintWriter out = new PrintWriter(Files.newBufferedWriter(parallel, StandardCharsets.US_ASCII));
+
+
+        for (Map.Entry<Integer, List<SubmissionFile.Tuple>> entry : submissionFileMap.entrySet()) {
+
+            Integer qID = entry.getKey();
+
+            int count = 0;
+            List<SubmissionFile.Tuple> list = entry.getValue();
+
+            for (SubmissionFile.Tuple tuple : list) {
+
+                int percentile = percentile(solr, tuple.docID);
+
+                if ((percentile > start && percentile < finish) || count == 1000) {
+                    continue;
+                }
+
+                count++;
+
+                out.print(qID);
+                out.print("\tQ0\t");
+                out.print(tuple.docID);
+                out.print("\t");
+                out.print(count);
+                out.print("\t");
+                out.print(tuple.score);
+                out.print("\t");
+                out.print(runTag);
+                out.println();
+
+            }
+
+
+            /*
+             * TREC submission system requires you to submit documents for every topic.
+             * If there are no documents for a certain topic, please insert 'clueweb12-0000wb-00-00000' as DOC-ID with a dummy score.
+             * If you are returning zero documents for a query, instead return the single document "clueweb09-en0000-00-00000".
+             */
+            if (count == 0) {
+                out.println(qID + "\tQ0\t" + dataset.getNoDocumentsID() + "\t1\t0\t" + runTag);
+            }
+        }
+        out.flush();
+        out.close();
+        submissionFile.clear();
+    }
+
 }

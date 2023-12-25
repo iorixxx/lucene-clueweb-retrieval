@@ -21,9 +21,10 @@ echo "starting evaluator with RUNS = $RUNS and EVALS = $EVALS ..."
 
  qrels[13]=qrels.www.1-100.txt
  qrels[14]=qrels.www.101-180.txt
+ qrels[15]=qrels.www.201-280.txt
 
 
-for WWW in 13 14; do
+for WWW in 13 14 15; do
  printf "%s\n" ${qrels[${WWW#}]}
 done
 
@@ -38,7 +39,7 @@ if [[ ! -d ${tag} ]]; then
 fi
 tag=$(basename "${tag}")
 mkdir -p "$TFD_HOME/$set/${EVALS}/$tag"
-for WWW in 13 14; do
+for WWW in 13 14 15; do
 
     if [ ! -d "${TFD_HOME}/${set}/${RUNS}/${tag}/WWW${WWW}" ]; then
         # Control will enter here if $DIRECTORY does not exist.
@@ -50,7 +51,8 @@ for WWW in 13 14; do
     mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WWW$WWW/trec_eval"
 
     for f in ${TFD_HOME}/${set}/${RUNS}/${tag}/WWW${WWW}/*.txt; do
-        ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WWW}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WWW${WWW}/trec_eval/${f##/*/}" 
+#       ${TFD_HOME}/scripts/trec_eval -M1000 -q -m all_trec ${TFD_HOME}/topics-and-qrels/${qrels[${WWW}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WWW${WWW}/trec_eval/${f##/*/}" #all measures calculated with the standard TREC
+        ${TFD_HOME}/scripts/trec_eval -M1000 -q ${TFD_HOME}/topics-and-qrels/${qrels[${WWW}]} ${f} > "${TFD_HOME}/${set}/${EVALS}/${tag}/WWW${WWW}/trec_eval/${f##/*/}"
         for k in "${cut_off[@]}"
         do
           mkdir -p "$TFD_HOME/$set/${EVALS}/$tag/WWW$WWW/$k"

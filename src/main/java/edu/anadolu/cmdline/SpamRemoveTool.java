@@ -64,7 +64,14 @@ public final class SpamRemoveTool extends CmdLineTool {
             return;
         }
 
-        final HttpSolrClient solr = getSpamSolr(collection);
+        final String solrBaseURL = props.getProperty("SOLR.URL");
+
+        if (solrBaseURL == null) {
+            System.out.println(getHelp());
+            return;
+        }
+
+        final HttpSolrClient solr = getSpamSolr(collection, solrBaseURL);
         if (solr == null) return;
 
 

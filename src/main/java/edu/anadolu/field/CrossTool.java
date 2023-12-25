@@ -59,6 +59,9 @@ public class CrossTool extends CmdLineTool {
     @Option(name = "-catB", required = false, usage = "use catB qrels for CW12B and CW09B")
     private boolean catB = false;
 
+    @Option(name = "-v", aliases = "--verbose", usage = "verbose=true: prints effectiveness scores for copy-paste")
+    private boolean verbose = false;
+
     private final TTest tTest = new TTest();
 
     /**
@@ -69,15 +72,6 @@ public class CrossTool extends CmdLineTool {
 
     @Override
     public void run(Properties props) throws Exception {
-
-        if (parseArguments(props) == -1) return;
-
-        final String tfd_home = props.getProperty("tfd.home");
-
-        if (tfd_home == null) {
-            System.out.println(getHelp());
-            return;
-        }
 
         DataSet dataSet = CollectionFactory.dataset(collection, tfd_home);
 
@@ -136,6 +130,7 @@ public class CrossTool extends CmdLineTool {
                 if (tTest.pairedTTest(baselines.get(model), scores, 0.05)) {
                     list.add(new ModelScore(tag + "*", modelScore.score));
 
+                    if (!verbose) continue;
 
                     // for risk graphs bar(sort(x(1,:)-x(2,:)))
                     System.out.print(baseline + "_" + model);
@@ -209,12 +204,15 @@ public class CrossTool extends CmdLineTool {
             }
 
             Solution solution = new Solution(list, -1);
-            System.out.print(String.format("%s(%.5f) \t", model, solution.getMean()));
+            System.out.print(String.format("%s\tOracle(%.5f) \t", Evaluator.prettyModel(model), solution.getMean()));
 
             countMap = sortByValue(countMap);
-            for (Map.Entry<String, Integer> entry : countMap.entrySet())
-                System.out.print(entry.getKey() + "(" + entry.getValue() + ")\t");
-
+            for (Map.Entry<String, Integer> entry : countMap.entrySet()) {
+                System.out.print(String.format("%s(%d | %.5f) \t",
+                        entry.getKey(),
+                        entry.getValue(),
+                        evaluatorMap.get(entry.getKey()).averagePerModel(model).score));
+            }
             System.out.println();
         }
     }

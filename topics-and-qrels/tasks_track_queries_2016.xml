@@ -1,0 +1,424 @@
+<tasktrack2016>
+<task id = "1">
+<query>acid stain concrete</query>
+</task>
+<task id = "2">
+<query>taking care of swimming pool</query>
+<freebase entity = "1">
+<id>/m/0b_rs</id>
+<text>Swimming pool</text>
+</freebase>
+</task>
+<task id = "3">
+<query>pole vault</query>
+<freebase entity = "1">
+<id>/m/0601q</id>
+<text>Pole vaulting</text>
+</freebase>
+</task>
+<task id = "4">
+<query>become an allergist</query>
+<freebase entity = "1">
+<id>/m/0fd23</id>
+<text>Allergy</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/05t4q</id>
+<text>Physician</text>
+</freebase>
+</task>
+<task id = "5">
+<query>bird spotting</query>
+<freebase entity = "1">
+<id>/m/015p6</id>
+<text>Bird</text>
+</freebase>
+</task>
+<task id = "6">
+<query>care for a toy poodle</query>
+</task>
+<task id = "7">
+<query>cure indigestion</query>
+<freebase entity = "1">
+<id>/m/04kl78</id>
+<text>Indigestion</text>
+</freebase>
+</task>
+<task id = "8">
+<query>white water rafting</query>
+<freebase entity = "1">
+<id>/m/01747q</id>
+<text>Whitewater</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/0162j4</id>
+<text>Rafting</text>
+</freebase>
+</task>
+<task id = "9">
+<query>invest in mutual funds</query>
+<freebase entity = "1">
+<id>/m/01h13q</id>
+<text>Mutual fund</text>
+</freebase>
+</task>
+<task id = "10">
+<query>setup living room</query>
+<freebase entity = "1">
+<id>/m/03f6tq</id>
+<text>Living room</text>
+</freebase>
+</task>
+<task id = "11">
+<query>braid extensions</query>
+<freebase entity = "1">
+<id>/m/01hk87</id>
+<text>braid</text>
+</freebase>
+</task>
+<task id = "12">
+<query>start a vineyard</query>
+<freebase entity = "1">
+<id>/m/016btq</id>
+<text>Vineyard</text>
+</freebase>
+</task>
+<task id = "13">
+<query>buy girl scout cookies</query>
+<freebase entity = "1">
+<id>/m/01wmzc</id>
+<text>Girl Scout Cookies</text>
+</freebase>
+</task>
+<task id = "14">
+<query>open a bank account</query>
+<freebase entity = "1">
+<id>/m/01k3kn</id>
+<text>Bank account</text>
+</freebase>
+</task>
+<task id = "15">
+<query>french manicure</query>
+<freebase entity = "1">
+<id>/m/01f4cc</id>
+<text>French Manicure</text>
+</freebase>
+</task>
+<task id = "16">
+<query>extend laptop warranty</query>
+<freebase entity = "1">
+<id>/m/01c648</id>
+<text>Laptop</text>
+</freebase>
+<freebase entity = "2">
+<id></id>
+<text>Warranty</text>
+</freebase>
+</task>
+<task id = "17">
+<query>fake tan at home</query>
+<freebase entity = "1">
+<id>/m/0554p5</id>
+<text>Sunless tanning</text>
+</freebase>
+</task>
+<task id = "18">
+<query>sell used laptop online</query>
+<freebase entity = "1">
+<id>/m/01c648</id>
+<text>Laptop</text>
+</freebase>
+</task>
+<task id = "19">
+<query>customize your own tshirt</query>
+<freebase entity = "1">
+<id>/m/013s93</id>
+<text>T-shirt</text>
+</freebase>
+</task>
+<task id = "20">
+<query>invest in stock market</query>
+<freebase entity = "1">
+<id>/m/0drqp</id>
+<text>Stock market</text>
+</freebase>
+</task>
+<task id = "21">
+<query>windows 10 troubleshoot</query>
+<freebase entity = "1">
+<id>-</id>
+<text>Windows 10</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/05qjyz</id>
+<text>Troubleshooting</text>
+</freebase>
+</task>
+<task id = "22">
+<query>health care certification united states</query>
+<freebase entity = "1">
+<id>/m/01mw2x</id>
+<text>Health care</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/09c7w0</id>
+<text>United States</text>
+</freebase>
+</task>
+<task id = "23">
+<query>apply for aadhar card</query>
+<freebase entity = "1">
+<id>/m/0bryvvt</id>
+<text>Aadhaar</text>
+</freebase>
+</task>
+<task id = "24">
+<query>drivers license united kingdom</query>
+<freebase entity = "1">
+<id>/m/0cw2t</id>
+<text>Driver's license</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/07ssc</id>
+<text>United Kingdom</text>
+</freebase>
+</task>
+<task id = "25">
+<query>educational toys for kids</query>
+<freebase entity = "1">
+<id>/m/02w5gwc</id>
+<text>Educational toy</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/0ytgt</id>
+<text>Kid</text>
+</freebase>
+</task>
+<task id = "26">
+<query>setup a garage sale</query>
+<freebase entity = "1">
+<id>/m/02rmnn</id>
+<text>garage sale</text>
+</freebase>
+<freebase entity = "2">
+<id></id>
+<text></text>
+</freebase>
+</task>
+<task id = "27">
+<query>apply for government job in india</query>
+<freebase entity = "1">
+<id>/m/01xbq1</id>
+<text>Public sector</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/03rk0</id>
+<text>India</text>
+</freebase>
+</task>
+<task id = "28">
+<query>test for diabetes</query>
+<freebase entity = "1">
+<id>/m/0c58k</id>
+<text>Diabetes mellitus</text>
+</freebase>
+</task>
+<task id = "29">
+<query>become vegan</query>
+<freebase entity = "1">
+<id>/m/07_hy</id>
+<text>Veganism</text>
+</freebase>
+</task>
+<task id = "30">
+<query>buttons for websites</query>
+<freebase entity = "1">
+<id>/m/03sd75</id>
+<text>Button (computing)</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/085n4</id>
+<text>Website</text>
+</freebase>
+</task>
+<task id = "31">
+<query>grow flowering plants from seed</query>
+<freebase entity = "1">
+<id>/m/04sjm</id>
+<text>Flowering plant</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/09dh0</id>
+<text>Seed</text>
+</freebase>
+</task>
+<task id = "32">
+<query>social media for learning</query>
+<freebase entity = "1">
+<id>/m/0fch0p</id>
+<text>Social media</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/0191f8</id>
+<text>Learning</text>
+</freebase>
+</task>
+<task id = "33">
+<query>home remedies sore throat</query>
+<freebase entity = "1">
+<id>/m/02bwfg</id>
+<text>Traditional medicine</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/0b76bty</id>
+<text>Sore throat</text>
+</freebase>
+</task>
+<task id = "34">
+<query>golf instruction</query>
+<freebase entity = "1">
+<id>/m/01v52_</id>
+<text>Golf instruction</text>
+</freebase>
+</task>
+<task id = "35">
+<query>hair dye</query>
+<freebase entity = "1">
+<id>/m/028mzr</id>
+<text>Hair coloring</text>
+</freebase>
+</task>
+<task id = "36">
+<query>build hip roof</query>
+<freebase entity = "1">
+<id>/m/0274srf</id>
+<text>Hip roof</text>
+</freebase>
+</task>
+<task id = "37">
+<query>build home theater system</query>
+<freebase entity = "1">
+<id>/m/01919d</id>
+<text>Home cinema</text>
+</freebase>
+</task>
+<task id = "38">
+<query>start a ketogenic diet</query>
+<freebase entity = "1">
+<id>/m/03cg86</id>
+<text>Ketogenic diet</text>
+</freebase>
+</task>
+<task id = "39">
+<query>finding planets in the night sky</query>
+<freebase entity = "1">
+<id>/m/05qc_</id>
+<text>Planet</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/03xw43</id>
+<text>Night sky</text>
+</freebase>
+</task>
+<task id = "40">
+<query>recycling lead acid batteries in new jersey</query>
+<freebase entity = "1">
+<id>/m/01cmk0</id>
+<text>Lead–acid battery</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/05fjf</id>
+<text>New Jersey</text>
+</freebase>
+</task>
+<task id = "41">
+<query>prevent a heart attact</query>
+<freebase entity = "1">
+<id>/m/0gk4g</id>
+<text>Myocardial infarction</text>
+</freebase>
+</task>
+<task id = "42">
+<query>make a teddy bear</query>
+<freebase entity = "1">
+<id>/m/0kmg4</id>
+<text>Teddy bear</text>
+</freebase>
+</task>
+<task id = "43">
+<query>browse the internet anonymously</query>
+<freebase entity = "1">
+<id>/m/03rlt</id>
+<text>Internet</text>
+</freebase>
+</task>
+<task id = "44">
+<query>morel mushrooms hunting</query>
+<freebase entity = "1">
+<id>/m/01g66n</id>
+<text>Morchella</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/01rx1k</id>
+<text>Mushroom hunting</text>
+</freebase>
+</task>
+<task id = "45">
+<query>watch tv on the internet</query>
+<freebase entity = "1">
+<id>/m/07c52</id>
+<text>Television</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/03rlt</id>
+<text>Internet</text>
+</freebase>
+</task>
+<task id = "46">
+<query>learn to dance hip-hop</query>
+<freebase entity = "1">
+<id>/m/0glt670</id>
+<text>Hip hop</text>
+</freebase>
+</task>
+<task id = "47">
+<query>transfer money online united states</query>
+<freebase entity = "1">
+<id>/m/08dln3</id>
+<text>Electronic funds transfer</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/09c7w0</id>
+<text>United States</text>
+</freebase>
+</task>
+<task id = "48">
+<query>regrow hair</query>
+<freebase entity = "1">
+<id>/m/03q69</id>
+<text>Hair</text>
+</freebase>
+</task>
+<task id = "49">
+<query>get a divorce in texas</query>
+<freebase entity = "1">
+<id>/m/0b03h</id>
+<text>divorce</text>
+</freebase>
+<freebase entity = "2">
+<id>/m/07b_l</id>
+<text>texas</text>
+</freebase>
+</task>
+<task id = "50">
+<query>deliver a baby at home</query>
+<freebase entity = "1">
+<id>/m/0jnvp</id>
+<text>baby</text>
+</freebase>
+<freebase entity = "2">
+<id></id>
+<text></text>
+</freebase>
+</task>
+</tasktrack2016>

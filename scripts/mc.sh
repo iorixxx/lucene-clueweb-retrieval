@@ -15,11 +15,11 @@ fi
 echo "Starting Milliyet Collection evaluator with RUNS = $RUNS and EVALS = $EVALS ..."
 
 qrels[0]=qrelsMC.txt
-qrels[1]=qrelsUBE.txt
+#qrels[1]=qrelsUBE.txt
 
 declare -a arr=("MC" "UBE")
 
-for set in MC UBE; do
+for set in MC; do
 if [ ! -d "${TFD_HOME}/${set}/${RUNS}" ]; then
        continue
 fi
@@ -30,7 +30,7 @@ fi
 tag=$(basename "${tag}")
 mkdir -p "${TFD_HOME}/$set/${EVALS}/$tag"
 
-for i in 0 1; do
+for i in 0; do
 
 if [ ! -d "${TFD_HOME}/${set}/${RUNS}/${tag}/${arr[${i}]}" ]; then
         # Control will enter here if $DIRECTORY does not exist.
